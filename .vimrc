@@ -1,0 +1,9 @@
+syntax on
+set et
+set sw=4
+set ts=4
+set ruler
+set backspace=2
+set nocompatible
+set relativenumber
+filetype on
