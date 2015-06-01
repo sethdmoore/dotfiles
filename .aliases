@@ -1,0 +1,28 @@
+## Replacement Aliases ###
+alias hist="cat -n ~/.bash_history"
+
+### Editing Aliases ###
+alias aliases="$EDITOR ~/.aliases; source ~/.aliases"
+alias bash_profile="$EDITOR ~/.bash_profile; source ~/.bash_profile"
+alias bashrc="$EDITOR ~/.bashrc; source ~/.bashrc"
+alias todo="$EDITOR ~/.todo"
+
+
+### utility aliasees ###
+alias ls="ls -G $@"
+alias cidr="cat ~/.cidr"
+alias hvinfo="cat ~/.hvinfo"
+alias orphans="cat ~/.orphandocker"
+
+# functions
+docker-enter() {
+    boot2docker ssh -t "[ -f /var/lib/boot2docker/nsenter ] || docker run --rm -v /var/lib/boot2docker/:/target jpetazzo/nsenter; sudo /var/lib/boot2docker/docker-enter $@";
+}
+
+function bannertime() {
+    defaults write com.apple.notificationcenterui bannerTime $@
+}
+
+### org-specific aliases ###
+source ~/.private_aliases
+
