@@ -1,2 +1,5 @@
 #!/bin/bash
-git ls-tree -r master --name-only
+echo $0
+for file in $(git ls-tree master  ../ --name-only); do
+  echo $(basename $file)
+done
