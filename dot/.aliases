@@ -6,6 +6,7 @@ alias aliases="$EDITOR ~/.aliases; source ~/.aliases"
 alias bash_profile="$EDITOR ~/.bash_profile; source ~/.bash_profile"
 alias bashrc="$EDITOR ~/.bashrc; source ~/.bashrc"
 alias todo="$EDITOR ~/.todo"
+alias standup="$EDITOR ~/.standup"
 
 
 ### utility aliasees ###
