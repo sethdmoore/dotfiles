@@ -5,3 +5,4 @@ shopt -s no_empty_cmd_completion
 source ~/.bashrc
 source ~/.aliases
 source ~/.auth
+source ~/.dockerenv

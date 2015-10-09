@@ -1,4 +1,4 @@
-export PATH="/usr/local/bin:/usr/local/sbin:$PATH"
+export PATH="/usr/local/bin:/usr/local/go/bin:/usr/local/sbin:$PATH"
 export GOPATH="${HOME}/go"
 
 # force bash to write and re-read history every time you issue a command.
@@ -21,3 +21,9 @@ export HISTTIMEFORMAT="%d/%m/%y %T "
 
 export HISTTIMEFORMAT="%d/%m/%y %T "
 
+
+export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+
+
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+eval $(docker-machine env default)

@@ -12,6 +12,7 @@ alias standup="$EDITOR ~/.standup"
 ### utility aliasees ###
 alias ls="ls -G $@"
 alias cidr="cat ~/.cidr"
+alias env="env | sort"
 
 function bannertime() {
     defaults write com.apple.notificationcenterui bannerTime $@

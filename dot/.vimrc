@@ -5,5 +5,8 @@ set ts=4
 set ruler
 set backspace=2
 set nocompatible
-set relativenumber
+"set relativenumber
+set incsearch
+set hlsearch
+set nu
 filetype on
