@@ -24,6 +24,7 @@ export HISTTIMEFORMAT="%d/%m/%y %T "
 
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 
+#eval $(docker-machine env default)
 
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-eval $(docker-machine env default)
+

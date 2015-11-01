@@ -1,4 +1,10 @@
+" activates filetype detection
+filetype plugin indent on
+"filetype plugin on
 syntax on
+
+set backspace=indent,eol,start
+
 set et
 set sw=4
 set ts=4
@@ -9,4 +15,6 @@ set nocompatible
 set incsearch
 set hlsearch
 set nu
-filetype on
+set sessionoptions-=options
+
+execute pathogen#infect()
