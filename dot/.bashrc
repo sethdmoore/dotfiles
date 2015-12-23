@@ -21,12 +21,20 @@ export HISTTIMEFORMAT="%d/%m/%y %T "
 
 export HISTTIMEFORMAT="%d/%m/%y %T "
 
+if [ $(basename "$SHELL") = "zsh" ]; then
+    autoload -U colors && colors
+    #export PS1="%n %~ %{$fg[blue]%}}► %{$reset_color%}"
+    export PS1="%n %~ %{$fg[blue]%}╠► %{$reset_color%}"
+else
+    export PS1="\W \u ► "
+fi
 
-export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+if [ -z "$TMUX" ]; then
+    tmux attach || tmux
+fi
 
 #eval $(docker-machine env default)
 
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
 
 
 # added by travis gem
