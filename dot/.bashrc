@@ -1,4 +1,4 @@
-export PATH="/usr/local/bin:/usr/local/go/bin:/usr/local/sbin:$PATH"
+export PATH="/usr/local/bin:/usr/local/go/bin:/usr/local/sbin:$PATH:$HOME/go/bin"
 export GOPATH="${HOME}/go"
 
 # force bash to write and re-read history every time you issue a command.
@@ -24,6 +24,8 @@ export HISTTIMEFORMAT="%d/%m/%y %T "
 if [ $(basename "$SHELL") = "zsh" ]; then
     autoload -U colors && colors
     #export PS1="%n %~ %{$fg[blue]%}}► %{$reset_color%}"
+    bindkey -v
+    bindkey '^R' history-incremental-search-backward
     export PS1="%n %~ %{$fg[blue]%}╠► %{$reset_color%}"
 else
     export PS1="\W \u ► "
