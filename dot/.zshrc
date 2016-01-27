@@ -7,7 +7,9 @@ export HISTSIZE=1000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
 export GO15VENDOREXPERIMENT=1
-export EDITOR="$(which vim)"
+export EDITOR="vim"
+
+KERNEL="$(uname -s)"
 
 source ~/.aliases
 
@@ -15,8 +17,18 @@ if [ -f "${HOME}/.auth" ]; then
     source "${HOME}/.auth"
 fi
 
-if [ -z "$TMUX" ]; then
-    tmux attach || tmux
+start_tmux () {
+    if [ -z "$TMUX" ]; then
+        tmux attach || tmux
+    fi
+}
+
+# do not start tmux if we have no X11 session
+# this prevents us from running $ startx
+if [ "$KERNEL" = "Linux" ] && [ -n "DISPLAY" ]; then
+    echo "should probably startx, no?"
+else
+    start_tmux
 fi
 
 if [ -f "${HOME}/.dockerenv" ]; then
