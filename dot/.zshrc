@@ -11,7 +11,9 @@ export EDITOR="vim"
 
 KERNEL="$(uname -s)"
 
-source ~/.aliases
+if [ -f "${HOME}/.aliases" ]; then
+    source "${HOME}/.aliases"
+fi
 
 if [ -f "${HOME}/.auth" ]; then
     source "${HOME}/.auth"
