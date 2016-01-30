@@ -11,7 +11,9 @@ export EDITOR="vim"
 
 KERNEL="$(uname -s)"
 
-source ~/.aliases
+if [ -f "${HOME}/.aliases" ]; then
+    source "${HOME}/.aliases"
+fi
 
 if [ -f "${HOME}/.auth" ]; then
     source "${HOME}/.auth"
@@ -25,7 +27,7 @@ start_tmux () {
 
 # do not start tmux if we have no X11 session
 # this prevents us from running $ startx
-if [ "$KERNEL" = "Linux" ] && [ -n "DISPLAY" ]; then
+if [ "$KERNEL" = "Linux" ] && [ -z "$DISPLAY" ]; then
     echo "should probably startx, no?"
 else
     start_tmux
