@@ -21,22 +21,9 @@ export HISTTIMEFORMAT="%d/%m/%y %T "
 
 export HISTTIMEFORMAT="%d/%m/%y %T "
 
-if [ $(basename "$SHELL") = "zsh" ]; then
-    autoload -U colors && colors
-    #export PS1="%n %~ %{$fg[blue]%}}► %{$reset_color%}"
-    bindkey -v
-    bindkey '^R' history-incremental-search-backward
-    export PS1="%n %~ %{$fg[blue]%}╠► %{$reset_color%}"
-else
-    export PS1="\W \u ► "
-fi
-
 if [ -z "$TMUX" ]; then
     tmux attach || tmux
 fi
-
-#eval $(docker-machine env default)
-
 
 
 # added by travis gem

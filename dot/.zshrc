@@ -2,7 +2,7 @@ autoload -U colors && colors
 bindkey -v
 bindkey '^R' history-incremental-search-backward
 
-export PS1="%n %~ %{$fg[blue]%}╠► %{$reset_color%}"
+export PS1="%n %~ %(?.%{$fg[blue]%}╠►.%{$fg[red]%}╠►) %{$reset_color%}"
 export HISTSIZE=1000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
