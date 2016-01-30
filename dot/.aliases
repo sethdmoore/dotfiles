@@ -13,7 +13,6 @@ function ebl() {
     ssh -i ~/.ssh/dev-ops.pem ec2-user@$1
 }
 
-
 ### utility aliasees ###
 alias ls="ls -G $@"
 alias cidr="cat ~/.cidr"
@@ -24,5 +23,7 @@ function bannertime() {
 }
 
 ### org-specific aliases ###
-source ~/.private_aliases
+if [ -e "${HOME}/.private_aliases" ]; then
+    source "${HOME}/.private_aliases"
+fi
 

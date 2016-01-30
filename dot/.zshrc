@@ -25,7 +25,7 @@ start_tmux () {
 
 # do not start tmux if we have no X11 session
 # this prevents us from running $ startx
-if [ "$KERNEL" = "Linux" ] && [ -n "DISPLAY" ]; then
+if [ "$KERNEL" = "Linux" ] && [ -z "$DISPLAY" ]; then
     echo "should probably startx, no?"
 else
     start_tmux
