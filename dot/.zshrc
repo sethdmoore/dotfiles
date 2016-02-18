@@ -1,15 +1,25 @@
+export KERNEL="$(uname -s)"
+
 autoload -U colors && colors
 bindkey -v
 bindkey '^R' history-incremental-search-backward
 
 export PS1="%n %~ %(?.%{$fg[blue]%}╠►.%{$fg[red]%}╠►) %{$reset_color%}"
+
 export HISTSIZE=1000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
 export GO15VENDOREXPERIMENT=1
 export EDITOR="vim"
+#export JAVA_HOME="/System/Library/Frameworks/JavaVM.framework/Versions/1.6/Home"
+export GOPATH="${HOME}/go"
 
-KERNEL="$(uname -s)"
+if [ "$KERNEL" = "Darwin" ]; then
+    # set java 6 ...
+    #PATH="${JAVA_HOME}/bin:${PATH}"
+    # rbenv 9_9
+    source "${HOME}/.rbenv_env"
+fi
 
 if [ -f "${HOME}/.aliases" ]; then
     source "${HOME}/.aliases"
@@ -26,9 +36,9 @@ start_tmux () {
 }
 
 # do not start tmux if we have no X11 session
-# this prevents us from running $ startx
+# X11 cannot usually be run in a tmux session
 if [ "$KERNEL" = "Linux" ] && [ -z "$DISPLAY" ]; then
-    echo "should probably startx, no?"
+    # echo "should probably startx, no?"
 else
     start_tmux
 fi

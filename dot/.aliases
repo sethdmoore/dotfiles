@@ -1,22 +1,31 @@
 ## Replacement Aliases ###
-alias hist="cat -n ~/.bash_history"
+alias hist="cat -n ${HOME}/.bash_history"
 
 ### Editing Aliases ###
-alias aliases="$EDITOR ~/.aliases; source ~/.aliases"
-alias bash_profile="$EDITOR ~/.bash_profile; source ~/.bash_profile"
-alias bashrc="$EDITOR ~/.bashrc; source ~/.bashrc"
-alias todo="$EDITOR ~/.todo"
-alias standup="$EDITOR ~/.standup"
+alias aliases="$EDITOR ${HOME}/.aliases; source ${HOME}/.aliases"
+alias bash_profile="$EDITOR ${HOME}/.bash_profile; source ${HOME}/.bash_profile"
+alias bashrc="$EDITOR ${HOME}/.bashrc; source ${HOME}/.bashrc"
+alias todo="$EDITOR ${HOME}/TODO.md"
 alias docker="docker --tlsverify=false $@"
 
-function ebl() {
-    ssh -i ~/.ssh/dev-ops.pem ec2-user@$1
+# convenience
+function reload() {
+    if [ -e "${HOME}/.zshrc" ]; then
+        source "${HOME}/.zshrc"
+    else
+        printf "No .zshrc in \"${HOME}\". Bootstrap or check your env.\n"
+    fi
 }
+
+if [ "$KERNEL" = "Darwin" ]; then
+    alias lockscreen="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
+fi
 
 ### utility aliasees ###
 alias ls="ls -G $@"
-alias cidr="cat ~/.cidr"
+alias cidr="cat ${HOME}/.cidr"
 alias env="env | sort"
+alias reload="source ${HOME}/.zshrc"
 
 function bannertime() {
     defaults write com.apple.notificationcenterui bannerTime $@
