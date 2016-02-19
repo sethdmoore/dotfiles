@@ -35,10 +35,13 @@ start_tmux () {
     fi
 }
 
+# always start tmux in remote sessions
+if [ -n "${SSH_CLIENT}" ]; then
+    export PS1="%m ${PS1}"
+    start_tmux
 # do not start tmux if we have no X11 session
-# X11 cannot usually be run in a tmux session
-if [ "$KERNEL" = "Linux" ] && [ -z "$DISPLAY" ]; then
-    # echo "should probably startx, no?"
+elif [ "$KERNEL" = "Linux" ] && [ -z "$DISPLAY" ]; then
+# start tmux by default
 else
     start_tmux
 fi
