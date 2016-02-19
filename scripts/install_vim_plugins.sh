@@ -17,11 +17,14 @@ EOF
 }
 
 # pathogen paths
-mkdir -p "${HOME}/.vim/autoload" "${HOME}/.vim/bundle" "${HOME}/.vim/colors" && \
+mkdir -p "${HOME}/.vim/autoload" \
+    "${HOME}/.vim/bundle" \
+    "${HOME}/.vim/colors" && \
 curl -LSso "${HOME}/.vim/autoload/pathogen.vim" "https://tpo.pe/pathogen.vim"
 
 # sourcerer colors
-curl -LSso "${HOME}/.vim/colors/sourcerer.vim" "https://raw.githubusercontent.com/xero/sourcerer/master/sourcerer.vim"
+curl -LSso "${HOME}/.vim/colors/sourcerer.vim" \
+    "https://raw.githubusercontent.com/xero/sourcerer/master/sourcerer.vim"
 
 # IFS abuse for pathogen bundles
 IFS=',:'
