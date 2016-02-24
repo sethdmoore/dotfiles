@@ -5,20 +5,35 @@ bindkey -v
 bindkey '^R' history-incremental-search-backward
 
 export PS1="%n %~ %(?.%{$fg[blue]%}╠►.%{$fg[red]%}╠►) %{$reset_color%}"
-
 export HISTSIZE=1000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
 export GO15VENDOREXPERIMENT=1
 export EDITOR="vim"
-#export JAVA_HOME="/System/Library/Frameworks/JavaVM.framework/Versions/1.6/Home"
+if [ ! -d "${HOME}/go" ]; then
+    printf "Creating GOPATH: ${HOME}/go\n"
+    mkdir -p "${HOME}/go"
+fi
 export GOPATH="${HOME}/go"
 
+# zshrc executed without POSIX compat
+# use array type (http://zsh.sourceforge.net/FAQ/zshfaq03.html)
+MY_DOT_FILES=(".aliases" ".auth" ".dockerenv" ".travis/travis.sh")
+
+source_dot_files() {
+    local dot
+    # don't need IFS abuse since we're using arraytype
+    for dot in $MY_DOT_FILES; do
+        if [ -f "${HOME}/${dot}" ]; then
+            source "${HOME}/${dot}"
+        fi
+    done
+}
+
+
 if [ "$KERNEL" = "Darwin" ]; then
-    # set java 6 ...
-    #PATH="${JAVA_HOME}/bin:${PATH}"
-    # rbenv 9_9
     source "${HOME}/.rbenv_env"
+    source "${HOME}/.travis/travis.sh"
 fi
 
 if [ -f "${HOME}/.aliases" ]; then
@@ -27,6 +42,10 @@ fi
 
 if [ -f "${HOME}/.auth" ]; then
     source "${HOME}/.auth"
+fi
+
+if [ -f "${HOME}/.dockerenv" ]; then
+    source "${HOME}/.dockerenv"
 fi
 
 start_tmux () {
@@ -46,9 +65,7 @@ else
     start_tmux
 fi
 
-if [ -f "${HOME}/.dockerenv" ]; then
-    source "${HOME}/.dockerenv"
-fi
+source_dot_files
 
 # added by travis gem
-[ -f "${HOME}/.travis/travis.sh" ] && source "${HOME}/.travis/travis.sh"
+# [ -f "${HOME}/.travis/travis.sh" ] && source "${HOME}/.travis/travis.sh"
