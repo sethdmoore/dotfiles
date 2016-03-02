@@ -18,7 +18,22 @@ export GOPATH="${HOME}/go"
 
 # zshrc executed without POSIX compat
 # use array type (http://zsh.sourceforge.net/FAQ/zshfaq03.html)
-MY_DOT_FILES=(".aliases" ".auth" ".dockerenv" ".travis/travis.sh")
+MY_DOT_FILES=(".aliases" ".auth")
+
+if [ "$KERNEL" = "Darwin" ]; then
+    # append to zsh array 9_9
+    MY_DOT_FILES+=(".rbenv_env" ".travis/travis.sh" ".dockerenv")
+    export PATH="${PATH}:/usr/local/sbin"
+fi
+
+check_path() {
+    local IFS pa
+
+    IFS="\::"
+    for p in $PATH; do
+        printf "$p\n"
+    done
+}
 
 source_dot_files() {
     local dot
@@ -30,29 +45,19 @@ source_dot_files() {
     done
 }
 
-
-if [ "$KERNEL" = "Darwin" ]; then
-    source "${HOME}/.rbenv_env"
-    source "${HOME}/.travis/travis.sh"
-fi
-
-if [ -f "${HOME}/.aliases" ]; then
-    source "${HOME}/.aliases"
-fi
-
-if [ -f "${HOME}/.auth" ]; then
-    source "${HOME}/.auth"
-fi
-
-if [ -f "${HOME}/.dockerenv" ]; then
-    source "${HOME}/.dockerenv"
-fi
-
 start_tmux () {
     if [ -z "$TMUX" ]; then
         tmux attach || tmux
     fi
 }
+
+# go tools
+# if [ -d "${HOME}/go/bin" ]; then
+#     PATH="${PATH}:${HOME}/go/bin"
+# fi
+
+source_dot_files
+check_path
 
 # always start tmux in remote sessions
 if [ -n "${SSH_CLIENT}" ]; then
@@ -64,8 +69,3 @@ elif [ "$KERNEL" = "Linux" ] && [ -z "$DISPLAY" ]; then
 else
     start_tmux
 fi
-
-source_dot_files
-
-# added by travis gem
-# [ -f "${HOME}/.travis/travis.sh" ] && source "${HOME}/.travis/travis.sh"
