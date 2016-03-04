@@ -2,7 +2,8 @@
 # So far, this script works on Linux, Mac OSX and Windows (cygwin / babun)
 
 # dotfiles
-for file in $(git ls-tree master  ../dot/ --name-only); do
+FILE_LIST="$(git ls-tree  master --full-tree dot/ --name-only)"
+for file in $FILE_LIST; do
   file=$(basename $file)
   cwd=$(echo $PWD | sed 's_scripts_dot_')
   #echo $cwd
@@ -10,4 +11,4 @@ for file in $(git ls-tree master  ../dot/ --name-only); do
   ln -vs "$cwd/$file" $HOME/$file
 done
 
-. ./install_vim_plugins.sh
+# . ./install_vim_plugins.sh

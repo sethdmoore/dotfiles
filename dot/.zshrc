@@ -19,7 +19,10 @@ if [ "$KERNEL" = "Darwin" ]; then
     #PATH="${JAVA_HOME}/bin:${PATH}"
     # rbenv 9_9
     source "${HOME}/.rbenv_env"
+elif [ "$KERNEL" = "CYGWIN_NT-10.0-WOW" ]; then
+    source "${HOME}/.sshagent"
 fi
+
 
 if [ -f "${HOME}/.aliases" ]; then
     source "${HOME}/.aliases"

@@ -19,7 +19,8 @@ EOF
 # pathogen paths
 mkdir -p "${HOME}/.vim/autoload" \
     "${HOME}/.vim/bundle" \
-    "${HOME}/.vim/colors" && \
+    "${HOME}/.vim/colors" \
+    "${HOME}/.vim/tmp" && \
 curl -LSso "${HOME}/.vim/autoload/pathogen.vim" "https://tpo.pe/pathogen.vim"
 
 # sourcerer colors
