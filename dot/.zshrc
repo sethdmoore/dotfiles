@@ -31,7 +31,7 @@ check_path() {
 
     IFS="\::"
     for p in $PATH; do
-        printf "$p\n"
+        # printf "$p\n"
     done
 }
 
