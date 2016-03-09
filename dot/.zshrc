@@ -26,12 +26,17 @@ if [ "$KERNEL" = "Darwin" ]; then
     export PATH="${PATH}:/usr/local/sbin"
 fi
 
-check_path() {
-    local IFS pa
+# golang tools
+if [ -d "${HOME}/go/bin" ]; then
+    PATH="${PATH}:${HOME}/go/bin"
+fi
 
-    IFS="\::"
+
+check_path() {
+    local IFS p
+
+    IFS=':'
     for p in $PATH; do
-        # printf "$p\n"
     done
 }
 
@@ -50,11 +55,6 @@ start_tmux () {
         tmux attach || tmux
     fi
 }
-
-# go tools
-# if [ -d "${HOME}/go/bin" ]; then
-#     PATH="${PATH}:${HOME}/go/bin"
-# fi
 
 source_dot_files
 check_path
