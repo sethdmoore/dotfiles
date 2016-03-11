@@ -4,39 +4,26 @@ autoload -U colors && colors
 bindkey -v
 bindkey '^R' history-incremental-search-backward
 
-export PS1="%n %~ %(?.%{$fg[blue]%}╠►.%{$fg[red]%}╠►) %{$reset_color%}"
+export PS1="$(date +%H:%M) %n %~ %(?.%{$fg[blue]%}╠►.%{$fg[red]%}╠►) %{$reset_color%}"
+# export RPROMPT="$(date +%H:%M)"
 export HISTSIZE=1000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
 export GO15VENDOREXPERIMENT=1
 export EDITOR="vim"
-if [ ! -d "${HOME}/go" ]; then
-    printf "Creating GOPATH: ${HOME}/go\n"
-    mkdir -p "${HOME}/go"
-fi
-export GOPATH="${HOME}/go"
 
 # zshrc executed without POSIX compat
 # use array type (http://zsh.sourceforge.net/FAQ/zshfaq03.html)
 MY_DOT_FILES=(".aliases" ".auth")
 
-if [ "$KERNEL" = "Darwin" ]; then
-    # append to zsh array 9_9
-    MY_DOT_FILES+=(".rbenv_env" ".travis/travis.sh" ".dockerenv")
-    export PATH="${PATH}:/usr/local/sbin"
-fi
-
-# golang tools
-if [ -d "${HOME}/go/bin" ]; then
-    PATH="${PATH}:${HOME}/go/bin"
-fi
-
-
+# deprecated
 check_path() {
-    local IFS p
+    local IFS p array_path
 
     IFS=':'
-    for p in $PATH; do
+    array_path=("${(@s/:/)PATH}")
+    for p in $array_path; do
+        printf "${p}\n"
     done
 }
 
@@ -56,8 +43,30 @@ start_tmux () {
     fi
 }
 
+
+if [ ! -d "${HOME}/go" ]; then
+    printf "Creating GOPATH: ${HOME}/go\n"
+    mkdir -p "${HOME}/go"
+fi
+
+
+if [ "$KERNEL" = "Darwin" ]; then
+    # append to zsh array 9_9
+    MY_DOT_FILES+=(".rbenv_env" ".travis/travis.sh" ".dockerenv")
+    # export PATH="${PATH}:/usr/local/sbin"
+    append_path "/usr/local/sbin"
+fi
+
+# golang tools
+if [ -d "${HOME}/go/bin" ]; then
+    append_path "${HOME}/go/bin"
+    # this directory will be created later
+    export GOPATH="${HOME}/go"
+fi
+
 source_dot_files
-check_path
+
+# check_path
 
 # always start tmux in remote sessions
 if [ -n "${SSH_CLIENT}" ]; then
