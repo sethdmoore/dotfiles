@@ -4,7 +4,7 @@ autoload -U colors && colors
 bindkey -v
 bindkey '^R' history-incremental-search-backward
 
-export PS1="$(date +%H:%M) %n %~ %(?.%{$fg[blue]%}╠►.%{$fg[red]%}╠►) %{$reset_color%}"
+export PS1="%~ %(?.%{$fg[blue]%}╠►.%{$fg[red]%}╠►) %{$reset_color%}"
 # export RPROMPT="$(date +%H:%M)"
 export HISTSIZE=1000
 export SAVEHIST=10000
@@ -25,6 +25,23 @@ check_path() {
     for p in $array_path; do
         printf "${p}\n"
     done
+}
+
+append_path() {
+    local IFS p array_path appender match
+    appender=$1
+    match="false"
+
+    IFS=':'
+    array_path=("${(@s/:/)PATH}")
+    for p in $array_path; do
+        if [ "${p}" = "${appender}" ]; then
+            printf "Duplicate PATH entry: ${p}\n"
+            return
+        fi
+    done
+
+    PATH="${PATH}:${appender}"
 }
 
 source_dot_files() {
@@ -70,11 +87,16 @@ source_dot_files
 
 # always start tmux in remote sessions
 if [ -n "${SSH_CLIENT}" ]; then
-    export PS1="%m ${PS1}"
+    # user@host if we're remote
+    export PS1="%* %n@%m ${PS1}"
     start_tmux
 # do not start tmux if we have no X11 session
 elif [ "$KERNEL" = "Linux" ] && [ -z "$DISPLAY" ]; then
+    # insert timestamp
+    export PS1="%* %n ${PS1}"
 # start tmux by default
 else
+    # insert timestamp
+    export PS1="%* %n ${PS1}"
     start_tmux
 fi
