@@ -4,7 +4,8 @@ autoload -U colors && colors
 bindkey -v
 bindkey '^R' history-incremental-search-backward
 
-export PS1="%~ %(?.%{$fg[blue]%}╠►.%{$fg[red]%}╠►) %{$reset_color%}"
+# export PS1="%~ %(?.%{$fg[blue]%}╠►.%{$fg[red]%}╠►) %{$reset_color%}"
+export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
 # export RPROMPT="$(date +%H:%M)"
 export HISTSIZE=1000
 export SAVEHIST=10000
@@ -54,10 +55,23 @@ source_dot_files() {
     done
 }
 
-start_tmux () {
-    if [ -z "$TMUX" ]; then
-        tmux attach || tmux
+start_tmux() {
+    local REATTACH
+    if [ -e "$TMUX" ]; then
+        return
     fi
+
+    # determine if we have any tmux sessions
+    tmux list-sessions > /dev/null
+    HAS_SESSION=$?
+
+    # determine if any clients are attached
+    if [ $HAS_SESSION == 0 ]; then
+        tmux list-clients | wc | grep -E '\s+0\s+0\s+0' > /dev/null
+        REATTACH=$?
+    fi
+
+    tmux attach || tmux new-session
 }
 
 
@@ -98,5 +112,7 @@ elif [ "$KERNEL" = "Linux" ] && [ -z "$DISPLAY" ]; then
 else
     # insert timestamp
     export PS1="%* %n ${PS1}"
-    start_tmux
+    # start_tmux
 fi
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
