@@ -1,6 +1,9 @@
 export KERNEL="$(uname -s)"
 
 autoload -U colors && colors
+# add git autocomplete
+autoload -Uz compinit && compinit
+
 bindkey -v
 bindkey '^R' history-incremental-search-backward
 
