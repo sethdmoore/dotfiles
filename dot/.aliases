@@ -18,7 +18,8 @@ function reload() {
 }
 
 if [ "$KERNEL" = "Darwin" ]; then
-    alias lockscreen="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
+    # alias lockscreen="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
+    alias lockscreen="pmset displaysleepnow"
 fi
 
 ### utility aliasees ###

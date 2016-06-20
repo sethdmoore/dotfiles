@@ -32,20 +32,22 @@ check_path() {
 }
 
 append_path() {
-    local IFS p array_path appender match
-    appender=$1
+    local IFS path_iterator array_path appender match
+    appender="${1}"
     match="false"
 
     IFS=':'
+
     array_path=("${(@s/:/)PATH}")
-    for p in $array_path; do
-        if [ "${p}" = "${appender}" ]; then
-            printf "Duplicate PATH entry: ${p}\n"
+    for path_iterator in $array_path; do
+        if [ "${path_iterator}" = "${appender}" ]; then
+            printf "Duplicate PATH entry: ${path_iterator}\n"
             return
         fi
     done
+    unset IFS
 
-    PATH="${PATH}:${appender}"
+    export PATH="$PATH:${appender}"
 }
 
 source_dot_files() {
