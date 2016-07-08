@@ -21,6 +21,10 @@ set sessionoptions-=options
 set backupdir=~/.vim/tmp,.
 set directory=~/.vim/tmp,.
 
+"Turn off help
+nmap <F1> :echo<CR>
+imap <F1> <C-o>:echo<CR>
+
 "This unsets the "last search pattern" register by hitting return
 nnoremap <CR> :noh<CR><CR>
 

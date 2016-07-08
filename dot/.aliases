@@ -28,6 +28,14 @@ alias cidr="cat ${HOME}/.cidr"
 alias env="env | sort"
 alias reload="source ${HOME}/.zshrc"
 
+function update_pathogen() {
+    local basedir
+    basedir="${HOME}/.vim/bundle"
+    for plugin in "${basedir}/*"; do
+        git --git-dir="${basedir}/.git" --work-tree="${basedir}/" pull
+    done
+}
+
 function bannertime() {
     defaults write com.apple.notificationcenterui bannerTime $@
 }

@@ -82,7 +82,7 @@ start_tmux() {
 
 if [ ! -d "${HOME}/go" ]; then
     printf "Creating GOPATH: ${HOME}/go\n"
-    mkdir -p "${HOME}/go"
+    mkdir -p "${HOME}/go/src"
 fi
 
 
@@ -94,8 +94,11 @@ if [ "$KERNEL" = "Darwin" ]; then
 fi
 
 # golang tools
-if [ -d "${HOME}/go/bin" ]; then
-    append_path "${HOME}/go/bin"
+if [ -d "${HOME}/go" ]; then
+    if [ -d "${HOME}/go/bin" ]; then
+        append_path "${HOME}/go/bin"
+    fi
+
     # this directory will be created later
     export GOPATH="${HOME}/go"
 fi
