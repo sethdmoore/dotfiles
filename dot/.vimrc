@@ -18,8 +18,10 @@ set noundofile
 set sessionoptions-=options
 
 " dump swp / backup files in temp
-set backupdir=~/.vim/tmp,.
-set directory=~/.vim/tmp,.
+set backupdir=~/.vim/backup//
+set directory=~/.vim/swp//
+
+let g:vim_markdown_folding_disabled = 1
 
 "Turn off help
 nmap <F1> :echo<CR>

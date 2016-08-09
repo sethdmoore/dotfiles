@@ -85,6 +85,20 @@ if [ ! -d "${HOME}/go" ]; then
     mkdir -p "${HOME}/go/src"
 fi
 
+if [ ! -d "${HOME}/.vim" ]; then
+    printf "Creating .vim: ${HOME}/.vim\n"
+    mkdir -p "${HOME}/.vim"
+fi
+
+if [ ! -d "${HOME}/.vim/backup" ]; then
+    printf "Creating vim backup: ${HOME}/.vim/backup\n"
+    mkdir -p "${HOME}/.vim/backup"
+fi
+
+if [ ! -d "${HOME}/.vim/swp" ]; then
+    printf "Creating vim swap: ${HOME}/.vim/swp\n"
+    mkdir -p "${HOME}/.vim/swp"
+fi
 
 if [ "$KERNEL" = "Darwin" ]; then
     # append to zsh array 9_9
