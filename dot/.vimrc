@@ -1,6 +1,5 @@
 " activates filetype detection
 filetype plugin indent on
-"filetype plugin on
 syntax on
 
 set backspace=indent,eol,start
@@ -17,10 +16,16 @@ set nu
 set noundofile
 set sessionoptions-=options
 
-" dump swp / backup files in temp
+autocmd FileType ruby setlocal sw=2 ts=2 et
+autocmd FileType sh setlocal sw=2 ts=2 et
+autocmd FileType python setlocal sw=4 ts=4 et
+autocmd FileType go setlocal sw=4 ts=4 noet
+
+" dump swp / backup files in temp, instead of polluting local dirs
 set backupdir=~/.vim/backup//
 set directory=~/.vim/swp//
 
+" turn off horrendous ''folding'' / collapsing of markdown
 let g:vim_markdown_folding_disabled = 1
 
 "Turn off help
