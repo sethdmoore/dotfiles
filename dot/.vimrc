@@ -21,6 +21,8 @@ autocmd FileType sh setlocal sw=2 ts=2 et
 autocmd FileType python setlocal sw=4 ts=4 et
 autocmd FileType go setlocal sw=4 ts=4 noet
 
+command Curlfmt s/ -H / \\\r    -H /g
+
 " dump swp / backup files in temp, instead of polluting local dirs
 set backupdir=~/.vim/backup//
 set directory=~/.vim/swp//
@@ -34,6 +36,9 @@ imap <F1> <C-o>:echo<CR>
 
 "This unsets the "last search pattern" register by hitting return
 nnoremap <CR> :noh<CR><CR>
+
+"remap colon to semicolon
+map ; :
 
 colors sourcerer
 "hi CursorLine   cterm=NONE ctermbg=darkred ctermfg=white guibg=darkred guifg=white
