@@ -20,10 +20,11 @@ function reload() {
 if [ "$KERNEL" = "Darwin" ]; then
     # alias lockscreen="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
     alias lockscreen="pmset displaysleepnow"
+elif [ "$KERNEL" = "Linux" ]; then
+    alias ls="ls --color $@"
 fi
 
 ### utility aliasees ###
-alias ls="ls -G $@"
 alias cidr="cat ${HOME}/.cidr"
 alias env="env | sort"
 alias reload="source ${HOME}/.zshrc"
