@@ -37,15 +37,7 @@ def shell_out(cmd):
     return
 
 
-def init_color_lerp(base_color, end_color):
-    # end_ccolor is white 255 255 255
-    # r * load * 2.55 | g * load * 1.71 |  b * load * 0.95
-    color_values = color_lerp(base_color, end_color)
-
-    return color_values
-
-
-def color_lerp(start_c, end_c):
+def init_color_lerp(start_c, end_c):
     r, g, b = start_c
     # re, ge, be = end_c
     result = ()
