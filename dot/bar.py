@@ -9,11 +9,16 @@ import time
 RESET_COLOR = "%{F-}%{B-}"
 
 ICONS = {
-    "CPU": " "
+    "CPU": " ",
+    "INACTIVE_DESKTOPS": "%{F#002244}o%{F-}",
+    "ACTIVE_DESKTOP":    "%{F#FFFFFF}x%{F-}"
 }
 
 BASE_COLOR = (00,84,160)
 END_COLOR = (255,255,255)
+
+ACTIVE_DESKTOP_COLOR  = "%{B#0084AA}"
+INACTIVE_DESKTOP_COLOR  = "%{B#004488}" 
 
 
 def shell_out(cmd):
@@ -34,7 +39,7 @@ def shell_out(cmd):
     if error != "":
         output = error
 
-    return
+    return output
 
 
 def init_color_lerp(start_c, end_c):
@@ -63,8 +68,6 @@ def cpu_pct(base_color, lerp_values):
     cpu_stat = {}
 
     red, green, blue = base_color
-    # print(base_color, file=sys.stdout)
-    # print(lerp_values, file=sys.stdout)
     rl, gl, bl = lerp_values
 
     cpus = psutil.cpu_percent(percpu=True)
@@ -77,7 +80,6 @@ def cpu_pct(base_color, lerp_values):
 
             cpu_stat[core_num] = "%%{B#%02X%02X%02X}" % (r, g, b)
 
-    # print(cpu_stat, file=sys.stdout)
     # sort this back out so the cores don't come out in random order
     for core_num, color in sorted(cpu_stat.items()):
         output += color + ICONS["CPU"] + RESET_COLOR + " "
@@ -87,15 +89,30 @@ def cpu_pct(base_color, lerp_values):
     return output
 
 
-def load_avg():
-    try:
-        with open("/proc/loadavg", "r",) as f:
-            output = f.read().strip("\n")
-    except Exception as e:
-        print("%s" % e, file=sys.stderr)
-        output = "load error"
+def get_desktops():
+    all_desktops = shell_out(["bspc", "query", "-D"]).split("\n")
+    this_desktop = shell_out(["bspc", "query", "-D", "-d"])
+    print_desktops = RESET_COLOR
 
-    return output
+    # active = ACTIVE_DESKTOP_COLOR + " " + ICONS["ACTIVE_DESKTOP"] + " " + RESET_COLOR
+    # inactive = INACTIVE_DESKTOP_COLOR + " " + ICONS["INACTIVE_DESKTOPS"] + " " + RESET_COLOR
+
+    active = " ".join((ACTIVE_DESKTOP_COLOR, ICONS["ACTIVE_DESKTOP"], RESET_COLOR))
+    inactive = " ".join((INACTIVE_DESKTOP_COLOR, ICONS["INACTIVE_DESKTOPS"], RESET_COLOR))
+
+    # list comprehension lol
+    desktops = [0 if desktop != this_desktop else 1 for desktop in all_desktops]
+
+
+    for desktop in desktops:
+        # print(desktop, file=sys.stdout)
+        if desktop == 1:
+            print_desktops += active + " "
+        elif desktop == 0:
+            print_desktops += inactive + " "
+
+    return print_desktops
+
 
 
 def date_print():
@@ -113,13 +130,15 @@ def main():
 
     while True:
         # output = load_avg()
-        output = cpu_pct(BASE_COLOR, lerp_values)
-        output += " "
-        output += date_print()
+        output = " ".join((cpu_pct(BASE_COLOR, lerp_values),
+                           get_desktops(),
+                           date_print()))
+
         output += "\n"
+
         p.stdin.write(bytes(output, "ascii"))
         p.stdin.flush()
-        time.sleep(0.5)
+        time.sleep(0.45)
 
 
 if __name__ == "__main__":
