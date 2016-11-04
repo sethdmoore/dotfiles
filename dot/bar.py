@@ -4,6 +4,7 @@ from subprocess import Popen, PIPE
 import psutil
 import sys
 import time
+import signal
 # import datetime
 
 RESET_COLOR = "%{F-}%{B-}"
@@ -19,6 +20,26 @@ END_COLOR = (255,255,255)
 
 ACTIVE_DESKTOP_COLOR  = "%{B#0084AA}"
 INACTIVE_DESKTOP_COLOR  = "%{B#004488}" 
+
+
+class Bar(object):
+    def __init__(self, process_handle):
+        self.process_handle = process_handle
+        self.output = ""
+        self.lerp_values = init_color_lerp(BASE_COLOR, END_COLOR)
+
+
+    def redraw(self, *args):
+        # have to take *args because of the signal handler...
+
+        self.output = " ".join((cpu_pct(BASE_COLOR, self.lerp_values),
+                           get_desktops_new(),
+                           date_print()))
+
+        self.output += "\n"
+        self.process_handle.stdin.write(bytes(self.output, "ascii"))
+        self.process_handle.stdin.flush()
+
 
 
 def shell_out(cmd):
@@ -114,6 +135,33 @@ def get_desktops():
     return print_desktops
 
 
+def get_desktops_new():
+    all_desktops = shell_out(["bspc", "query", "-D"]).split("\n")
+    this_desktop = shell_out(["bspc", "query", "-D", "-d"])
+
+    print_desktops = RESET_COLOR
+
+    active = " ".join((ACTIVE_DESKTOP_COLOR, ICONS["ACTIVE_DESKTOP"], RESET_COLOR))
+    inactive = " ".join((INACTIVE_DESKTOP_COLOR, ICONS["INACTIVE_DESKTOPS"], RESET_COLOR))
+
+
+    for number, desktop in enumerate(all_desktops):
+        # print(desktop, file=sys.stderr)
+        desktop_number = number + 1
+
+        # we signal our own program with USR1 to update the bar instantly
+        link = "%%{A:bspc desktop ^%s -f; pkill --signal USR1 -xf 'python3 ./bar.py':}" % desktop_number
+        end_link = "%{A}"
+
+        if desktop == this_desktop:
+            print_desktops += active + " "
+        else:
+            print_desktops += link + inactive + end_link + " "
+            # print_desktops += inactive + " "
+
+    return print_desktops
+
+
 
 def date_print():
     date_str = "%{r}"
@@ -123,22 +171,15 @@ def date_print():
 
 
 def main():
-    # p = Popen(["lemonbar"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    lerp_values = init_color_lerp(BASE_COLOR, END_COLOR)
+    p = Popen(["lemonbar", "-n", "lemonbar"], stdin=PIPE)
 
-    p = Popen(["lemonbar"], stdin=PIPE)
+    bar = Bar(p)
+
+    signal.signal(signal.SIGUSR1, bar.redraw)
 
     while True:
-        # output = load_avg()
-        output = " ".join((cpu_pct(BASE_COLOR, lerp_values),
-                           get_desktops(),
-                           date_print()))
-
-        output += "\n"
-
-        p.stdin.write(bytes(output, "ascii"))
-        p.stdin.flush()
-        time.sleep(0.45)
+        bar.redraw()
+        time.sleep(1)
 
 
 if __name__ == "__main__":
