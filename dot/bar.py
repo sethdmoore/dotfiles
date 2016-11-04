@@ -33,7 +33,7 @@ class Bar(object):
         # have to take *args because of the signal handler...
 
         self.output = " ".join((cpu_pct(BASE_COLOR, self.lerp_values),
-                           get_desktops_new(),
+                           get_desktops(),
                            date_print()))
 
         self.output += "\n"
@@ -111,31 +111,6 @@ def cpu_pct(base_color, lerp_values):
 
 
 def get_desktops():
-    all_desktops = shell_out(["bspc", "query", "-D"]).split("\n")
-    this_desktop = shell_out(["bspc", "query", "-D", "-d"])
-    print_desktops = RESET_COLOR
-
-    # active = ACTIVE_DESKTOP_COLOR + " " + ICONS["ACTIVE_DESKTOP"] + " " + RESET_COLOR
-    # inactive = INACTIVE_DESKTOP_COLOR + " " + ICONS["INACTIVE_DESKTOPS"] + " " + RESET_COLOR
-
-    active = " ".join((ACTIVE_DESKTOP_COLOR, ICONS["ACTIVE_DESKTOP"], RESET_COLOR))
-    inactive = " ".join((INACTIVE_DESKTOP_COLOR, ICONS["INACTIVE_DESKTOPS"], RESET_COLOR))
-
-    # list comprehension lol
-    desktops = [0 if desktop != this_desktop else 1 for desktop in all_desktops]
-
-
-    for desktop in desktops:
-        # print(desktop, file=sys.stdout)
-        if desktop == 1:
-            print_desktops += active + " "
-        elif desktop == 0:
-            print_desktops += inactive + " "
-
-    return print_desktops
-
-
-def get_desktops_new():
     all_desktops = shell_out(["bspc", "query", "-D"]).split("\n")
     this_desktop = shell_out(["bspc", "query", "-D", "-d"])
 
