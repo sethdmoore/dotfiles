@@ -7,8 +7,6 @@ import os
 import time
 import signal
 
-# import datetime
-
 RESET_COLOR = "%{F-}%{B-}"
 
 ICONS = {
@@ -33,8 +31,6 @@ class Bar(object):
 
     def redraw(self, *args):
         # have to take *args because of the signal handler...
-
-        # print(str(self.pid), file=sys.stdout)
 
         self.output = " ".join((cpu_pct(BASE_COLOR, self.lerp_values),
                                 get_desktops(self.pid),
@@ -68,12 +64,10 @@ def shell_out(cmd):
 
 def init_color_lerp(start_c, end_c):
     r, g, b = start_c
-    # re, ge, be = end_c
     result = ()
 
     for idx, color in enumerate(start_c):
         result_value = (end_c[idx] - color) / 100
-        # print(result_value, sys.stdout)
         result += (result_value,)
 
     return result
@@ -108,7 +102,6 @@ def cpu_pct(base_color, lerp_values):
     for core_num, color in sorted(cpu_stat.items()):
         output += color + ICONS["CPU"] + RESET_COLOR + " "
 
-    # return " ".join(str(cpu) for cpu in cpus)
     return output
 
 
