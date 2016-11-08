@@ -1,3 +1,5 @@
+export PATH="~/bin:$PATH"
+
 export KERNEL="$(uname -s)"
 
 autoload -U colors && colors
