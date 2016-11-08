@@ -1,0 +1,46 @@
+#!/bin/sh
+
+set_cpu_gov() {
+	core=$1
+	governor=$2
+	target_path="/sys/devices/system/cpu/cpu$core/cpufreq/scaling_governor"
+	echo $governor > $target_path
+	printf -- 'cpu %s: %s\n' $core $(cat $target_path)
+
+}
+
+
+set_min_freq() {
+	core=$1
+	freq=$2
+	target_path="/sys/devices/system/cpu/cpu$core/cpufreq/scaling_min_freq"
+	echo $freq > $target_path
+	printf -- 'cpu %s set to %sMhz\n' $core $(cat $target_path)
+}
+
+
+set_params() {
+	core=$1
+	governor=$2
+	freq=$3
+	set_min_freq $core $freq
+	set_cpu_gov $core $governor
+}
+
+
+main() {
+	state=$1
+	if [ "$state" = "perf" ]; then
+		cpu_freq=4700000
+		governor='performance'
+	elif [ "$state" = "save" ]; then
+		cpu_freq=8000
+		governor='powersave'
+	fi
+
+	for core in {0..7}; do
+		set_params $core $governor $cpu_freq
+	done
+}
+
+main $*
