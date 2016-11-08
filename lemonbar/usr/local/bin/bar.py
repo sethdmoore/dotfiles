@@ -10,16 +10,21 @@ import signal
 RESET_COLOR = "%{F-}%{B-}"
 
 ICONS = {
-    "CPU": " ",
-    "INACTIVE_DESKTOPS": "%{F#002244}o%{F-}",
-    "ACTIVE_DESKTOP":    "%{F#FFFFFF}x%{F-}"
+    "CPU": u'\uF0A3',
+    "DESKTOP_GENERIC": u'\uF07B',
+    "DESKTOP1": u'\uF0AC',
+    "DESKTOP2": u'\uF075',
+    "DESKTOP3": u'\uF08E',
+    "DESKTOP4": u'\uF085',
+    "DESKTOP5": u'\uF0C3',
+    "DESKTOP6": u'\uF0C2',
 }
 
 BASE_COLOR = (00, 84, 160)
 END_COLOR = (255, 255, 255)
 
-ACTIVE_DESKTOP_COLOR = "%{B#0084AA}"
-INACTIVE_DESKTOP_COLOR = "%{B#004488}"
+ACTIVE_DESKTOP_COLOR = "%{F#0084AA}"
+INACTIVE_DESKTOP_COLOR = "%{F#004488}"
 
 
 class Bar(object):
@@ -32,12 +37,13 @@ class Bar(object):
     def redraw(self, *args):
         # have to take *args because of the signal handler...
 
-        self.output = " ".join((cpu_pct(BASE_COLOR, self.lerp_values),
+        self.output = "  ".join((cpu_pct(BASE_COLOR, self.lerp_values),
                                 get_desktops(self.pid),
                                 date_print()))
 
         self.output += "\n"
-        self.process_handle.stdin.write(bytes(self.output, "ascii"))
+        # self.process_handle.stdin.write(bytes(self.output, "ascii"))
+        self.process_handle.stdin.write(bytes(self.output, "utf-8"))
         self.process_handle.stdin.flush()
 
 
@@ -96,7 +102,7 @@ def cpu_pct(base_color, lerp_values):
             g = hex_limit(int(green + (percent * gl)))
             b = hex_limit(int(blue + (percent * bl)))
 
-            cpu_stat[core_num] = "%%{B#%02X%02X%02X}" % (r, g, b)
+            cpu_stat[core_num] = "%%{F#%02X%02X%02X}" % (r, g, b)
 
     # sort this back out so the cores don't come out in random order
     for core_num, color in sorted(cpu_stat.items()):
@@ -111,14 +117,22 @@ def get_desktops(pid):
 
     print_desktops = RESET_COLOR
 
-    active = " ".join((ACTIVE_DESKTOP_COLOR,
-                      ICONS["ACTIVE_DESKTOP"], RESET_COLOR))
-    inactive = " ".join((INACTIVE_DESKTOP_COLOR,
-                         ICONS["INACTIVE_DESKTOPS"], RESET_COLOR))
 
     for number, desktop in enumerate(all_desktops):
         # print(desktop, file=sys.stderr)
         desktop_number = number + 1
+
+        icon_key = "DESKTOP%s" % desktop_number
+
+        if icon_key not in ICONS:
+            icon_key = "DESKTOP_GENERIC"
+
+        icon = ICONS[icon_key]
+
+        active = " ".join((ACTIVE_DESKTOP_COLOR,
+                           icon, RESET_COLOR))
+        inactive = " ".join((INACTIVE_DESKTOP_COLOR,
+                             icon, RESET_COLOR))
 
         # we signal our own program with USR1 to update the bar instantly
         link = "%%{A:bspc desktop ^%s -f; kill -USR1 %s:}" \
@@ -161,14 +175,14 @@ def write_pid(pid):
 
 def main():
     pid = os.getpid()
-    p = Popen(["lemonbar", "-n", "lemonbar"], stdin=PIPE)
-    # s = Popen("sh", shell=True, stdin=p.stdout)
+    lemonbar_bin = ["lemonbar", "-n", "lemonbar"]
+    lemonbar_bin += ["-f", "fontawesome-webfont:size=14"]
+
+    p = Popen(lemonbar_bin, stdin=PIPE)
 
     write_pid(pid)
 
     bar = Bar(p, pid)
-    # print(str(bar.pid), file=sys.stderr)
-    # sys.exit(0)
 
     signal.signal(signal.SIGUSR1, bar.redraw)
 
