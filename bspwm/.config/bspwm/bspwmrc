@@ -7,7 +7,8 @@ systemctl --user start synergy.service
 bspc config border_width         2
 bspc config window_gap          12
 
-bspc config -m focused top_padding "$HEIGHT"
+bspc config top_padding "$HEIGHT"
+bspc config window_gap 20
 
 bspc config split_ratio           0.52
 bspc config borderless_monocle    true
