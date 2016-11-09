@@ -10,7 +10,9 @@ import signal
 RESET_COLOR = "%{F-}%{B-}"
 
 ICONS = {
-    "CPU": u'\uF0A3',
+    # "CPU": u'\uF0A3',
+    "CPU": u'\uF054',
+    "CALENDAR": u'\uF073',
     "DESKTOP_GENERIC": u'\uF07B',
     "DESKTOP1": u'\uF0AC',
     "DESKTOP2": u'\uF075',
@@ -33,6 +35,8 @@ class Bar(object):
         self.output = ""
         self.lerp_values = init_color_lerp(BASE_COLOR, END_COLOR)
         self.pid = pid
+        self.pidfile = ""
+
 
     def redraw(self, *args):
         # have to take *args because of the signal handler...
@@ -45,6 +49,37 @@ class Bar(object):
         # self.process_handle.stdin.write(bytes(self.output, "ascii"))
         self.process_handle.stdin.write(bytes(self.output, "utf-8"))
         self.process_handle.stdin.flush()
+
+
+    def write_pid(self):
+        temp_dir = "/".join((os.getenv("XDG_RUNTIME_DIR"), "lemonbar"))
+        pidfile = "bar.py"
+        self.pidfile = "/".join((temp_dir, pidfile))
+        print(self.pidfile, sys.stderr)
+    
+        try:
+            os.mkdir(temp_dir)
+        except FileExistsError as e:
+            pass
+        except Exception as e:
+            print("Unspecified error writing to $XDG_RUNTIME_DIR: %s" % e,
+                  file=sys.stderr)
+    
+        with open(self.pidfile, 'w') as f:
+            f.write(str(self.pid))
+
+
+    def del_pid(self):
+        try:
+            os.remove(self.pidfile)
+        except OSError as e:
+            print("Test: %s" % e, file=sys.stderr)
+
+
+    def exit(self, *args):
+        self.del_pid()
+        sys.exit(0)
+
 
 
 def shell_out(cmd):
@@ -152,39 +187,28 @@ def get_desktops(pid):
 
 def date_print():
     date_str = "%{r}"
+    date_str += INACTIVE_DESKTOP_COLOR
+    date_str += ICONS["CALENDAR"] + ACTIVE_DESKTOP_COLOR + "  "
     date_str += time.strftime("%c")
     date_str += "   "
     return date_str
 
-
-def write_pid(pid):
-    temp_dir = "/".join((os.getenv("XDG_RUNTIME_DIR"), "lemonbar"))
-    pidfile = "bar.py"
-
-    try:
-        os.mkdir(temp_dir)
-    except FileExistsError as e:
-        pass
-    except Exception as e:
-        print("Unspecified error writing to $XDG_RUNTIME_DIR: %s" % e,
-              file=sys.stderr)
-
-    with open("/".join((temp_dir, pidfile)), 'w') as f:
-        f.write(str(pid))
 
 
 def main():
     pid = os.getpid()
     lemonbar_bin = ["lemonbar", "-n", "lemonbar"]
     lemonbar_bin += ["-f", "fontawesome-webfont:size=14"]
+    lemonbar_bin += ["-f", "lato-regular:size=14"]
 
     p = Popen(lemonbar_bin, stdin=PIPE)
 
-    write_pid(pid)
-
     bar = Bar(p, pid)
+    bar.write_pid()
 
     signal.signal(signal.SIGUSR1, bar.redraw)
+    signal.signal(signal.SIGINT, bar.exit)
+
 
     while True:
         bar.redraw()
