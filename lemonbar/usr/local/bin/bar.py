@@ -76,10 +76,9 @@ class Bar(object):
             print("Test: %s" % e, file=sys.stderr)
 
 
-    def exit(self, *args):
+    def quit(self, *args):
         self.del_pid()
         sys.exit(0)
-
 
 
 def shell_out(cmd):
@@ -127,6 +126,7 @@ def cpu_pct(base_color, lerp_values):
     cpu_stat = {}
 
     red, green, blue = base_color
+    # red, green, blue lerp values
     rl, gl, bl = lerp_values
 
     cpus = psutil.cpu_percent(percpu=True)
@@ -141,7 +141,8 @@ def cpu_pct(base_color, lerp_values):
 
     # sort this back out so the cores don't come out in random order
     for core_num, color in sorted(cpu_stat.items()):
-        output += color + ICONS["CPU"] + RESET_COLOR + " "
+        # output += color + ICONS["CPU"] + RESET_COLOR + " "
+        output += color + ICONS["CPU"] + RESET_COLOR
 
     return output
 
@@ -180,7 +181,6 @@ def get_desktops(pid):
             print_desktops += active + " "
         else:
             print_desktops += link + inactive + end_link + " "
-            # print_desktops += inactive + " "
 
     return print_desktops
 
@@ -207,7 +207,7 @@ def main():
     bar.write_pid()
 
     signal.signal(signal.SIGUSR1, bar.redraw)
-    signal.signal(signal.SIGINT, bar.exit)
+    signal.signal(signal.SIGINT, bar.quit)
 
 
     while True:
