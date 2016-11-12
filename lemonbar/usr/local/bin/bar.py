@@ -43,7 +43,8 @@ class Bar(object):
 
         self.output = "  ".join((cpu_pct(BASE_COLOR, self.lerp_values),
                                 get_desktops(self.pid),
-                                date_print()))
+                                date_print(),
+                                get_utils()))
 
         self.output += "\n"
         # self.process_handle.stdin.write(bytes(self.output, "ascii"))
@@ -145,6 +146,11 @@ def cpu_pct(base_color, lerp_values):
         output += color + ICONS["CPU"] + RESET_COLOR
 
     return output
+
+
+def get_utils():
+    return_str = "%{A:urxvt &:}" + ICONS["DESKTOP_GENERIC"] + "%{A}" + "  "
+    return return_str
 
 
 def get_desktops(pid):
