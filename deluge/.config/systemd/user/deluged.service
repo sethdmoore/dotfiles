@@ -3,9 +3,7 @@ Description=deluged
 After=display-manager.service
 
 [Service]
-ExecStart=/usr/bin/deluged
-# no encryption
-# ExecStart=/usr/bin/synergyc --no-daemon --restart seth-pc.home
+ExecStart=/usr/bin/deluged -d
 Restart=on-failure
 
 [Install]
