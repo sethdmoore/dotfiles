@@ -1,0 +1,12 @@
+[Unit]
+Description=deluged 
+After=display-manager.service
+
+[Service]
+ExecStart=/usr/bin/deluged
+# no encryption
+# ExecStart=/usr/bin/synergyc --no-daemon --restart seth-pc.home
+Restart=on-failure
+
+[Install]
+WantedBy=graphical.target
