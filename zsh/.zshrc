@@ -107,6 +107,9 @@ if [ "$KERNEL" = "Darwin" ]; then
     MY_DOT_FILES+=(".rbenv_env" ".travis/travis.sh" ".dockerenv")
     # export PATH="${PATH}:/usr/local/sbin"
     append_path "/usr/local/sbin"
+elif [ "$KERNEL" = "Linux" ]; then
+    # connect to the ssh-agent sock
+    export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 fi
 
 # golang tools
@@ -132,7 +135,6 @@ if [ -n "${SSH_CLIENT}" ]; then
 elif [ "$KERNEL" = "Linux" ] && [ -z "$DISPLAY" ]; then
     # insert timestamp
     export PS1="%* %n ${PS1}"
-# start tmux by default
 else
     # insert timestamp
     export PS1="%* %n ${PS1}"

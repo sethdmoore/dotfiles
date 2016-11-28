@@ -37,6 +37,10 @@ function update_pathogen() {
     done
 }
 
+function pacman-clean() {
+    sudo pacman -Rsn $(pacman -Qdtq)
+}
+
 function bannertime() {
     defaults write com.apple.notificationcenterui bannerTime $@
 }

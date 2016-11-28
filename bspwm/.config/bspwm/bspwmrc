@@ -3,6 +3,7 @@
 HEIGHT=10
 
 systemctl --user start synergy.service
+bspc monitor -d I II III IV V VI
 
 bspc config border_width         2
 bspc config window_gap          12
@@ -13,11 +14,27 @@ bspc config window_gap 20
 bspc config split_ratio           0.52
 bspc config borderless_monocle    true
 bspc config gapless_monocle       true
-bspc config focus_by_distance     true
-bspc config history_aware_focus   true
+# bspc config focus_by_distance     true
+# bspc config history_aware_focus   true
 bspc config focus_follows_pointer true
 
-bspc monitor -a I II III IV V
+DELUGE_PROC=$(pgrep -xf '/usr/bin/python2 /usr/bin/deluge')
+
+# deluge
+bspc rule -a Deluge -o desktop=^6
+
+systemctl --user start deluged
+if [ -z "$DELUGE_PROC" ]; then
+  nohup deluge  > /dev/null 2>&1 &
+fi
+
+# firestorm
+bspc rule -a do-not-directly-run-firestorm-bin -o desktop=^3
+
+# classname:instance_name
+# fetch with $ bspc query -n @focused:/ -T | json_pp | less 
+bspc rule -a Chromium:crx_knipolnnllmklapflnccelgolnpehhpl -o desktop=^2
+bspc rule -a TelegramDesktop -o desktop=^2
 
 # bspc rule -a Gimp desktop=^8 state=floating follow=on
 # bspc rule -a Chromium desktop=^2
