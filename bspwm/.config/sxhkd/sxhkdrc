@@ -15,7 +15,7 @@ super + e
 
 # program launcher
 super + space
-	dmenu_run -y 25 -lh 30
+	dmenu_run -fn lato:size=13 -x 50 -w 700 -y 50 -lh 50
 
 # make sxhkd reload its configuration files:
 super + Escape
