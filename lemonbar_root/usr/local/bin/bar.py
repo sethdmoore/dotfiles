@@ -6,6 +6,11 @@ import sys
 import os
 import time
 import signal
+import json
+
+
+import pdb # remove
+
 
 RESET_COLOR = "%{F-}%{B-}"
 
@@ -27,6 +32,8 @@ END_COLOR = (255, 255, 255)
 
 ACTIVE_DESKTOP_COLOR = "%{F#0084AA}"
 INACTIVE_DESKTOP_COLOR = "%{F#004488}"
+# bspc query -T -m DVI-I-2
+MONITORS = ["DVI-I-3", "DVI-I-2"]
 
 
 class Bar(object):
@@ -154,39 +161,60 @@ def get_utils():
 
 
 def get_desktops(pid):
-    all_desktops = shell_out(["bspc", "query", "-D"]).split("\n")
-    this_desktop = shell_out(["bspc", "query", "-D", "-d"])
+    # bspc query -T -m DVI-I-2
+    all_desktops = []
+    active_desktops = []
+    for idx, monitor in enumerate(MONITORS):
+        json_blob = shell_out(["bspc", "query", "-T", "-m", monitor])
+
+        try:
+            json_blob = json.loads(json_blob)
+        except Exception as e:
+            print("Could not decode [bspc query -T -m " +
+                  monitor + "] %s" % e, file=sys.stderr)
+        all_desktops.append(json_blob['desktops'])
+        active_desktops.append(json_blob['focusedDesktopId'])
+
+        # active_desktops[monitor] = shell_out(["bspc", "query", "-T", "-d"])
 
     print_desktops = RESET_COLOR
 
 
-    for number, desktop in enumerate(all_desktops):
+    for monitor_num, monitor in enumerate(all_desktops):
         # print(desktop, file=sys.stderr)
-        desktop_number = number + 1
+        print_desktops += INACTIVE_DESKTOP_COLOR + "[ " + RESET_COLOR
+        for idx, desktops in enumerate(monitor):
+            # pdb.set_trace()
 
-        icon_key = "DESKTOP%s" % desktop_number
+            desktop_id = desktops['id']
 
-        if icon_key not in ICONS:
-            icon_key = "DESKTOP_GENERIC"
+            desktop_number = desktops['name']
 
-        icon = ICONS[icon_key]
+            icon_key = "DESKTOP%s" % desktop_number
 
-        active = " ".join((ACTIVE_DESKTOP_COLOR,
-                           icon, RESET_COLOR))
-        inactive = " ".join((INACTIVE_DESKTOP_COLOR,
-                             icon, RESET_COLOR))
+            if icon_key not in ICONS:
+                icon_key = "DESKTOP_GENERIC"
 
-        # we signal our own program with USR1 to update the bar instantly
-        link = "%%{A:bspc desktop ^%s -f; kill -USR1 %s:}" \
-            % (desktop_number, pid)
+            icon = ICONS[icon_key]
 
-        # print(link, file=sys.stderr)
-        end_link = "%{A}"
+            active = " ".join((ACTIVE_DESKTOP_COLOR,
+                               icon, RESET_COLOR))
+            inactive = " ".join((INACTIVE_DESKTOP_COLOR,
+                                 icon, RESET_COLOR))
 
-        if desktop == this_desktop:
-            print_desktops += active + " "
-        else:
-            print_desktops += link + inactive + end_link + " "
+            # pdb.set_trace()
+            # we signal our own program with USR1 to update the bar instantly
+            link = "%%{A:bspc desktop ^%s -f; kill -USR1 %s:}" \
+                % (desktop_number, pid)
+
+            # print(link, file=sys.stderr)
+            end_link = "%{A}"
+
+            if desktop_id == active_desktops[monitor_num]:
+                print_desktops += active + " "
+            else:
+                print_desktops += link + inactive + end_link + " "
+        print_desktops += INACTIVE_DESKTOP_COLOR +  " ] " + RESET_COLOR
 
     return print_desktops
 
