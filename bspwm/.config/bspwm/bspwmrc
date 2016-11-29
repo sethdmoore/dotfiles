@@ -1,9 +1,21 @@
 #! /bin/sh
+local HEIGHT MONITORS
 
 HEIGHT=10
 
 systemctl --user start synergy.service
-bspc monitor -d I II III IV V VI
+
+MONITORS=$(xrandr -q | grep " connected " | wc -l)
+
+if [ "$MONITORS" -eq 2 ]; then
+  # DVI-I-3 = 1920x1200 | DVI-I-2 == 1600X900
+  # bspc monitor DVI-I-3 -d I II III
+  # bspc monitor DVI-I-2 -d IV V VI
+  bspc monitor DVI-I-3 -d 1 2 3
+  bspc monitor DVI-I-2 -d 4 5 6
+elif [ "$MONITORS" -eq 1 ]; then
+  bspc monitor DVI-I-2 -d 1 2 3 4 5 6
+fi
 
 bspc config border_width         2
 bspc config window_gap          12
