@@ -8,6 +8,7 @@ autoload -Uz compinit && compinit
 
 bindkey -v
 bindkey '^R' history-incremental-search-backward
+bindkey -v '^?' backward-delete-char
 
 # export PS1="%~ %(?.%{$fg[blue]%}╠►.%{$fg[red]%}╠►) %{$reset_color%}"
 export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
