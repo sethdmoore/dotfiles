@@ -1,9 +1,4 @@
 #
-# wm independent hotkeys
-#
-
-
-#
 # Program specific bindings
 #
 
@@ -14,8 +9,17 @@ super + e
 	chromium &
 
 # program launcher
+# super + space
+# 	dmenu_run -fn lato:size=13 -x 50 -w 700 -y 50 -lh 50
+
 super + space
-	dmenu_run -fn lato:size=13 -x 50 -w 700 -y 50 -lh 50
+	rofi -xoffset 10 \
+         -yoffset 25 \
+         -width 25 \
+         -lines 4 \
+         -location 1 \
+         -font "Lato Regular 14" \
+         -show run
 
 # make sxhkd reload its configuration files:
 super + Escape

@@ -9,9 +9,6 @@ import signal
 import json
 
 
-import pdb # remove
-
-
 RESET_COLOR = "%{F-}%{B-}"
 
 ICONS = {
@@ -20,9 +17,9 @@ ICONS = {
     "CALENDAR": u'\uF073',
     "DESKTOP_GENERIC": u'\uF07B',
     "DESKTOP1": u'\uF0AC',
-    "DESKTOP2": u'\uF075',
+    "DESKTOP2": u'\uF085',
     "DESKTOP3": u'\uF08E',
-    "DESKTOP4": u'\uF085',
+    "DESKTOP4": u'\uF075',
     "DESKTOP5": u'\uF0C3',
     "DESKTOP6": u'\uF0C2',
 }
@@ -184,8 +181,6 @@ def get_desktops(pid):
         # print(desktop, file=sys.stderr)
         print_desktops += INACTIVE_DESKTOP_COLOR + "[ " + RESET_COLOR
         for idx, desktops in enumerate(monitor):
-            # pdb.set_trace()
-
             desktop_id = desktops['id']
 
             desktop_number = desktops['name']
@@ -202,19 +197,17 @@ def get_desktops(pid):
             inactive = " ".join((INACTIVE_DESKTOP_COLOR,
                                  icon, RESET_COLOR))
 
-            # pdb.set_trace()
             # we signal our own program with USR1 to update the bar instantly
             link = "%%{A:bspc desktop ^%s -f; kill -USR1 %s:}" \
                 % (desktop_number, pid)
 
-            # print(link, file=sys.stderr)
             end_link = "%{A}"
 
             if desktop_id == active_desktops[monitor_num]:
                 print_desktops += active + " "
             else:
                 print_desktops += link + inactive + end_link + " "
-        print_desktops += INACTIVE_DESKTOP_COLOR +  " ] " + RESET_COLOR
+        print_desktops += INACTIVE_DESKTOP_COLOR +  "] " + RESET_COLOR
 
     return print_desktops
 
@@ -226,7 +219,6 @@ def date_print():
     date_str += time.strftime("%c")
     date_str += "   "
     return date_str
-
 
 
 def main():

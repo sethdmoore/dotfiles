@@ -27,5 +27,20 @@ singlehead() {
 # 
 # }
 
-singlehead
-virsh start win10
+main() {
+  local arg
+  arg=$1
+  if [ "$arg" = "start" ]; then
+    singlehead
+    virsh start win10
+  elif [ "$arg" = "single" ]; then
+    singlehead
+    sleep 2
+    source ~/.config/bspwm/bspwmrc
+  elif [ "$arg" = "multi" ]; then
+    multihead
+    source ~/.config/bspwm/bspwmrc
+  fi
+}
+
+main $@

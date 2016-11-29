@@ -38,6 +38,27 @@
 #define base0E #6b6bb8
 #define base0F #b72dd2
 
+! human-friendly colors
+# define white #ffffff
+!!! grayscale
+# define gray0  base00
+# define gray1  base01
+# define gray2  base02
+# define gray3  base03
+# define gray4  base04
+# define gray5  base05
+# define gray6  base06
+# define gray7  base07
+!!! extra colors
+#define yellow  base0A
+#define orange  base09
+#define red     base08
+#define magenta base0F
+#define violet  base0E
+#define blue    base0D
+#define cyan    base0C
+#define green   base0B
+
 *.foreground:   base05
 *.background:   base00
 *.cursorColor:  base05
@@ -67,3 +88,9 @@ URxvt.scrollstyle: rxvt
 URxvt.perl-ext-common: default,matcher
 URxvt.url-launcher: /usr/bin/xdg-open
 URxvt.matcher.button: 1
+
+! rofi.color-normal: gray1,blue,gray1,blue,white
+! activebg, text, pinstripe1, potentialprog bg, potentialprog fg
+rofi.color-normal: gray0,blue,gray1,blue,white
+rofi.color-window: gray0, gray0
+rofi.color-active: gray0, gray1
