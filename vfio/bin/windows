@@ -35,11 +35,10 @@ main() {
     virsh start win10
   elif [ "$arg" = "single" ]; then
     singlehead
-    sleep 2
-    source ~/.config/bspwm/bspwmrc
+    sh ~/.config/bspwm/bspwmrc
   elif [ "$arg" = "multi" ]; then
     multihead
-    source ~/.config/bspwm/bspwmrc
+    sh ~/.config/bspwm/bspwmrc
   fi
 }
 
