@@ -1,7 +1,8 @@
 #! /bin/sh
-local HEIGHT MONITORS
+# local HEIGHT MONITORS
 
 HEIGHT=10
+LEMONBAR_PID="$XDG_RUNTIME_DIR/lemonbar/bar.py"
 
 systemctl --user start synergy.service
 
@@ -15,9 +16,11 @@ if [ "$MONITORS" -eq 2 ]; then
   bspc monitor DVI-I-2 -d 4 5 6
 elif [ "$MONITORS" -eq 1 ]; then
   # bspc monitor DVI-I-3 -r
-  echo 'yes'
+  bspc monitor DVI-I-3 -r
   bspc monitor DVI-I-2 -d 1 2 3 4 5 6
 fi
+
+xargs kill -USR2 < $LEMONBAR_PID
 
 bspc config border_width         2
 bspc config window_gap          12
@@ -47,7 +50,7 @@ fi
 bspc rule -a do-not-directly-run-firestorm-bin -o desktop=^3
 
 # classname:instance_name
-# fetch with $ bspc query -n @focused:/ -T | json_pp | less 
+# fetch with $ bspc query -n @focused:/ -T | json_pp | less
 bspc rule -a Chromium:crx_knipolnnllmklapflnccelgolnpehhpl -o desktop=^4
 bspc rule -a TelegramDesktop -o desktop=^4
 
