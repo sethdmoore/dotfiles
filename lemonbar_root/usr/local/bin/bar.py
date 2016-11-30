@@ -30,7 +30,12 @@ END_COLOR = (255, 255, 255)
 ACTIVE_DESKTOP_COLOR = "%{F#0084AA}"
 INACTIVE_DESKTOP_COLOR = "%{F#004488}"
 # bspc query -T -m DVI-I-2
-MONITORS = ["DVI-I-3", "DVI-I-2"]
+
+MONITOR_SORT = ["DVI-I-3", "DVI-I-2"]
+
+LEMONBAR_BIN = ["lemonbar", "-n", "lemonbar"]
+LEMONBAR_BIN += ["-f", "fontawesome-webfont:size=14"]
+LEMONBAR_BIN += ["-f", "lato-regular:size=14"]
 
 
 class Bar(object):
@@ -40,13 +45,17 @@ class Bar(object):
         self.lerp_values = init_color_lerp(BASE_COLOR, END_COLOR)
         self.pid = pid
         self.pidfile = ""
+        self.monitors = get_monitors()
 
 
     def redraw(self, *args):
         # have to take *args because of the signal handler...
 
-        self.output = "  ".join((cpu_pct(BASE_COLOR, self.lerp_values),
-                                get_desktops(self.pid),
+        self.monitors = get_monitors()
+
+        self.output = "  ".join((command_format(len(self.monitors)),
+                                cpu_pct(BASE_COLOR, self.lerp_values),
+                                get_desktops(self.monitors, self.pid),
                                 date_print(),
                                 get_utils()))
 
@@ -56,12 +65,21 @@ class Bar(object):
         self.process_handle.stdin.flush()
 
 
+    def restart(self, *args):
+        # this is the only way to close a file handle cleanly
+        _, _ = self.process_handle.communicate()
+
+        p = Popen(LEMONBAR_BIN, stdin=PIPE)
+        self.process_handle = p
+        self.redraw()
+
+
     def write_pid(self):
         temp_dir = "/".join((os.getenv("XDG_RUNTIME_DIR"), "lemonbar"))
         pidfile = "bar.py"
         self.pidfile = "/".join((temp_dir, pidfile))
         print(self.pidfile, sys.stderr)
-    
+
         try:
             os.mkdir(temp_dir)
         except FileExistsError as e:
@@ -69,7 +87,7 @@ class Bar(object):
         except Exception as e:
             print("Unspecified error writing to $XDG_RUNTIME_DIR: %s" % e,
                   file=sys.stderr)
-    
+
         with open(self.pidfile, 'w') as f:
             f.write(str(self.pid))
 
@@ -84,6 +102,13 @@ class Bar(object):
     def quit(self, *args):
         self.del_pid()
         sys.exit(0)
+
+
+def command_format(monitor_count):
+    if monitor_count == 2:
+        return "%{Sl}"
+    else:
+        return "%{S0}"
 
 
 def shell_out(cmd):
@@ -157,11 +182,11 @@ def get_utils():
     return return_str
 
 
-def get_desktops(pid):
+def get_desktops(monitors, pid):
     # bspc query -T -m DVI-I-2
     all_desktops = []
     active_desktops = []
-    for idx, monitor in enumerate(MONITORS):
+    for idx, monitor in enumerate(monitors):
         json_blob = shell_out(["bspc", "query", "-T", "-m", monitor])
 
         try:
@@ -169,7 +194,8 @@ def get_desktops(pid):
         except Exception as e:
             print("Could not decode [bspc query -T -m " +
                   monitor + "] %s" % e, file=sys.stderr)
-        all_desktops.append(json_blob['desktops'])
+        if 'desktops' in json_blob:
+            all_desktops.append(json_blob['desktops'])
         active_desktops.append(json_blob['focusedDesktopId'])
 
         # active_desktops[monitor] = shell_out(["bspc", "query", "-T", "-d"])
@@ -212,6 +238,41 @@ def get_desktops(pid):
     return print_desktops
 
 
+def get_monitors():
+    out = shell_out(["xrandr", "-q"])
+    out = out.split("\n")
+    unsorted_monitors = []
+    monitors = []
+    for idx, line in enumerate(out):
+        display = ""
+        if "*" in line:
+            try:
+                display = out[idx-1]
+            except Exception as e:
+                print("Could not reliably determine monitors", file=sys.stderr)
+            unsorted_monitors.append(display.split(" ")[0])
+
+
+    for monitor in MONITOR_SORT:
+        try:
+            idx = unsorted_monitors.index(monitor)
+            monitors.append(unsorted_monitors[idx])
+        # this should only occur if your MONITOR_SORT is invalid
+        except Exception as e:
+            pass
+
+    # failsafe
+    if len(monitors) == 0:
+        monitors = unsorted_monitors
+
+    # validation
+    if len(monitors) > 0:
+        return monitors
+    else:
+        print("No monitors detected!", file=sys.stderr)
+        sys.exit(2)
+
+
 def date_print():
     date_str = "%{r}"
     date_str += INACTIVE_DESKTOP_COLOR
@@ -223,16 +284,14 @@ def date_print():
 
 def main():
     pid = os.getpid()
-    lemonbar_bin = ["lemonbar", "-n", "lemonbar"]
-    lemonbar_bin += ["-f", "fontawesome-webfont:size=14"]
-    lemonbar_bin += ["-f", "lato-regular:size=14"]
 
-    p = Popen(lemonbar_bin, stdin=PIPE)
+    p = Popen(LEMONBAR_BIN, stdin=PIPE)
 
     bar = Bar(p, pid)
     bar.write_pid()
 
     signal.signal(signal.SIGUSR1, bar.redraw)
+    signal.signal(signal.SIGUSR2, bar.restart)
     signal.signal(signal.SIGINT, bar.quit)
 
 
