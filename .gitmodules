@@ -19,3 +19,6 @@
 [submodule "vim/.vim/pack/vim/.vim/pack/start/vim-better-whitespace"]
 	path = vim/.vim/pack/plugins/start/vim-better-whitespace
 	url = https://github.com/ntpeters/vim-better-whitespace
+[submodule "vim/.vim/pack/plugins/start/vim-markdown"]
+	path = vim/.vim/pack/plugins/start/vim-markdown
+	url = https://github.com/plasticboy/vim-markdown
