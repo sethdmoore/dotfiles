@@ -2,33 +2,9 @@
 
 export QEMU_AUDIO_DRV=pa
 
-multihead() {
-  xrandr --output DVI-I-3 \
-    --auto \
-    --left-of DVI-I-2 \
-    --output DVI-I-2 \
-    --auto \
-    --primary
-    sh ~/.config/bspwm/bspwmrc
-}
-
-singlehead() {
-  xrandr --output DVI-I-3 \
-    --off
-    sh ~/.config/bspwm/bspwmrc
-}
-
 main() {
-  local arg
-  arg=$1
-  if [ "$arg" = "start" ]; then
-    singlehead
-    virsh start win10
-  elif [ "$arg" = "single" ]; then
-    singlehead
-  elif [ "$arg" = "multi" ]; then
-    multihead
-  fi
+  monitorctl single
+  sudo virsh start win10
 }
 
 main $@
