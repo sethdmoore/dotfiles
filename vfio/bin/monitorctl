@@ -1,0 +1,84 @@
+#!/bin/sh
+
+export QEMU_AUDIO_DRV=pa
+
+MONITOR_TO_TOGGLE="DVI-I-3"
+MONITOR_TO_KEEP="DVI-I-2"
+MONITOR_STATE_DIR="$XDG_RUNTIME_DIR/monitorctl"
+DESKTOP_STATE="$MONITOR_STATE_DIR/monitors"
+
+multihead() {
+  # read the last desktop state and attempt to restore it
+  if [ -z "$DESKTOP_STATE" ]; then
+    printf -- "No DESKTOP_STATE defined\n"
+  fi
+
+  if [ -f "$DESKTOP_STATE" ]; then
+    while read desktop; do
+      bspc desktop --to-monitor "$MONITOR_TO_TOGGLE"
+    done < "$DESKTOP_STATE"
+
+    rm -v -- "$DESKTOP_STATE"
+  fi
+
+  xrandr --output "$MONITOR_TO_TOGGLE" \
+    --auto \
+    --left-of "$MONITOR_TO_KEEP" \
+    --output "$MONITOR_TO_KEEP" \
+    --auto \
+    --primary
+
+    # sh ~/.config/bspwm/bspwmrc
+}
+
+singlehead() {
+  local desktops retval
+
+  xrandr --output "$MONITOR_TO_TOGGLE" \
+    --off
+
+  desktops=$(bspc query -D -m "$MONITOR_TO_TOGGLE")
+  retval=$?
+
+  if [ ! "$retval" -eq 0 ]; then
+    return
+  fi
+
+  printf "%s\n" $desktops >> "$DESKTOP_STATE"
+
+
+  for desktop in $desktops; do
+    bspc desktop --to-monitor "$MONITOR_TO_KEEP" "$desktop"
+  done
+  sh ~/.config/bspwm/bspwmrc
+}
+
+print_help() {
+  cat <<EOF
+monitorctl <arg>
+<no arg>  print help
+single    single monitor
+multi     multihead monitor
+EOF
+}
+
+main() {
+  local arg
+  arg=$1
+
+  # track the desktops
+  if [ ! -d "$MONITOR_STATE_DIR" ]; then
+    mkdir "$MONITOR_STATE_DIR"
+  fi
+
+  if [ "$arg" = "single" ]; then
+    singlehead
+  elif [ "$arg" = "multi" ]; then
+    multihead
+  else
+    print_help
+  fi
+
+}
+
+main $@
