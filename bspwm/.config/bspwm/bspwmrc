@@ -5,6 +5,7 @@ HEIGHT=10
 LEMONBAR_PID="$XDG_RUNTIME_DIR/lemonbar/bar.py"
 
 systemctl --user start synergy.service
+systemctl --user start deluged.service
 
 MONITORS=$(xrandr -q | grep "*" | wc -l)
 
@@ -41,18 +42,19 @@ DELUGE_PROC=$(pgrep -xf '/usr/bin/python2 /usr/bin/deluge')
 # deluge
 bspc rule -a Deluge -o desktop=^6
 
-systemctl --user start deluged
-if [ -z "$DELUGE_PROC" ]; then
-  nohup deluge  > /dev/null 2>&1 &
-fi
-
 # firestorm
-bspc rule -a do-not-directly-run-firestorm-bin -o desktop=^3
+bspc rule -a do-not-directly-run-firestorm-bin -o desktop=^5
 
 # classname:instance_name
 # fetch with $ bspc query -n @focused:/ -T | json_pp | less
 bspc rule -a Chromium:crx_knipolnnllmklapflnccelgolnpehhpl -o desktop=^4
 bspc rule -a TelegramDesktop -o desktop=^4
+
+systemctl --user start deluged
+if [ -z "$DELUGE_PROC" ]; then
+  nohup deluge  > /dev/null 2>&1 &
+fi
+
 
 bspc wm --adopt-orphans
 
