@@ -9,23 +9,14 @@ multihead() {
     --output DVI-I-2 \
     --auto \
     --primary
+    sh ~/.config/bspwm/bspwmrc
 }
 
 singlehead() {
   xrandr --output DVI-I-3 \
     --off
+    sh ~/.config/bspwm/bspwmrc
 }
-
-# main() {
-#   local mode
-#   mode=$1
-#   if [ "$mode" = "multi" ]; then
-#     multihead
-#   elif [ "$mode" = "single" ]; then
-#     singlehead
-#   fi
-# 
-# }
 
 main() {
   local arg
@@ -35,10 +26,8 @@ main() {
     virsh start win10
   elif [ "$arg" = "single" ]; then
     singlehead
-    sh ~/.config/bspwm/bspwmrc
   elif [ "$arg" = "multi" ]; then
     multihead
-    sh ~/.config/bspwm/bspwmrc
   fi
 }
 

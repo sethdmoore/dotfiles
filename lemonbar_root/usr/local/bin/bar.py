@@ -8,20 +8,28 @@ import time
 import signal
 import json
 
-
 RESET_COLOR = "%{F-}%{B-}"
 
 ICONS = {
-    # "CPU": u'\uF0A3',
-    "CPU": u'\uF054',
-    "CALENDAR": u'\uF073',
-    "DESKTOP_GENERIC": u'\uF07B',
-    "DESKTOP1": u'\uF0AC',
-    "DESKTOP2": u'\uF085',
-    "DESKTOP3": u'\uF08E',
-    "DESKTOP4": u'\uF075',
-    "DESKTOP5": u'\uF0C3',
-    "DESKTOP6": u'\uF0C2',
+    "cpu_chip": u'\uF2DB',
+    # "gpu_chip": u'\uF2D0',
+    "gpu_chip": u'\uF11B',
+    "cpu_core": u'\uF054',
+    "calendar": u'\uF073',
+    "desktop_generic": u'\uF07B',
+    "monitor_generic": u'\uF108',
+    "desktop1": u'\uF268',
+    "desktop2": u'\uF085',
+    "desktop3": u'\uF08E',
+    "desktop4": u'\uF075',
+    "desktop5": u'\uF0C3',
+    "desktop6": u'\uF0C2',
+    "arrow_right": u'\uF0DA',
+    "temp0": u'\uF2CB',
+    "temp1": u'\uF2CA',
+    "temp2": u'\uF2C9',
+    "temp3": u'\uF2C8',
+    "temp4": u'\uF2C7',
 }
 
 BASE_COLOR = (00, 84, 160)
@@ -29,20 +37,31 @@ END_COLOR = (255, 255, 255)
 
 ACTIVE_DESKTOP_COLOR = "%{F#0084AA}"
 INACTIVE_DESKTOP_COLOR = "%{F#004488}"
-# bspc query -T -m DVI-I-2
 
 MONITOR_SORT = ["DVI-I-3", "DVI-I-2"]
+TEMPERATURE_SORT = ["cpu", "gpu"]
 
-LEMONBAR_BIN = ["lemonbar", "-n", "lemonbar"]
-LEMONBAR_BIN += ["-f", "fontawesome-webfont:size=14"]
-LEMONBAR_BIN += ["-f", "lato-regular:size=14"]
+# reasonable, I think. 40C for low, 90+ is horrible
+TEMP_WARNING = 55
+TEMP_MAX = 90
+
+LEMONBAR_BIN = ["lemonbar", "-n", "lemonbar",
+                "-f", "fontawesome-webfont:size=14",
+                "-f", "lato-regular:size=14"]
+
+NVIDIA_TEMP_BIN = ["nvidia-smi",
+                   "--query-gpu=temperature.gpu",
+                   "--format=csv,noheader"]
+
+# this probably won't change
+CPU_TEMP_FILE = "/sys/class/thermal/thermal_zone0/temp"
 
 
 class Bar(object):
     def __init__(self, process_handle, pid):
         self.process_handle = process_handle
         self.output = ""
-        self.lerp_values = init_color_lerp(BASE_COLOR, END_COLOR)
+        self.lerp_multiplicant = init_color_lerp(BASE_COLOR, END_COLOR)
         self.pid = pid
         self.pidfile = ""
         self.monitors = get_monitors()
@@ -51,26 +70,30 @@ class Bar(object):
     def redraw(self, *args):
         # have to take *args because of the signal handler...
 
-        self.monitors = get_monitors()
+        # WARNING: DO NOT POLL xrandr !!
+        # It will cause stutter on interval, and high CPU! Very bad!
+        # self.monitors = get_monitors()
 
         self.output = "  ".join((command_format(len(self.monitors)),
-                                cpu_pct(BASE_COLOR, self.lerp_values),
+                                get_temps(self.lerp_multiplicant),
+                                cpu_pct(self.lerp_multiplicant),
                                 get_desktops(self.monitors, self.pid),
                                 date_print(),
                                 get_utils()))
 
         self.output += "\n"
-        # self.process_handle.stdin.write(bytes(self.output, "ascii"))
         self.process_handle.stdin.write(bytes(self.output, "utf-8"))
         self.process_handle.stdin.flush()
 
 
     def restart(self, *args):
         # this is the only way to close a file handle cleanly
+        # when using Popen
         _, _ = self.process_handle.communicate()
 
         p = Popen(LEMONBAR_BIN, stdin=PIPE)
         self.process_handle = p
+        self.monitors = get_monitors()
         self.redraw()
 
 
@@ -104,34 +127,7 @@ class Bar(object):
         sys.exit(0)
 
 
-def command_format(monitor_count):
-    if monitor_count == 2:
-        return "%{Sl}"
-    else:
-        return "%{S0}"
-
-
-def shell_out(cmd):
-    p = Popen(cmd, stdout=PIPE, stderr=PIPE)
-
-    out, err = p.communicate()
-
-    try:
-        output = out.decode("ascii").strip("\n")
-    except Exception as e:
-        output = "load_avg error"
-
-    try:
-        error = err.decode("ascii")
-    except Exception as e:
-        pass
-
-    if error != "":
-        output = error
-
-    return output
-
-
+# determines the start and end colors
 def init_color_lerp(start_c, end_c):
     r, g, b = start_c
     result = ()
@@ -143,6 +139,31 @@ def init_color_lerp(start_c, end_c):
     return result
 
 
+# always stick lemonbar on the correct monitor
+def command_format(monitor_count):
+    if monitor_count == 2:
+        return "%{Sl}"
+    else:
+        return "%{S0}"
+
+
+# wrap Popen to make it not so horrible every time we want to shell out
+def shell_out(cmd):
+    # universal_newlines returns a str object instead of an io*
+    p = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    error = ""
+
+    out, err = p.communicate()
+
+    out = out.strip("\n")
+
+    if error != "":
+        out = error
+
+    return out
+
+
+# ensure we don't go under or over 8 bit
 def hex_limit(dec):
     if dec > 255:
         dec = 255
@@ -152,33 +173,80 @@ def hex_limit(dec):
     return dec
 
 
-def cpu_pct(base_color, lerp_values):
-    cpu_stat = {}
-
-    red, green, blue = base_color
+def lerp_multiply(percent, lerp_multiplicant):
     # red, green, blue lerp values
-    rl, gl, bl = lerp_values
+    rl, gl, bl = lerp_multiplicant
+
+    red, green, blue = BASE_COLOR
+    r = hex_limit(int(red + (percent * rl)))
+    g = hex_limit(int(green + (percent * gl)))
+    b = hex_limit(int(blue + (percent * bl)))
+    return r,g,b
+
+
+# return the lerp values, scaled against TEMP_WARNING and TEMP_MAX
+def temperature_range(input_temp):
+    # http://stackoverflow.com/a/25835683 so nice.
+    temp = ((input_temp - TEMP_WARNING) * 100) // (TEMP_MAX - TEMP_WARNING)
+    if temp < 0:
+        temp = 0
+    return temp
+
+
+# return CPU and GPU temperatures
+def get_temps(lerp_multiplicant):
+    temps = {}
+    temps["cpu"] = 0
+    temps["gpu"] = 0
+    output = ""
+    with open(CPU_TEMP_FILE, "r") as t:
+        cpu_temp = t.read()
+
+    # floor division
+    temps["cpu"] = int(cpu_temp) // 1000
+
+    temps["gpu"] = int(shell_out(NVIDIA_TEMP_BIN))
+
+    temps["gpu_lerp"] = temperature_range(temps["gpu"])
+
+    temps["cpu_lerp"] = temperature_range(temps["cpu"])
+
+    print("real c%s, floaty c%s" % (temps["cpu"], temps["cpu_lerp"]), file=sys.stderr)
+    print("real g%s, floaty g%s" % (temps["gpu"], temps["gpu_lerp"]), file=sys.stderr)
+
+    for temp_type in TEMPERATURE_SORT:
+        temp_key = "%s_lerp" % temp_type
+        icon_key = "%s_chip" % temp_type
+
+        r,g,b = lerp_multiply(temps[temp_key], lerp_multiplicant)
+        output += "%%{F#%02X%02X%02X}" % (r, g, b)
+        output += ICONS[icon_key] + RESET_COLOR + "  "
+    output += INACTIVE_DESKTOP_COLOR + "|" + RESET_COLOR
+
+    return str(output)
+
+
+def cpu_pct(lerp_multiplicant):
+    cpu_stat = {}
 
     cpus = psutil.cpu_percent(percpu=True)
     output = ""
 
     for core_num, percent in enumerate(cpus):
-            r = hex_limit(int(red + (percent * rl)))
-            g = hex_limit(int(green + (percent * gl)))
-            b = hex_limit(int(blue + (percent * bl)))
+        r,g,b = lerp_multiply(percent, lerp_multiplicant)
 
-            cpu_stat[core_num] = "%%{F#%02X%02X%02X}" % (r, g, b)
+        cpu_stat[core_num] = "%%{F#%02X%02X%02X}" % (r, g, b)
 
     # sort this back out so the cores don't come out in random order
     for core_num, color in sorted(cpu_stat.items()):
         # output += color + ICONS["CPU"] + RESET_COLOR + " "
-        output += color + ICONS["CPU"] + RESET_COLOR
+        output += color + ICONS["cpu_core"] + RESET_COLOR
 
     return output
 
 
 def get_utils():
-    return_str = "%{A:urxvt &:}" + ICONS["DESKTOP_GENERIC"] + "%{A}" + "  "
+    return_str = "%{A:urxvt &:}" + ICONS["monitor_generic"] + "%{A}" + "  "
     return return_str
 
 
@@ -211,10 +279,10 @@ def get_desktops(monitors, pid):
 
             desktop_number = desktops['name']
 
-            icon_key = "DESKTOP%s" % desktop_number
+            icon_key = "desktop%s" % desktop_number
 
             if icon_key not in ICONS:
-                icon_key = "DESKTOP_GENERIC"
+                icon_key = "desktop_generic"
 
             icon = ICONS[icon_key]
 
@@ -276,7 +344,7 @@ def get_monitors():
 def date_print():
     date_str = "%{r}"
     date_str += INACTIVE_DESKTOP_COLOR
-    date_str += ICONS["CALENDAR"] + ACTIVE_DESKTOP_COLOR + "  "
+    date_str += ICONS["calendar"] + ACTIVE_DESKTOP_COLOR + "  "
     date_str += time.strftime("%c")
     date_str += "   "
     return date_str
