@@ -1,7 +1,7 @@
 # DOTFILES
 ## Introduction
 Dotfiles are managed GNU stow.  
-Clone this repository to a directory in your $HOME called dotfiles/  
+Clone this repository directory into $HOME  
 When you want to use an application configuration, simply:  
 ```sh
 cd $HOME/dotfiles
