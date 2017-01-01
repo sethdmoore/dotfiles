@@ -185,17 +185,17 @@
     # Otherwise the "#" and following would be interpreted as a comment.
     background = "#222222"
     foreground = "#888888"
-    timeout = 10
+    timeout = 5
 
 [urgency_normal]
     background = "#ffffff"
     foreground = "#ffffff"
-    timeout = 10
+    timeout = 5
 
 [urgency_critical]
     background = "#900000"
     foreground = "#ffffff"
-    timeout = 0
+    timeout = 10
 
 
 # Every section that isn't one of the above is interpreted as a rules to
