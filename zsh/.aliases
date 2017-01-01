@@ -19,6 +19,7 @@ function reload() {
 
 if [ "$KERNEL" = "Darwin" ]; then
     # alias lockscreen="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
+    alias ls="ls -G $@"
     alias lockscreen="pmset displaysleepnow"
 elif [ "$KERNEL" = "Linux" ]; then
     alias ls="ls --color $@"
