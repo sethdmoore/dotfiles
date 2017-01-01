@@ -1,6 +1,7 @@
 #
 # Program specific bindings
 #
+BAR_REFRESH="xargs kill -USR1 < $XDG_RUNTIME_DIR/lemonbar/bar.py"
 
 super + Return
 	urxvt
@@ -95,7 +96,6 @@ super + {o,i}
 super + {_,shift + }{1-9,0}
 	bspc {desktop -f,node -d} '^{1-9,10}'; \
 	xargs kill -USR1 < $XDG_RUNTIME_DIR/lemonbar/bar.py
-	
 
 #
 # preselect
