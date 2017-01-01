@@ -8,14 +8,18 @@ import time
 import signal
 import json
 
+
 RESET_COLOR = "%{F-}%{B-}"
 
+# fontawesome icons
 ICONS = {
     "cpu_chip": u'\uF2DB',
-    # "gpu_chip": u'\uF2D0',
     "gpu_chip": u'\uF11B',
     "cpu_core": u'\uF054',
     "calendar": u'\uF073',
+    "check_empty": u'\uF096',
+    "check": u'\uF046',
+    "unknown": u'\uF059',
     "desktop_generic": u'\uF07B',
     "monitor_generic": u'\uF108',
     "desktop1": u'\uF268',
@@ -41,9 +45,13 @@ INACTIVE_DESKTOP_COLOR = "%{F#004488}"
 MONITOR_SORT = ["DVI-I-3", "DVI-I-2"]
 TEMPERATURE_SORT = ["cpu", "gpu"]
 
-# reasonable, I think. 40C for low, 90+ is horrible
+# reasonable, I think. 40C for low, 90+ for horrible
 TEMP_WARNING = 55
 TEMP_MAX = 90
+
+TEMP_DIR = "/".join((os.getenv("XDG_RUNTIME_DIR"), "lemonbar"))
+PID_FILE = "/".join((TEMP_DIR, "bar.py"))
+FIFO_FILE = "/".join((TEMP_DIR, "bar.fifo"))
 
 LEMONBAR_BIN = ["lemonbar", "-n", "lemonbar",
                 "-f", "fontawesome-webfont:size=14",
@@ -56,14 +64,18 @@ NVIDIA_TEMP_BIN = ["nvidia-smi",
 # this probably won't change
 CPU_TEMP_FILE = "/sys/class/thermal/thermal_zone0/temp"
 
-
 class Bar(object):
-    def __init__(self, process_handle, pid):
+    def __init__(self, process_handle):
         self.process_handle = process_handle
+        self.pid = os.getpid()
         self.output = ""
+        self.hidden = False
+
         self.lerp_multiplicant = init_color_lerp(BASE_COLOR, END_COLOR)
-        self.pid = pid
-        self.pidfile = ""
+        self.write_pid()
+        self.write_fifo()
+
+        self.fifo_file = ""
         self.monitors = get_monitors()
 
 
@@ -71,19 +83,28 @@ class Bar(object):
         # have to take *args because of the signal handler...
 
         # WARNING: DO NOT POLL xrandr !!
-        # It will cause stutter on interval, and high CPU! Very bad!
+        # It will cause frame stutter on interval and high CPU! Very bad!
         # self.monitors = get_monitors()
 
-        self.output = "  ".join((command_format(len(self.monitors)),
-                                get_temps(self.lerp_multiplicant),
-                                cpu_pct(self.lerp_multiplicant),
-                                get_desktops(self.monitors, self.pid),
-                                date_print(),
-                                get_utils()))
-
+        if self.hidden:
+            self.output = "  ".join((command_format(len(self.monitors)),
+                                     right_justify(),
+                                     get_utils(self.hidden)))
+        else:
+            self.output = "  ".join((command_format(len(self.monitors)),
+                                    get_temps(self.lerp_multiplicant),
+                                    cpu_pct(self.lerp_multiplicant),
+                                    get_desktops(self.monitors, self.pid),
+                                    right_justify(),
+                                    date_print(),
+                                    get_utils(self.hidden)))
         self.output += "\n"
         self.process_handle.stdin.write(bytes(self.output, "utf-8"))
         self.process_handle.stdin.flush()
+
+    def toggle_hidden(self, *args):
+        self.hidden = not self.hidden
+        self.redraw()
 
 
     def restart(self, *args):
@@ -98,28 +119,32 @@ class Bar(object):
 
 
     def write_pid(self):
-        temp_dir = "/".join((os.getenv("XDG_RUNTIME_DIR"), "lemonbar"))
-        pidfile = "bar.py"
-        self.pidfile = "/".join((temp_dir, pidfile))
-        print(self.pidfile, sys.stderr)
+        self.pid_file = PID_FILE
+        print(self.pid_file, sys.stderr)
 
         try:
-            os.mkdir(temp_dir)
+            os.mkdir(TEMP_DIR)
         except FileExistsError as e:
             pass
         except Exception as e:
-            print("Unspecified error writing to $XDG_RUNTIME_DIR: %s" % e,
+            print("Unhandled error writing to $XDG_RUNTIME_DIR: %s" % e,
                   file=sys.stderr)
 
-        with open(self.pidfile, 'w') as f:
+        with open(self.pid_file, 'w') as f:
             f.write(str(self.pid))
+
+
+    def write_fifo(self):
+        pass
+        # self.fifo_file = FIFO_FILE
+        # os.mkfifo(FIFO_FILE)
 
 
     def del_pid(self):
         try:
-            os.remove(self.pidfile)
+            os.remove(self.pid_file)
         except OSError as e:
-            print("Test: %s" % e, file=sys.stderr)
+            print("Could not remove pid file: %s" % e, file=sys.stderr)
 
 
     def quit(self, *args):
@@ -128,6 +153,7 @@ class Bar(object):
 
 
 # determines the start and end colors
+# return a tuple
 def init_color_lerp(start_c, end_c):
     r, g, b = start_c
     result = ()
@@ -205,7 +231,11 @@ def get_temps(lerp_multiplicant):
     # floor division
     temps["cpu"] = int(cpu_temp) // 1000
 
-    temps["gpu"] = int(shell_out(NVIDIA_TEMP_BIN))
+    temps["gpu"] = shell_out(NVIDIA_TEMP_BIN)
+    try:
+        temps["gpu"] = int(temps["gpu"])
+    except ValueError as e:
+        temps["gpu"] = 255
 
     temps["gpu_lerp"] = temperature_range(temps["gpu"])
 
@@ -217,6 +247,9 @@ def get_temps(lerp_multiplicant):
     for temp_type in TEMPERATURE_SORT:
         temp_key = "%s_lerp" % temp_type
         icon_key = "%s_chip" % temp_type
+
+        if temps["gpu"] == 255 and temp_type == "gpu":
+            icon_key = "unknown"
 
         r,g,b = lerp_multiply(temps[temp_key], lerp_multiplicant)
         output += "%%{F#%02X%02X%02X}" % (r, g, b)
@@ -245,8 +278,16 @@ def cpu_pct(lerp_multiplicant):
     return output
 
 
-def get_utils():
-    return_str = "%{A:urxvt &:}" + ICONS["monitor_generic"] + "%{A}" + "  "
+def get_utils(hidden):
+    if hidden:
+        return_str = INACTIVE_DESKTOP_COLOR
+        icon_hide = ICONS["check_empty"]
+    else:
+        return_str = ACTIVE_DESKTOP_COLOR
+        icon_hide = ICONS["check"]
+
+    return_str += "%{A:urxvt &:}" + ICONS["monitor_generic"] + "%{A}" + "  "
+    return_str += "%%{A:xargs kill -SIGINT < %s &:}" % PID_FILE + icon_hide + "%{A}" + "  "
     return return_str
 
 
@@ -340,10 +381,11 @@ def get_monitors():
         print("No monitors detected!", file=sys.stderr)
         sys.exit(2)
 
+def right_justify():
+    return "%{r}"
 
 def date_print():
-    date_str = "%{r}"
-    date_str += INACTIVE_DESKTOP_COLOR
+    date_str = INACTIVE_DESKTOP_COLOR
     date_str += ICONS["calendar"] + ACTIVE_DESKTOP_COLOR + "  "
     date_str += time.strftime("%c")
     date_str += "   "
@@ -351,16 +393,14 @@ def date_print():
 
 
 def main():
-    pid = os.getpid()
 
     p = Popen(LEMONBAR_BIN, stdin=PIPE)
 
-    bar = Bar(p, pid)
-    bar.write_pid()
+    bar = Bar(p)
 
     signal.signal(signal.SIGUSR1, bar.redraw)
     signal.signal(signal.SIGUSR2, bar.restart)
-    signal.signal(signal.SIGINT, bar.quit)
+    signal.signal(signal.SIGINT, bar.toggle_hidden)
 
 
     while True:
