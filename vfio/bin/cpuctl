@@ -1,5 +1,14 @@
 #!/bin/sh
 
+print_help() {
+  cat <<EOH
+cpuctl <arg>
+  perf: set CPU governor to performance and min freq to 4.7GHz
+  save: set CPU governor to powersave and min cpu freq to 8MHz
+EOH
+  exit 1
+}
+
 set_cpu_gov() {
 	core=$1
 	governor=$2
@@ -36,6 +45,8 @@ main() {
 	elif [ "$state" = "save" ]; then
 		cpu_freq=8000
 		governor='powersave'
+  else
+    print_help
 	fi
 
 	for core in {0..7}; do
