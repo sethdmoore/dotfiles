@@ -23,13 +23,19 @@ if [ "$KERNEL" = "Darwin" ]; then
     alias lockscreen="pmset displaysleepnow"
 elif [ "$KERNEL" = "Linux" ]; then
     alias ls="ls --color $@"
+
     function temps() {
-    watch \
-        'printf "GPU:\t\t+%s°C\n" \
-         $(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader);
-         sensors coretemp-isa-0000 | grep C'
+        watch \
+            'printf "GPU:\t\t+%s°C\n" \
+             $(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader);
+             sensors coretemp-isa-0000 | grep C'
 
     }
+
+    function pacman-clean() {
+        sudo pacman -Rsn $(pacman -Qdtq)
+    }
+
 fi
 
 ### utility aliasees ###
@@ -45,10 +51,6 @@ function update_pathogen() {
     done
 }
 
-function pacman-clean() {
-    sudo pacman -Rsn $(pacman -Qdtq)
-}
-
 function bannertime() {
     defaults write com.apple.notificationcenterui bannerTime $@
 }
@@ -57,4 +59,3 @@ function bannertime() {
 if [ -e "${HOME}/.private_aliases" ]; then
     source "${HOME}/.private_aliases"
 fi
-
