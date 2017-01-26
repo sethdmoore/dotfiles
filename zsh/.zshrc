@@ -124,6 +124,12 @@ if [ -d "${HOME}/go" ]; then
     export GOPATH="${HOME}/go"
 fi
 
+# if golang is installed, add go bins to PATH
+if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
+    append_path "/usr/local/go/bin"
+fi
+
+
 source_dot_files
 
 # check_path
