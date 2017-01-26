@@ -1,16 +1,13 @@
-export PATH="$HOME/bin:$PATH"
-
-export KERNEL="$(uname -s)"
-
 autoload -U colors && colors
 # add git autocomplete
 autoload -Uz compinit && compinit
 
-bindkey -v
-bindkey '^R' history-incremental-search-backward
-bindkey -v '^?' backward-delete-char
+setopt inc_append_history
+setopt share_history
 
-# export PS1="%~ %(?.%{$fg[blue]%}╠►.%{$fg[red]%}╠►) %{$reset_color%}"
+export PATH="$HOME/bin:$PATH"
+
+export KERNEL="$(uname -s)"
 export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
 # export RPROMPT="$(date +%H:%M)"
 export HISTSIZE=1000
@@ -18,6 +15,10 @@ export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
 export GO15VENDOREXPERIMENT=1
 export EDITOR="vim"
+
+bindkey -v
+bindkey '^R' history-incremental-search-backward
+bindkey -v '^?' backward-delete-char 
 
 # zshrc executed without POSIX compat
 # use array type (http://zsh.sourceforge.net/FAQ/zshfaq03.html)
