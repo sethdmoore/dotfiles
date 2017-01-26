@@ -1781,15 +1781,15 @@
 	<key>NSWindow Frame Preferences</key>
 	<string>269 324 606 456 0 0 2560 1417 </string>
 	<key>NSWindow Frame SUUpdateAlert</key>
-	<string>930 597 700 622 0 0 2560 1417 </string>
+	<string>370 192 700 622 0 0 1440 877 </string>
 	<key>NSWindow Frame SessionsPreferences</key>
 	<string>623 264 599 505 0 0 2560 1417 </string>
 	<key>NSWindow Frame SharedPreferences</key>
-	<string>100 347 918 498 0 0 2560 1417 </string>
+	<string>274 799 796 473 0 0 2560 1417 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>481 774 570 452 0 0 2560 1417 </string>
+	<string>0 9 2554 1408 0 0 2560 1417 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
-	<string>0 954 650 454 0 0 2560 1417 </string>
+	<string>0 3 1914 1174 0 0 1920 1177 </string>
 	<key>NSWindow Frame iTerm Window 2</key>
 	<string>0 963 650 454 0 0 2560 1417 </string>
 	<key>NSWindow Frame iTerm Window 3</key>
@@ -2620,6 +2620,8 @@
 	<integer>0</integer>
 	<key>NoSyncInstallationId</key>
 	<string>071EE9A6-3462-494C-92AD-2FA5F6449079</string>
+	<key>NoSyncNeverAskAboutSettingAlternateMouseScroll</key>
+	<true/>
 	<key>NoSyncNeverRemindPrefsChangesLostForFile</key>
 	<true/>
 	<key>NoSyncNeverRemindPrefsChangesLostForFile_selection</key>
@@ -2696,9 +2698,11 @@
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2016-12-15T14:46:31Z</date>
+	<date>2017-01-23T21:16:11Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
+	<key>SUSkippedVersion</key>
+	<string>3.0.13</string>
 	<key>SavePasteHistory</key>
 	<false/>
 	<key>Show Toolbelt</key>
@@ -2706,7 +2710,7 @@
 	<key>ShowBookmarkName</key>
 	<false/>
 	<key>ShowFullScreenTabBar</key>
-	<true/>
+	<false/>
 	<key>ShowPaneTitles</key>
 	<true/>
 	<key>SmartPlacement</key>
