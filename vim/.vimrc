@@ -54,7 +54,7 @@ nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
 
 nnoremap <C-_> :split<CR>
-nnoremap <C-h> :vsplit<CR>
+nnoremap <C-\> :vsplit<CR>
 
 
 command Curlfmt s/ -H / \\\r    -H /g
