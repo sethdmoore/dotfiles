@@ -7,7 +7,7 @@ When you want to use an application configuration, simply:
 cd $HOME/dotfiles
 stow $PROGRAM
 ```
-EG:   
+EG:  
 ```sh
 $ cd $HOME/dotfiles && stow vim
 ```
