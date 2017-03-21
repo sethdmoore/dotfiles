@@ -9,6 +9,14 @@ set sessionoptions-=options
 " fix backspace behavior
 set backspace=indent,eol,start
 
+" only highlight on active windows
+augroup CursorLine
+  au!
+  au VimEnter,WinEnter,BufWinEnter * setlocal cursorline
+  au WinLeave * setlocal nocursorline
+augroup END
+
+
 " More 'natural' splits
 set splitbelow
 set splitright
@@ -57,7 +65,13 @@ nnoremap <C-_> :split<CR>
 nnoremap <C-\> :vsplit<CR>
 
 
+" trash
 command Curlfmt s/ -H / \\\r    -H /g
 
 
+" best colors of all time
+" https://github.com/xero/sourcerer.vim
 colors sourcerer
+
+" override sourcerer incorrectly removing syntax highlighting on CursorLine
+hi CursorLine cterm=NONE ctermfg=NONE guifg=NONE
