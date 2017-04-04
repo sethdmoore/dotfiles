@@ -660,11 +660,11 @@
 	<key>NSWindow Frame NSFontPanel</key>
 	<string>2349 368 445 103 1440 -84 1920 1057 </string>
 	<key>NSWindow Frame SharedPreferences</key>
-	<string>232 207 796 473 0 0 1280 777 </string>
+	<string>232 100 796 473 0 0 1280 777 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
 	<string>1 346 570 429 0 0 1280 777 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
-	<string>472 340 570 429 0 0 1280 777 </string>
+	<string>1 6 1277 769 0 0 1280 777 </string>
 	<key>New Bookmarks</key>
 	<array>
 		<dict>
@@ -898,7 +898,7 @@
 			<key>Columns</key>
 			<integer>80</integer>
 			<key>Command</key>
-			<string>/usr/local/bin/zsh</string>
+			<string>/usr/local/bin/zsh --login</string>
 			<key>Cursor Color</key>
 			<dict>
 				<key>Blue Component</key>
@@ -935,7 +935,7 @@
 				<real>0.13333333333333333</real>
 			</dict>
 			<key>Custom Command</key>
-			<string>Yes</string>
+			<string>No</string>
 			<key>Custom Directory</key>
 			<string>No</string>
 			<key>Default Bookmark</key>
@@ -1277,7 +1277,7 @@
 			<key>Normal Font</key>
 			<string>Monaco 12</string>
 			<key>Option Key Sends</key>
-			<integer>0</integer>
+			<integer>2</integer>
 			<key>Prevent Opening in a Tab</key>
 			<true/>
 			<key>Prompt Before Closing 2</key>
