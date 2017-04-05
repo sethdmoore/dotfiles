@@ -665,12 +665,17 @@
 	</data>
 	<key>NSTableView Supports v2 KeyBingingTable</key>
 	<true/>
+	<key>NSToolbar Configuration com.apple.NSColorPanel</key>
+	<dict>
+		<key>TB Is Shown</key>
+		<integer>1</integer>
+	</dict>
 	<key>NSWindow Frame NSFontPanel</key>
 	<string>515 227 445 77 0 0 1280 800 </string>
 	<key>NSWindow Frame SharedPreferences</key>
-	<string>232 90 796 473 0 0 1280 800 </string>
+	<string>1979 141 918 381 1440 -84 1920 1057 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>1 6 1277 769 0 0 1280 777 </string>
+	<string>1440 -84 1914 1041 1440 -84 1920 1057 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
 	<string>54 438 570 429 0 0 1440 900 </string>
 	<key>New Bookmarks</key>
@@ -1300,25 +1305,29 @@
 			<integer>1000</integer>
 			<key>Selected Text Color</key>
 			<dict>
+				<key>Alpha Component</key>
+				<real>1</real>
 				<key>Blue Component</key>
-				<real>0.69019607843137254</real>
+				<real>0.83296561241149902</real>
 				<key>Color Space</key>
-				<string>sRGB</string>
+				<string>Calibrated</string>
 				<key>Green Component</key>
-				<real>0.76078431372549016</real>
+				<real>0.83295148611068726</real>
 				<key>Red Component</key>
-				<real>0.76078431372549016</real>
+				<real>0.83297646045684814</real>
 			</dict>
 			<key>Selection Color</key>
 			<dict>
+				<key>Alpha Component</key>
+				<real>1</real>
 				<key>Blue Component</key>
-				<real>0.13333333333333333</real>
+				<real>0.32584273815155029</real>
 				<key>Color Space</key>
-				<string>sRGB</string>
+				<string>Calibrated</string>
 				<key>Green Component</key>
-				<real>0.13333333333333333</real>
+				<real>0.32583719491958618</real>
 				<key>Red Component</key>
-				<real>0.13333333333333333</real>
+				<real>0.32584697008132935</real>
 			</dict>
 			<key>Send Code When Idle</key>
 			<false/>
@@ -1362,6 +1371,8 @@
 	<true/>
 	<key>NoSyncNeverRemindPrefsChangesLostForFile_selection</key>
 	<integer>0</integer>
+	<key>NoSyncPermissionToShowTip</key>
+	<false/>
 	<key>NoSyncTimeOfFirstLaunchOfVersionWithTip</key>
 	<real>512935590.90979397</real>
 	<key>PointerActions</key>
@@ -1408,7 +1419,7 @@
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2017-04-04T20:31:24Z</date>
+	<date>2017-04-05T20:31:40Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
 	<key>ShowPaneTitles</key>
@@ -1423,5 +1434,9 @@
 	<string></string>
 	<key>iTerm Version</key>
 	<string>3.0.15</string>
+	<key>kCPKSelectionViewPreferredModeKey</key>
+	<integer>0</integer>
+	<key>kCPKSelectionViewShowHSBTextFieldsKey</key>
+	<false/>
 </dict>
 </plist>
