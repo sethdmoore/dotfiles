@@ -620,6 +620,14 @@
 	<false/>
 	<key>HideTabNumber</key>
 	<false/>
+	<key>Hotkey</key>
+	<true/>
+	<key>HotkeyChar</key>
+	<integer>96</integer>
+	<key>HotkeyCode</key>
+	<integer>50</integer>
+	<key>HotkeyModifiers</key>
+	<integer>262401</integer>
 	<key>LoadPrefsFromCustomFolder</key>
 	<true/>
 	<key>NSNavLastRootDirectory</key>
@@ -658,13 +666,13 @@
 	<key>NSTableView Supports v2 KeyBingingTable</key>
 	<true/>
 	<key>NSWindow Frame NSFontPanel</key>
-	<string>2349 368 445 103 1440 -84 1920 1057 </string>
+	<string>515 227 445 77 0 0 1280 800 </string>
 	<key>NSWindow Frame SharedPreferences</key>
-	<string>309 118 796 473 0 0 1440 877 </string>
+	<string>232 90 796 473 0 0 1280 800 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>1 346 570 429 0 0 1280 777 </string>
-	<key>NSWindow Frame iTerm Window 1</key>
 	<string>1 6 1277 769 0 0 1280 777 </string>
+	<key>NSWindow Frame iTerm Window 1</key>
+	<string>54 438 570 429 0 0 1440 900 </string>
 	<key>New Bookmarks</key>
 	<array>
 		<dict>
@@ -1400,7 +1408,7 @@
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2017-04-03T18:43:14Z</date>
+	<date>2017-04-04T20:31:24Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
 	<key>ShowPaneTitles</key>
