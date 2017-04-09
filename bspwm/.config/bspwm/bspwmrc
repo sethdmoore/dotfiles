@@ -10,21 +10,14 @@ systemctl --user start deluged.service
 MONITORS=$(xrandr -q | grep "*" | wc -l)
 
 if [ "$MONITORS" -eq 2 ]; then
-  # DVI-I-3 = 1920x1200 | DVI-I-2 == 1600X900
-  # bspc monitor DVI-I-3 -d I II III
-  # bspc monitor DVI-I-2 -d IV V VI
+  # HDMI-0 = 1920x1200 | DVI-I-2 == 1600X900
   bspc monitor DVI-I-3 -d 1 2 3
   bspc monitor DVI-I-2 -d 4 5 6
 elif [ "$MONITORS" -eq 1 ]; then
   # bspc monitor DVI-I-3 -r
-  bspc monitor DVI-I-3 -r
   # bspc monitor DVI-I-2 -d 1 2 3 4 5 6
-  bspc monitor DVI-I-2 -d 4 5 6 1 2 3
 
-  # hoping there's more elegant solution to this...
-  bspc desktop 1 -s 4
-  bspc desktop 2 -s 5
-  bspc desktop 3 -s 6
+  bspc monitor HDMI-0 -d 1 2 3 4 5 6
 fi
 
 xargs kill -USR2 < $LEMONBAR_PID
@@ -54,7 +47,7 @@ bspc rule -a do-not-directly-run-firestorm-bin -o desktop=^5
 
 # classname:instance_name
 # fetch with $ bspc query -n @focused:/ -T | json_pp | less
-bspc rule -a Chromium:crx_knipolnnllmklapflnccelgolnpehhpl -o desktop=^4
+bspc rule -a Google-chrome:crx_knipolnnllmklapflnccelgolnpehhpl -o desktop=^4
 bspc rule -a TelegramDesktop -o desktop=^4
 
 systemctl --user start deluged
