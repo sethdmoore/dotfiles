@@ -4,6 +4,7 @@ autoload -Uz compinit && compinit
 
 setopt inc_append_history
 setopt share_history
+setopt interactivecomments
 
 export PATH="$HOME/bin:$PATH"
 
