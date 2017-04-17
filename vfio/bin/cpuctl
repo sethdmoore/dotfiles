@@ -40,10 +40,11 @@ set_params() {
 main() {
 	state=$1
 	if [ "$state" = "perf" ]; then
-		cpu_freq=4700000
+    # cpu_freq=4700000
+    cpu_freq=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq)
 		governor='performance'
 	elif [ "$state" = "save" ]; then
-		cpu_freq=8000
+    cpu_freq=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq)
 		governor='powersave'
   else
     print_help

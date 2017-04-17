@@ -6,7 +6,7 @@ setopt inc_append_history
 setopt share_history
 setopt interactivecomments
 
-export PATH="$HOME/bin:$PATH"
+# export PATH="$HOME/bin:$PATH"
 
 export KERNEL="$(uname -s)"
 export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
@@ -17,6 +17,8 @@ export HISTFILE=~/.zsh_history
 export GO15VENDOREXPERIMENT=1
 export EDITOR="vim"
 
+export GPGKEY='4096R/1CF9C381'
+
 bindkey -v
 bindkey '^R' history-incremental-search-backward
 bindkey -v '^?' backward-delete-char 
@@ -24,17 +26,6 @@ bindkey -v '^?' backward-delete-char
 # zshrc executed without POSIX compat
 # use array type (http://zsh.sourceforge.net/FAQ/zshfaq03.html)
 MY_DOT_FILES=(".aliases" ".auth")
-
-# deprecated
-check_path() {
-    local IFS p array_path
-
-    IFS=':'
-    array_path=("${(@s/:/)PATH}")
-    for p in $array_path; do
-        printf "${p}\n"
-    done
-}
 
 append_path() {
     local IFS path_iterator array_path appender match
@@ -46,7 +37,7 @@ append_path() {
     array_path=("${(@s/:/)PATH}")
     for path_iterator in $array_path; do
         if [ "${path_iterator}" = "${appender}" ]; then
-            printf "Duplicate PATH entry: ${path_iterator}\n"
+            # printf "Duplicate PATH entry: ${path_iterator}\n"
             return
         fi
     done
@@ -108,7 +99,6 @@ fi
 if [ "$KERNEL" = "Darwin" ]; then
     # append to zsh array 9_9
     MY_DOT_FILES+=(".rbenv_env" ".travis/travis.sh" ".dockerenv")
-    # export PATH="${PATH}:/usr/local/sbin"
     append_path "/usr/local/sbin"
 elif [ "$KERNEL" = "Linux" ]; then
     # connect to the ssh-agent sock
@@ -130,10 +120,12 @@ if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
     append_path "/usr/local/go/bin"
 fi
 
+if [ ! -d "${HOME}/bin" ]; then
+    append_path "${HOME}/bin"
+fi
 
 source_dot_files
 
-# check_path
 
 # always start tmux in remote sessions
 if [ -n "${SSH_CLIENT}" ]; then
@@ -150,4 +142,8 @@ else
     # start_tmux
 fi
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+if [ -f ~/.fzf.zsh ]; then
+    source ~/.fzf.zsh
+else
+    printf -- "NOTE: fzf is missing, please install with brew\n"
+fi
