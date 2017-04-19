@@ -82,6 +82,12 @@ super + {_,shift + }c
 super + bracket{left,right}
 	bspc desktop -f {prev,next}
 
+# side clicks of the wheel change desktops
+# just kidding, this annoys the shit out of me
+# ~button{6,7}
+#     bspc desktop -f {prev,next}
+
+
 # focus the last node/desktop
 super + {grave,Tab}
 	bspc {node,desktop} -f last
