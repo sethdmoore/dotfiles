@@ -1,8 +1,10 @@
 #!/bin/sh
 
-export QEMU_AUDIO_DRV=pa
+# not needed.
+# export QEMU_AUDIO_DRV=pa
 
 main() {
+  sudo cpuctl perf
   monitorctl single
   sudo virsh start win10
 }
