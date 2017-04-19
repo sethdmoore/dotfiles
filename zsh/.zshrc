@@ -145,5 +145,5 @@ fi
 if [ -f ~/.fzf.zsh ]; then
     source ~/.fzf.zsh
 else
-    printf -- "NOTE: fzf is missing, please install with brew\n"
+    printf -- "NOTE: fzf is missing, please install with your pkg manager\n"
 fi
