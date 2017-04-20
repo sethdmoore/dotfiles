@@ -387,9 +387,14 @@ def right_justify():
 
 def date_print():
     date_str = INACTIVE_DESKTOP_COLOR
+    link = '%{A:notify-send "$(cal_wrapper)":}'
+    end_link = "%{A}"
+
+    date_str += link
     date_str += ICONS["calendar"] + ACTIVE_DESKTOP_COLOR + "  "
     date_str += time.strftime("%c")
     date_str += "   "
+    date_str += end_link
     return date_str
 
 
