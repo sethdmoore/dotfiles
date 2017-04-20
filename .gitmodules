@@ -22,12 +22,12 @@
 [submodule "vim/.vim/pack/plugins/start/vim-markdown"]
 	path = vim/.vim/pack/plugins/start/vim-markdown
 	url = https://github.com/plasticboy/vim-markdown
-[submodule "vim/.vim/pack/plugins/start/tabular"]
-	path = vim/.vim/pack/plugins/start/tabular
-	url = git://github.com/godlygeek/tabular.git
 [submodule "osx/base16_iterm2"]
 	path = osx/base16_iterm2
 	url = https://github.com/chriskempson/base16-iterm2.git
 [submodule "0mniscient-discord-themes"]
 	path = .resources/omnisicient-discord-themes
 	url = https://github.com/0mniscient/Discord-Themes.git
+[submodule "vim-table-mode"]
+	path = vim/.vim/pack/plugins/start/vim-table-mode
+	url = https://github.com/dhruvasagar/vim-table-mode.git

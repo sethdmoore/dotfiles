@@ -1,0 +1,6 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =4
+let g:netrw_dirhist_1='/Users/sethmoore/git/puppet-npo/manifests/clientbuild'
+let g:netrw_dirhist_2='/Users/sethmoore/puppet/control-repo/site'
+let g:netrw_dirhist_3='/Users/sethmoore/git/nomis/nomis/mclient'
+let g:netrw_dirhist_4='/Users/sethmoore/git/nomis/nomis/aws/mclient'
