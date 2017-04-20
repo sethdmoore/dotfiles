@@ -28,3 +28,6 @@
 [submodule "osx/base16_iterm2"]
 	path = osx/base16_iterm2
 	url = https://github.com/chriskempson/base16-iterm2.git
+[submodule "0mniscient-discord-themes"]
+	path = .resources/omnisicient-discord-themes
+	url = https://github.com/0mniscient/Discord-Themes.git
