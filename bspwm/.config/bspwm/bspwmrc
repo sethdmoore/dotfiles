@@ -15,9 +15,9 @@ if [ "$MONITORS" -eq 2 ]; then
   bspc monitor DVI-I-2 -d 4 5 6
 elif [ "$MONITORS" -eq 1 ]; then
   # bspc monitor DVI-I-3 -r
-  # bspc monitor DVI-I-2 -d 1 2 3 4 5 6
+  bspc monitor DVI-I-2 -d 1 2 3 4 5 6
 
-  bspc monitor HDMI-0 -d 1 2 3 4 5 6
+  # bspc monitor HDMI-0 -d 1 2 3 4 5 6
 fi
 
 xargs kill -USR2 < $LEMONBAR_PID
