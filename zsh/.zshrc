@@ -5,6 +5,8 @@ autoload -Uz compinit && compinit
 setopt inc_append_history
 setopt share_history
 setopt interactivecomments
+# setopt hist_find_no_dups
+setopt hist_ignore_dups
 
 # export PATH="$HOME/bin:$PATH"
 
@@ -101,8 +103,21 @@ if [ "$KERNEL" = "Darwin" ]; then
     MY_DOT_FILES+=(".rbenv_env" ".travis/travis.sh" ".dockerenv")
     append_path "/usr/local/sbin"
 elif [ "$KERNEL" = "Linux" ]; then
+    FZF_ZSH_COMPLETION="/usr/share/fzf/completion.zsh"
+    FZF_ZSH_BINDINGS="/usr/share/fzf/key-bindings.zsh"
+
     # connect to the ssh-agent sock
     export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+
+    # fzf
+    if [ -f "$FZF_ZSH_COMPLETION" ] && [ -f "$FZF_ZSH_BINDINGS" ]; then
+        source "$FZF_ZSH_BINDINGS"
+        source "$FZF_ZSH_COMPLETION"
+    else
+        printf -- "WTF \n"
+        cat "$FZF_ZSH_COMPLETION"
+        NO_FZF=true
+    fi
 fi
 
 # golang tools
@@ -126,7 +141,6 @@ fi
 
 source_dot_files
 
-
 # always start tmux in remote sessions
 if [ -n "${SSH_CLIENT}" ]; then
     # user@host if we're remote
@@ -142,8 +156,14 @@ else
     # start_tmux
 fi
 
-if [ -f ~/.fzf.zsh ]; then
-    source ~/.fzf.zsh
-else
+if [ ! "$KERNEL" = "Linux" ]; then
+    if [ -f ~/.fzf.zsh ]; then
+        source ~/.fzf.zsh
+    else
+        NO_FZF=true
+    fi
+fi
+
+if [ "$NO_FZF" ]; then
     printf -- "NOTE: fzf is missing, please install with your pkg manager\n"
 fi
