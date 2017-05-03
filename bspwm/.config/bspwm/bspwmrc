@@ -39,6 +39,9 @@ bspc config remove_disabled_monitors true
 
 DELUGE_PROC=$(pgrep -xf '/usr/bin/python2 /usr/bin/deluge')
 
+# steam
+bspc rule -a Steam -o desktop=^2
+
 # deluge
 bspc rule -a Deluge -o desktop=^6
 

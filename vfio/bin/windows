@@ -4,8 +4,13 @@
 # export QEMU_AUDIO_DRV=pa
 
 main() {
+  printf -- "Setting CPU to MAX_FREQ/Performance\n"
   sudo cpuctl perf
+  printf -- "Changing to single monitor configurastion\n"
   monitorctl single
+  printf -- "Stopping synergyd\n"
+  systemctl --user stop synergyd
+  printf -- "Starting windows\n"
   sudo virsh start win10
 }
 

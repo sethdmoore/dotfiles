@@ -14,6 +14,8 @@
     # message.
     allow_markup = yes
 
+    max_icon_size = 128
+
     # Treat incoming notifications as plain text
     plain_text = no
 
