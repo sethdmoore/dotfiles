@@ -22,6 +22,8 @@ ICONS = {
     "unknown": u'\uF059',
     "desktop_generic": u'\uF07B',
     "monitor_generic": u'\uF108',
+    "toggle_off": u'\uF204',
+    "toggle_on": u'\uF205',
     "desktop1": u'\uF268',
     "desktop2": u'\uF085',
     "desktop3": u'\uF08E',
@@ -54,7 +56,7 @@ TEMP_DIR = "/".join((os.getenv("XDG_RUNTIME_DIR"), "lemonbar"))
 PID_FILE = "/".join((TEMP_DIR, "bar.py"))
 FIFO_FILE = "/".join((TEMP_DIR, "bar.fifo"))
 
-LEMONBAR_BIN = ["lemonbar", "-n", "lemonbar",
+LEMONBAR_BIN = ["lemonbar", "-n", "lemonybar",
                 "-f", "fontawesome-webfont:size=14",
                 "-f", "lato-regular:size=14"]
 
@@ -282,10 +284,10 @@ def cpu_pct(lerp_multiplicant):
 def get_utils(hidden):
     if hidden:
         return_str = INACTIVE_DESKTOP_COLOR
-        icon_hide = ICONS["check_empty"]
+        icon_hide = ICONS["toggle_off"]
     else:
         return_str = ACTIVE_DESKTOP_COLOR
-        icon_hide = ICONS["check"]
+        icon_hide = ICONS["toggle_on"]
 
     return_str += "%{A:urxvt &:}" + ICONS["monitor_generic"] + "%{A}" + "  "
     return_str += "%%{A:xargs kill -SIGINT < %s &:}" % PID_FILE + icon_hide + "%{A}" + "  "
