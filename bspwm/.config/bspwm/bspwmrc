@@ -5,6 +5,7 @@ HEIGHT=10
 LEMONBAR_PID="$XDG_RUNTIME_DIR/lemonbar/bar.py"
 
 systemctl --user start synergy.service
+systemctl --user start synergyd.service
 systemctl --user start deluged.service
 
 MONITORS=$(xrandr -q | grep "*" | wc -l)
