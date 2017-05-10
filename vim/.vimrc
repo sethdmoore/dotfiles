@@ -9,6 +9,9 @@ set sessionoptions-=options
 " fix backspace behavior
 set backspace=indent,eol,start
 
+" mouse mode is actually awesome
+set mouse=a
+
 " only highlight on active windows
 augroup CursorLine
   au!
