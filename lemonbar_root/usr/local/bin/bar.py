@@ -397,6 +397,7 @@ def date_print():
     date_str += time.strftime("%c")
     date_str += "   "
     date_str += end_link
+    # print(date_str, file=sys.stderr)
     return date_str
 
 
