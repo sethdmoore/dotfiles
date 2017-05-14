@@ -11,6 +11,8 @@ set backspace=indent,eol,start
 
 " mouse mode is actually awesome
 set mouse=a
+" smooth mouse controls
+set ttymouse=xterm2
 
 " only highlight on active windows
 augroup CursorLine

@@ -1,1 +1,1 @@
-../../../.resources/sourcerer/sourcerer.vim
+../../../.resources/vim/sourcerer/sourcerer.vim

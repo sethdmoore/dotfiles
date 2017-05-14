@@ -31,3 +31,6 @@
 [submodule "vim-table-mode"]
 	path = vim/.vim/pack/plugins/start/vim-table-mode
 	url = https://github.com/dhruvasagar/vim-table-mode.git
+[submodule "base16"]
+	path = .resources/vim/base16
+	url = https://github.com/chriskempson/base16-vim.git
