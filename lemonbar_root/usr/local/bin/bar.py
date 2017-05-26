@@ -45,7 +45,7 @@ ACTIVE_DESKTOP_COLOR = "%{F#0084AA}"
 INACTIVE_DESKTOP_COLOR = "%{F#004488}"
 
 # MONITOR_SORT = ["DVI-I-3", "DVI-I-2"]
-MONITOR_SORT = ["HDMI-0"]
+MONITOR_SORT = ["HDMI-0", "DP-4", "DP-2"]
 TEMPERATURE_SORT = ["cpu", "gpu"]
 
 # reasonable, I think. 40C for low, 90+ for horrible
