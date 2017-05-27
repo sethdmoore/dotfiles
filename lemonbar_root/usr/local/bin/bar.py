@@ -49,10 +49,12 @@ MONITOR_SORT = ["HDMI-0", "DP-4", "DP-2"]
 TEMPERATURE_SORT = ["cpu", "gpu"]
 
 # reasonable, I think. 40C for low, 90+ for horrible
-TEMP_WARNING = 55
+TEMP_WARNING = 40
 TEMP_MAX = 90
 
-TEMP_DIR = "/".join((os.getenv("XDG_RUNTIME_DIR"), "lemonbar"))
+# throw a keyerror if there are no XDG_ vars defined.
+# like, what are you doing?
+TEMP_DIR = "/".join((os.environ["XDG_RUNTIME_DIR"], "lemonbar"))
 PID_FILE = "/".join((TEMP_DIR, "bar.py"))
 FIFO_FILE = "/".join((TEMP_DIR, "bar.fifo"))
 
@@ -67,43 +69,113 @@ NVIDIA_TEMP_BIN = ["nvidia-smi",
 # this probably won't change
 CPU_TEMP_FILE = "/sys/class/thermal/thermal_zone0/temp"
 
+
 class Bar(object):
-    def __init__(self, process_handle):
+    def __init__(self, process_handle, fps=60):
         self.process_handle = process_handle
         self.pid = os.getpid()
         self.output = ""
         self.hidden = False
+        self.fps = fps
+        self.current_frame = 1
 
         self.lerp_multiplicant = init_color_lerp(BASE_COLOR, END_COLOR)
         self.write_pid()
         self.write_fifo()
 
+        self.state = {
+            "command": "",
+            "utils": "",
+            "temps": "",
+            "cpu": "",
+            "desktops": "",
+            "date": "",
+
+            "temp_data": None,
+            "temp_prev_data": None,
+
+            "cpu_data": None,
+            "cpu_prev_data": None,
+
+            "right_justify": right_justify()
+        }
+
+        # key order from self.state
+        self.print_order = ["command", "temps", "cpu", "desktops",
+                            "right_justify", "date", "utils"]
+        self.hidden_print_order = ["command", "right_justify", "date", "utils"]
+
         self.fifo_file = ""
-        self.monitors = get_monitors()
-
-
-    def redraw(self, *args):
-        # have to take *args because of the signal handler...
 
         # WARNING: DO NOT POLL xrandr !!
         # It will cause frame stutter on interval and high CPU! Very bad!
-        # self.monitors = get_monitors()
+        # this will only cause one stutter (which is fine for a bar starting IMO)
+        self.monitors = get_monitors()
+
+        self.full_redraw()
+
+
+    def redraw(self):
+        # step = self.current_frame / self.fps
+        if self.current_frame >= self.fps:
+            self.current_frame = 1
+            self.full_redraw()
+        else:
+            self.current_frame += 1
+            # lerp_temps(self.state)
+            self.state["temps"], _ = \
+                    get_temps(self.lerp_multiplicant,
+                              previous=self.state["temp_prev_data"],
+                              current=self.state["temp_data"],
+                              step=self.current_frame)
+            self.state["cpu"], _ = \
+                    cpu_pct(self.lerp_multiplicant,
+                            previous=self.state["cpu_prev_data"],
+                            current=self.state["cpu_data"],
+                            step=self.current_frame)
+            self.printer()
+            # lerp updates
+
+
+    # have to take *args because of the signal handler...
+    def full_redraw(self, *args):
+        # only update what we need
+        self.state["command"] = command_format(len(self.monitors))
+        self.state["utils"] = get_utils(self.hidden)
+
+        self.state["temp_prev_data"] = self.state["temp_data"]
+        self.state["cpu_prev_data"] = self.state["cpu_data"]
+
+        if not self.hidden:
+           self.state["temps"], self.state["temp_data"] = \
+                   get_temps(self.lerp_multiplicant,
+                             refresh=True)
+           self.state["cpu"], self.state["cpu_data"] = \
+                   cpu_pct(self.lerp_multiplicant,
+                           previous=self.state["cpu_prev_data"],
+                           refresh=True)
+           self.state["desktops"] = get_desktops(self.monitors, self.pid)
+           self.state["date"] = date_print()
+
+        self.printer()
+
+
+    def printer(self):
+        print_list = []
 
         if self.hidden:
-            self.output = "  ".join((command_format(len(self.monitors)),
-                                     right_justify(),
-                                     get_utils(self.hidden)))
+            for k in self.hidden_print_order:
+                print_list.append(self.state[k])
         else:
-            self.output = "  ".join((command_format(len(self.monitors)),
-                                    get_temps(self.lerp_multiplicant),
-                                    cpu_pct(self.lerp_multiplicant),
-                                    get_desktops(self.monitors, self.pid),
-                                    right_justify(),
-                                    date_print(),
-                                    get_utils(self.hidden)))
-        self.output += "\n"
-        self.process_handle.stdin.write(bytes(self.output, "utf-8"))
+            for k in self.print_order:
+                print_list.append(self.state[k])
+
+        output = "  ".join((print_list))
+
+        output += "\n"
+        self.process_handle.stdin.write(bytes(output, "utf-8"))
         self.process_handle.stdin.flush()
+
 
     def toggle_hidden(self, *args):
         self.hidden = not self.hidden
@@ -168,10 +240,16 @@ def init_color_lerp(start_c, end_c):
     return result
 
 
+def lerp_step(current=0.0, target=100.0, total_steps=60.0, current_step=1.0):
+    return ((target - current) / total_steps) * current_step
+
+
 # always stick lemonbar on the correct monitor
 def command_format(monitor_count):
+    if monitor_count == 3:
+        return "%{S1}"
     if monitor_count == 2:
-        return "%{Sl}"
+        return "%{S0}"
     else:
         return "%{S0}"
 
@@ -222,31 +300,8 @@ def temperature_range(input_temp):
     return temp
 
 
-# return CPU and GPU temperatures
-def get_temps(lerp_multiplicant):
-    temps = {}
-    temps["cpu"] = 0
-    temps["gpu"] = 0
+def get_lerp_temps(temps, multiplicant, step=1.0):
     output = ""
-    with open(CPU_TEMP_FILE, "r") as t:
-        cpu_temp = t.read()
-
-    # floor division
-    temps["cpu"] = int(cpu_temp) // 1000
-
-    temps["gpu"] = shell_out(NVIDIA_TEMP_BIN)
-    try:
-        temps["gpu"] = int(temps["gpu"])
-    except ValueError as e:
-        temps["gpu"] = 255
-
-    temps["gpu_lerp"] = temperature_range(temps["gpu"])
-
-    temps["cpu_lerp"] = temperature_range(temps["cpu"])
-
-    print("real c%s, floaty c%s" % (temps["cpu"], temps["cpu_lerp"]), file=sys.stderr)
-    print("real g%s, floaty g%s" % (temps["gpu"], temps["gpu_lerp"]), file=sys.stderr)
-
     for temp_type in TEMPERATURE_SORT:
         temp_key = "%s_lerp" % temp_type
         icon_key = "%s_chip" % temp_type
@@ -254,21 +309,73 @@ def get_temps(lerp_multiplicant):
         if temps["gpu"] == 255 and temp_type == "gpu":
             icon_key = "unknown"
 
-        r,g,b = lerp_multiply(temps[temp_key], lerp_multiplicant)
+        r,g,b = lerp_multiply(temps[temp_key], multiplicant)
         output += "%%{F#%02X%02X%02X}" % (r, g, b)
         output += ICONS[icon_key] + RESET_COLOR + "  "
-    output += INACTIVE_DESKTOP_COLOR + "|" + RESET_COLOR
 
+    output += INACTIVE_DESKTOP_COLOR + "|" + RESET_COLOR
     return str(output)
 
 
-def cpu_pct(lerp_multiplicant):
+# return CPU and GPU temperatures
+def get_temps(lerp_multiplicant, current=None, previous=None, refresh=False, step=1.0):
+    temps = {}
+    temps["cpu"] = 0
+    temps["gpu"] = 0
+    output = ""
+
+    if previous:
+        temps = previous
+    else:
+        temps["gpu"] = shell_out(NVIDIA_TEMP_BIN)
+        with open(CPU_TEMP_FILE, "r") as t:
+            cpu_temp = t.read()
+
+        # floor division
+        temps["cpu"] = int(cpu_temp) // 1000
+        try:
+            temps["gpu"] = int(temps["gpu"])
+        except ValueError as e:
+            temps["gpu"] = 255
+
+
+    temps["gpu_lerp"] = temperature_range(temps["gpu"])
+
+    temps["cpu_lerp"] = temperature_range(temps["cpu"])
+
+    # print("real c%s, floaty c%s" % (temps["cpu"], temps["cpu_lerp"]), file=sys.stderr)
+    # print("real g%s, floaty g%s" % (temps["gpu"], temps["gpu_lerp"]), file=sys.stderr)
+
+    output = get_lerp_temps(temps, lerp_multiplicant, step=step)
+
+    return str(output), temps
+
+
+def cpu_pct(lerp_multiplicant, current=None, previous=None, refresh=False, step=60.0):
     cpu_stat = {}
 
-    cpus = psutil.cpu_percent(percpu=True)
+    if not refresh:
+        cpus = current
+        # print(current, file=sys.stderr)
+    elif refresh:
+        cpus = psutil.cpu_percent(percpu=True)
     output = ""
 
     for core_num, percent in enumerate(cpus):
+        if previous:
+            # action = previous[core_num] * step
+            # new_percent = percent
+            t = percent
+            lstep = lerp_step(current=previous[core_num], target=percent, current_step=step)
+            if core_num == 1:
+                print(previous[core_num])
+                print("Percent: %s" % percent)
+                print(lstep)
+            percent += lstep
+            if core_num == 1:
+                print(percent, file=sys.stderr)
+                print(t)
+
         r,g,b = lerp_multiply(percent, lerp_multiplicant)
 
         cpu_stat[core_num] = "%%{F#%02X%02X%02X}" % (r, g, b)
@@ -278,7 +385,7 @@ def cpu_pct(lerp_multiplicant):
         # output += color + ICONS["CPU"] + RESET_COLOR + " "
         output += color + ICONS["cpu_core"] + RESET_COLOR
 
-    return output
+    return output, cpus
 
 
 def get_utils(hidden):
@@ -299,15 +406,17 @@ def get_desktops(monitors, pid):
     all_desktops = []
     active_desktops = []
     for idx, monitor in enumerate(monitors):
-        json_blob = shell_out(["bspc", "query", "-T", "-m", monitor])
+        query = ["bspc", "query", "-T", "-m", monitor]
+        json_blob = shell_out(query)
 
         try:
             json_blob = json.loads(json_blob)
         except Exception as e:
-            print("Could not decode [bspc query -T -m " +
-                  monitor + "] %s" % e, file=sys.stderr)
+            print("Could not decode %s: %s " %
+                  (" ".join((query)), e), file=sys.stderr)
         if 'desktops' in json_blob:
             all_desktops.append(json_blob['desktops'])
+        # print(all_desktops, file=sys.stderr)
         active_desktops.append(json_blob['focusedDesktopId'])
 
         # active_desktops[monitor] = shell_out(["bspc", "query", "-T", "-d"])
@@ -384,8 +493,10 @@ def get_monitors():
         print("No monitors detected!", file=sys.stderr)
         sys.exit(2)
 
+
 def right_justify():
     return "%{r}"
+
 
 def date_print():
     date_str = INACTIVE_DESKTOP_COLOR
@@ -407,14 +518,14 @@ def main():
 
     bar = Bar(p)
 
-    signal.signal(signal.SIGUSR1, bar.redraw)
+    signal.signal(signal.SIGUSR1, bar.full_redraw)
     signal.signal(signal.SIGUSR2, bar.restart)
     signal.signal(signal.SIGINT, bar.toggle_hidden)
 
 
     while True:
         bar.redraw()
-        time.sleep(1)
+        time.sleep(1.0 / bar.fps)
 
 
 if __name__ == "__main__":
