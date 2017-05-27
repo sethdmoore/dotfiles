@@ -1,7 +1,7 @@
 #!/bin/sh
 
-MONITOR_TO_TOGGLE="DVI-I-3"
-MONITOR_TO_KEEP="DVI-I-2"
+MONITOR_TO_TOGGLE="HDMI-0"
+# MONITOR_TO_KEEP="DVI-I-2"
 MONITOR_STATE_DIR="$XDG_RUNTIME_DIR/monitorctl"
 DESKTOP_STATE="$MONITOR_STATE_DIR/monitors"
 
@@ -21,11 +21,7 @@ multihead() {
 
   xrandr --output "$MONITOR_TO_TOGGLE" \
     --auto \
-    --left-of "$MONITOR_TO_KEEP" \
-    --output "$MONITOR_TO_KEEP" \
-    --auto \
-    --primary
-
+    --left-of "$MONITOR_TO_KEEP"
     sh ~/.config/bspwm/bspwmrc
 }
 
