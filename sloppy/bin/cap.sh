@@ -1,29 +1,31 @@
 #!/bin/sh
 # ShareX in a few lines of shell script!
+# requires slop(1), ffmpeg(1)
 
 OPTIONS="+nomouse"
 CAP_MOUSE="0"
-FILE="vid.mp4"
+FILE="/tmp/region_cap.mp4"
+# value between 1 and 31
 QUANT="26"
-# 480p
+# telegram limits 10 megabytes
+FS_LIMIT="10M"
+# telegram limits 480p
 WIDTH_MAX="854"
 HEIGHT_MAX="480"
 
 function region_cap() {
-  # x,y coords for capture
-  # w,h dimensions of capture
-  # nw is the modified new width, usually copied from width
-  local x y w h dim input nw
+  # $x,$y are coords for capture | $w,$h dimensions of capture
+  # $nw is the modified new width, usually copied from width
+  local x y w h nw dim input
   read -r x y w h <<< "$1 $2 $3 $4"
   echo $x
 
+  # scales the maximum width to WIDTH_MAX and then rounds the height down
   if [ "$w" -gt "$WIDTH_MAX" ]; then
-    w="854"
+    nw="854"
   else
-    nw=w
+    nw="$w"
   fi
-
-  echo "$nw"
 
   dim="$x,$y"
   input=":0.0+$dim"
@@ -31,13 +33,13 @@ function region_cap() {
   ffmpeg \
     -vsync passthrough -frame_drop_threshold 4 \
     -f x11grab \
-    -video_size "$nw"x"$h" \
+    -draw_mouse "$CAP_MOUSE" \
+    -video_size "$w"x"$h" \
     -framerate 60 \
     -i "$input" \
     -vcodec libx264 \
-    -vf scale="$w:-2" \
+    -vf scale="$nw:-2" \
     -preset ultrafast -crf:v "$QUANT" \
-    -draw_mouse "$CAP_MOUSE" \
     -fs 10M \
     -y \
     "$FILE"
