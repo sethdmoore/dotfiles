@@ -2,14 +2,17 @@
 # ShareX in a few lines of shell script!
 # requires slop(1), ffmpeg(1)
 
-OPTIONS="+nomouse"
+# 0 for no cap, 1 for cap
 CAP_MOUSE="0"
 FILE="/tmp/region_cap.mp4"
+
 # value between 1 and 31
 QUANT="26"
+
 # telegram limits 10 megabytes
 FS_LIMIT="10M"
-# telegram limits 480p
+
+# telegram limits to 480p
 WIDTH_MAX="854"
 HEIGHT_MAX="480"
 
@@ -30,7 +33,7 @@ function region_cap() {
   dim="$x,$y"
   input=":0.0+$dim"
   # -vf scale="854:-2" \
-  ffmpeg \
+  echo ffmpeg \
     -vsync passthrough -frame_drop_threshold 4 \
     -f x11grab \
     -draw_mouse "$CAP_MOUSE" \
@@ -45,14 +48,22 @@ function region_cap() {
     "$FILE"
 }
 
-# function upload() {
-# 
-# }
+function upload() {
+  # echo curl -sS -F "files[]=@${FILE}" https://pomf.space/upload.php | jq '.files[0].url' | xsel --clipboard
+  echo
+}
+
 
 function main() {
   local x y w h g id
-  # echo curl -sS -F "files[]=@${FILE}" https://pomf.space/upload.php | jq '.files[0].url' | xsel --clipboard
-  read -r x y w h g id <<< $(slop -f "%x %y %w %h %g %i")
+
+  output="$(slop -f "%x %y %w %h %g %i")"
+  if [ "$?" -ne 0 ]; then
+    exit
+  fi
+
+
+  read -r x y w h g id <<< "$output"
   region_cap "$x $y $w $h"
 }
 
