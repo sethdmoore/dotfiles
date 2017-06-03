@@ -1,0 +1,5 @@
+! rofi.color-normal: gray1,blue,gray1,blue,white
+! activebg, text, pinstripe1, potentialprog bg, potentialprog fg
+rofi.color-normal: gray0,blue,gray1,blue,white
+rofi.color-window: gray0, gray0
+rofi.color-active: gray0, gray1
