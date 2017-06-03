@@ -30,7 +30,7 @@ super + Escape
 # bspwm hotkeys
 #
 
-ctrl + b
+super + b
     urxvt -e sloppy
 
 # quit bspwm normally
