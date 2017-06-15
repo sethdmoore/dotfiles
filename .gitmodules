@@ -37,3 +37,6 @@
 [submodule "nerdtree"]
 	path = vim/.vim/pack/plugins/start/nerdtree
 	url = https://github.com/scrooloose/nerdtree.git
+[submodule "syntastic"]
+	path = vim/.vim/pack/plugins/start/syntastic
+	url = https://github.com/vim-syntastic/syntastic.git
