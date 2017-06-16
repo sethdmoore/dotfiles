@@ -2,8 +2,7 @@
 # import common lib for syntax
 . lib
 
-hostname="${b}$(hostname)${d}"
+date_section="${a}$(date +%H:%M)${d}"
+hostname="${b}#{host}${d}"
 public_ip="${a}$(dig +short myip.opendns.com @resolver1.opendns.com)${d}"
-output="| ${hostname} | ${public_ip} "
-
-printf -- "$output"
+printf -- "| ${date_section} | ${hostname} | ${public_ip} "
