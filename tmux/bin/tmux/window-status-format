@@ -1,0 +1,7 @@
+#!/bin/sh
+# import common lib for syntax
+. lib
+
+output="  #{?window_zoomed_flag,${i} ,  }#W#{?window_zoomed_flag, ${i},  }  "
+
+printf -- "$output"

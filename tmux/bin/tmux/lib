@@ -1,0 +1,21 @@
+#!/bin/sh
+# bold
+b="#[bold]"
+
+# anchor
+a="#[fg=blue]"
+
+# brigher anchor link
+aa="#[fg=colour39]"
+
+# unused
+ac="#[fg=white, bg=colour235]"
+
+# icon
+i="■"
+
+# highlighed selection
+hl="#[bg=blue]"
+
+# default (reset format)
+d="#[default]"
