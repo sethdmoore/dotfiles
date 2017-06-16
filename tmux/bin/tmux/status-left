@@ -1,0 +1,11 @@
+#!/bin/sh
+# import common lib for syntax
+. lib
+
+# seriously condense all the logic here
+prefix_button="[#{?client_prefix,${a}${i}, }$d]"
+user_section="${b}#{?client_prefix,${hl}${USER},${USER}}${d}"
+date_section="${a}$(date +%H:%M)${d}"
+
+output="${prefix_button} ${user_section} | ${date_section} |  "
+printf -- "$output"
