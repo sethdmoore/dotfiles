@@ -2,9 +2,8 @@
 # import common lib for syntax
 . lib
 
-# "#[bg=colour235][-#[fg=colour39,noreverse]#{?window_zoomed_flag,■ ,  }#W#{?window_zoomed_flag, ■,  }#[fg=white]-]#[default]"
-
-output="[-${aa}#{?window_zoomed_flag,${i} ,  }#W#{?window_zoomed_flag, ${i},  }${d}-]"
-
+output="[-${aa}#{?window_zoomed_flag,${i} ,  }"
+output="${output}#{window_name}"
+output="${output}#{?window_zoomed_flag, ${i},  }${d}-]"
 
 printf -- "$output"

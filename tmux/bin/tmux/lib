@@ -5,6 +5,9 @@ b="#[bold]"
 # anchor
 a="#[fg=blue]"
 
+# bell
+bl="#[fg=colour141]"
+
 # brigher anchor link
 aa="#[fg=colour39]"
 
