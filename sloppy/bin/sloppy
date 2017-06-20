@@ -33,7 +33,7 @@ function region_cap() {
   dim="$x,$y"
   input=":0.0+$dim"
   # -vf scale="854:-2" \
-  echo ffmpeg \
+  ffmpeg \
     -vsync passthrough -frame_drop_threshold 4 \
     -f x11grab \
     -draw_mouse "$CAP_MOUSE" \
