@@ -4,7 +4,7 @@ export PATH="/home/seth/bin/:$PATH"
 
 bar.py | sh &
 
-sleep 0.05
+sleep 0.35
 PANEL_WM_NAME="lemonybar"
 wid=$(xdo id -a "$PANEL_WM_NAME")
 tries_left=20

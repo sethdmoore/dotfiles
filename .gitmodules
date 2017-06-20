@@ -40,3 +40,6 @@
 [submodule "syntastic"]
 	path = vim/.vim/pack/plugins/start/syntastic
 	url = https://github.com/vim-syntastic/syntastic.git
+[submodule "vim-indent-object"]
+	path = vim/.vim/pack/plugins/start/vim-indent-object
+	url = https://github.com/michaeljsmith/vim-indent-object
