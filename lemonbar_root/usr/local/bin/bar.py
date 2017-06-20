@@ -309,7 +309,6 @@ def get_desktops(monitors, pid):
         if 'desktops' in json_blob:
             all_desktops.append(json_blob['desktops'])
         active_desktops.append(json_blob['focusedDesktopId'])
-
         # active_desktops[monitor] = shell_out(["bspc", "query", "-T", "-d"])
 
     print_desktops = RESET_COLOR
