@@ -135,7 +135,7 @@ if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
     append_path "/usr/local/go/bin"
 fi
 
-if [ ! -d "${HOME}/bin" ]; then
+if [ -d "${HOME}/bin" ]; then
     append_path "${HOME}/bin"
 fi
 
