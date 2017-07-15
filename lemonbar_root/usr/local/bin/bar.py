@@ -8,7 +8,6 @@ import time
 import signal
 import json
 
-
 RESET_COLOR = "%{F-}%{B-}"
 
 # fontawesome icons
@@ -71,18 +70,28 @@ class Bar(object):
     def __init__(self, process_handle):
         self.process_handle = process_handle
         self.pid = os.getpid()
-        self.output = ""
         self.hidden = False
 
         self.lerp_multiplicant = init_color_lerp(BASE_COLOR, END_COLOR)
+
         self.write_pid()
         self.write_fifo()
+        self.current_cycle = 0
+        self.cycles_until_full_redraw = 9
+        self.lerp_cache = {}
+        self.output = {}
+        self.print_order = {
+                "hidden": ["command_format", "right_justify", "utils"],
+                "visible": ["command_format", "temps", "cpu", "desktops",
+                            "right_justify", "date", "get_utils"]
+        }
 
         self.fifo_file = ""
         self.monitors = get_monitors()
+        self.full_redraw()
 
 
-    def redraw(self, *args):
+    def full_redraw(self, *args):
         # have to take *args because of the signal handler...
 
         # WARNING: DO NOT POLL xrandr !!
@@ -90,20 +99,53 @@ class Bar(object):
         # self.monitors = get_monitors()
 
         if self.hidden:
-            self.output = "  ".join((command_format(len(self.monitors)),
-                                     right_justify(),
-                                     get_utils(self.hidden)))
+            self.output = {
+                    "command_format": command_format(len(self.monitors)),
+                    "right_justify": right_justify(),
+                    "utils": get_utils(self.hidden)
+                    }
         else:
-            self.output = "  ".join((command_format(len(self.monitors)),
-                                    get_temps(self.lerp_multiplicant),
-                                    cpu_pct(self.lerp_multiplicant),
-                                    get_desktops(self.monitors, self.pid),
-                                    right_justify(),
-                                    date_print(),
-                                    get_utils(self.hidden)))
-        self.output += "\n"
-        self.process_handle.stdin.write(bytes(self.output, "utf-8"))
+            self.output = {
+                "command_format": command_format(len(self.monitors)),
+                "temps": get_temps(self.lerp_cache, self.lerp_multiplicant),
+                "cpu": cpu_pct(self.lerp_cache, self.lerp_multiplicant),
+                "desktops": get_desktops(self.monitors, self.pid),
+                "right_justify": right_justify(),
+                "date": date_print(),
+                "get_utils": get_utils(self.hidden)
+            }
+
+        self.printer()
+
+    def printer(self):
+        order = []
+        output = ""
+        if self.hidden:
+            order = self.print_order["hidden"]
+        else:
+            order = self.print_order["visible"]
+
+        for key in order:
+            output += "  " + self.output[key]
+
+        output += "\n"
+        self.process_handle.stdin.write(bytes(output, "utf-8"))
         self.process_handle.stdin.flush()
+
+    def redraw(self, *args):
+        if self.current_cycle >= self.cycles_until_full_redraw:
+            self.current_cycle = 0
+            self.full_redraw()
+            return
+
+        if self.hidden:
+            return
+
+        self.output["temps"] = get_temps(self.lerp_cache, self.lerp_multiplicant)
+        self.output["cpu"] = cpu_pct(self.lerp_cache, self.lerp_multiplicant)
+        self.output["date"] = date_print()
+        self.current_cycle += 1
+        self.printer()
 
     def toggle_hidden(self, *args):
         self.hidden = not self.hidden
@@ -202,14 +244,19 @@ def hex_limit(dec):
     return dec
 
 
-def lerp_multiply(percent, lerp_multiplicant):
+def lerp_cache_or_multiply(cache, percent, lerp_multiplicant):
     # red, green, blue lerp values
+    str_percent = str(percent)
+    if str_percent in cache:
+        return cache[str_percent]
+
     rl, gl, bl = lerp_multiplicant
 
     red, green, blue = BASE_COLOR
     r = hex_limit(int(red + (percent * rl)))
     g = hex_limit(int(green + (percent * gl)))
     b = hex_limit(int(blue + (percent * bl)))
+    cache[str_percent] = (r,g,b)
     return r,g,b
 
 
@@ -223,7 +270,7 @@ def temperature_range(input_temp):
 
 
 # return CPU and GPU temperatures
-def get_temps(lerp_multiplicant):
+def get_temps(cache, lerp_multiplicant):
     temps = {}
     temps["cpu"] = 0
     temps["gpu"] = 0
@@ -254,7 +301,7 @@ def get_temps(lerp_multiplicant):
         if temps["gpu"] == 255 and temp_type == "gpu":
             icon_key = "unknown"
 
-        r,g,b = lerp_multiply(temps[temp_key], lerp_multiplicant)
+        r,g,b = lerp_cache_or_multiply(cache, temps[temp_key], lerp_multiplicant)
         output += "%%{F#%02X%02X%02X}" % (r, g, b)
         output += ICONS[icon_key] + RESET_COLOR + "  "
     output += INACTIVE_DESKTOP_COLOR + "|" + RESET_COLOR
@@ -262,14 +309,14 @@ def get_temps(lerp_multiplicant):
     return str(output)
 
 
-def cpu_pct(lerp_multiplicant):
+def cpu_pct(cache, lerp_multiplicant):
     cpu_stat = {}
 
     cpus = psutil.cpu_percent(percpu=True)
     output = ""
 
     for core_num, percent in enumerate(cpus):
-        r,g,b = lerp_multiply(percent, lerp_multiplicant)
+        r,g,b = lerp_cache_or_multiply(cache, percent, lerp_multiplicant)
 
         cpu_stat[core_num] = "%%{F#%02X%02X%02X}" % (r, g, b)
 
@@ -406,7 +453,7 @@ def main():
 
     bar = Bar(p)
 
-    signal.signal(signal.SIGUSR1, bar.redraw)
+    signal.signal(signal.SIGUSR1, bar.full_redraw)
     signal.signal(signal.SIGUSR2, bar.restart)
     signal.signal(signal.SIGINT, bar.toggle_hidden)
 
