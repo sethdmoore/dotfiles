@@ -11,8 +11,7 @@ EOH
 
 set_cpu_gov() {
 	core=$1
-	governor=$2
-	target_path="/sys/devices/system/cpu/cpu$core/cpufreq/scaling_governor"
+	governor=$2 target_path="/sys/devices/system/cpu/cpu$core/cpufreq/scaling_governor"
 	echo $governor > $target_path
 	printf -- 'cpu %s: %s\n' $core $(cat $target_path)
 
@@ -44,10 +43,8 @@ main() {
     cpu_freq=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq)
 		governor='performance'
 	elif [ "$state" = "save" ]; then
-    # this won't work because we overwrite the min_freq with max_freq
-    # cpu_freq=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq)
-
-    cpu_freq=8000
+    # can't read min_freq back since we overwrite it with "perf"
+    cpu_freq=0
 		governor='powersave'
   else
     print_help
