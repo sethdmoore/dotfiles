@@ -1,12 +1,15 @@
 ## Replacement Aliases ###
-alias hist="cat -n ${HOME}/.bash_history"
+# alias hist="cat -n ${HOME}/.bash_history"
+
+### utility aliasees ###
+alias cidr="cat ${HOME}/.cidr"
+alias env="env | sort"
+alias reload="source ${HOME}/.zshrc"
 
 ### Editing Aliases ###
-alias aliases="$EDITOR ${HOME}/.aliases; source ${HOME}/.aliases"
-alias bash_profile="$EDITOR ${HOME}/.bash_profile; source ${HOME}/.bash_profile"
-alias bashrc="$EDITOR ${HOME}/.bashrc; source ${HOME}/.bashrc"
+alias aliases="$EDITOR ${HOME}/.aliases && source ${HOME}/.aliases"
 alias todo="$EDITOR ${HOME}/TODO.md"
-alias docker="docker --tlsverify=false $@"
+# alias docker="docker --tlsverify=false $@"
 
 # convenience
 function reload() {
@@ -17,10 +20,23 @@ function reload() {
     fi
 }
 
+function git-clean-all() {
+    local cwd dir
+    cwd="$(pwd)"
+
+    for dir in *; do
+        git --work-tree="$cwd/$dir" --git-dir="$cwd/$dir/.git" clean -xdff
+    done
+}
+
 if [ "$KERNEL" = "Darwin" ]; then
     # alias lockscreen="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
     alias ls="ls -G $@"
     alias lockscreen="pmset displaysleepnow"
+
+    function bannertime() {
+        defaults write com.apple.notificationcenterui bannerTime $@
+    }
 elif [ "$KERNEL" = "Linux" ]; then
     alias ls="ls --color $@"
 
@@ -35,25 +51,8 @@ elif [ "$KERNEL" = "Linux" ]; then
     function pacman-clean() {
         sudo pacman -Rsn $(pacman -Qdtq)
     }
-
 fi
 
-### utility aliasees ###
-alias cidr="cat ${HOME}/.cidr"
-alias env="env | sort"
-alias reload="source ${HOME}/.zshrc"
-
-function update_pathogen() {
-    local basedir
-    basedir="${HOME}/.vim/bundle"
-    for plugin in "${basedir}/*"; do
-        git --git-dir="${basedir}/.git" --work-tree="${basedir}/" pull
-    done
-}
-
-function bannertime() {
-    defaults write com.apple.notificationcenterui bannerTime $@
-}
 
 ### org-specific aliases ###
 if [ -e "${HOME}/.private_aliases" ]; then
