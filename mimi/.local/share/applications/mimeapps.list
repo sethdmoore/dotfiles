@@ -1,12 +1,12 @@
 [Added Associations]
-x-scheme-handler/tg=telegramdesktop.desktop;
 text/html=google-chrome.desktop;
 text/xml=google-chrome.desktop;
 application/xhtml_xml=google-chrome.desktop;
+application/pdf=google-chrome.desktop;
+application/pdf; charset=binary=google-chrome.desktop;
 image/webp=google-chrome.desktop;
-x-scheme-handler/http=google-chrome.desktop;
-x-scheme-handler/https=google-chrome.desktop;
 x-scheme-handler/ftp=google-chrome.desktop;
+x-scheme-handler/tg=telegramdesktop.desktop;
 image/jpeg=feh.desktop;
 video/=mpv;
 video/mp4=mpv.desktop;
