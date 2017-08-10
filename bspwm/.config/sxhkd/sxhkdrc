@@ -22,7 +22,7 @@ super + space
          -font "Lato Regular 14" \
          -show run
 
-# make sxhkd reload its configuration files:
+# make kxhkd reload its configuration files:
 super + Escape
 	pkill -USR1 -x sxhkd
 
@@ -30,11 +30,17 @@ super + Escape
 # bspwm hotkeys
 #
 
+#
+# capture
+#
 super + {_,shift +} b
     bspc rule -a URxvt -o "state=floating" \
             "monitor=last" \
             "" && \
         urxvt -geometry 80x4 -e sloppy {--no-mouse, }
+
+super + {_, shift +} v
+    maimy {--clipboard, }
 
 # quit bspwm normally
 super + alt + Escape
