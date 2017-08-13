@@ -22,14 +22,18 @@ augroup CursorLine
 augroup END
 
 
+" #Section splits
 " More 'natural' splits
 set splitbelow
 set splitright
+set winheight=5
+set winminheight=5
 
 " dump swp / backup files in temp, instead of polluting local dirs
 set backupdir=~/.vim/backup//
-set directory=~/.vim/swp//
+set directory^=~/.vim/swp//
 set noundofile
+
 
 " activates filetype detection
 filetype plugin indent on
