@@ -7,8 +7,11 @@ LEMONBAR_PID="$XDG_RUNTIME_DIR/lemonbar/bar.py"
 systemctl --user start synergy.service
 systemctl --user start synergyd.service
 systemctl --user start deluged.service
+
 DELUGE_PROC=$(pgrep -xf '/usr/bin/python2 /usr/bin/deluge')
 if [ -z "$DELUGE_PROC" ]; then
+  # deluge
+  bspc rule -a Deluge -o desktop=^6
   nohup deluge  > /dev/null 2>&1 &
 fi
 
@@ -58,21 +61,27 @@ bspc config focus_follows_pointer true
 bspc config remove_disabled_monitors true
 
 
-# steam
-bspc rule -a Steam -o desktop=^2
+# clear any rules so that sourcing bspwmrc is idempotent
+bspc rule -r '*:*'
 
-# deluge
-bspc rule -a Deluge -o desktop=^6
+# steam
+bspc rule -a Steam:Steam state=tiled
+if [ ! $(pgrep -i steam) ]; then
+  bspc rule -a Steam -o desktop=^2
+fi
 
 # firestorm
 bspc rule -a do-not-directly-run-firestorm-bin -o desktop=^5
 
 # classname:instance_name
 # fetch with $ bspc query -n @focused:/ -T | json_pp | less
+# hangouts messenger
 bspc rule -a Google-chrome:crx_knipolnnllmklapflnccelgolnpehhpl -o desktop=^4
-bspc rule -a TelegramDesktop -o desktop=^4
-bspc rule -a TelegramDesktop -o desktop=^4
-bspc rule -a Steam:Steam state=tiled
+
+if [ ! $(pgrep -i telegram) ]; then
+  bspc rule -a TelegramDesktop -o desktop=^4
+fi
+
 
 bspc wm --adopt-orphans
 
