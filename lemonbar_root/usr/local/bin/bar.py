@@ -8,7 +8,8 @@ import time
 import signal
 import json
 
-RESET_COLOR = "%{F-}%{B-}"
+# RESET_COLOR = "%{F-}%{B-}"
+RESET_COLOR = "%{F-}"
 
 # fontawesome icons
 ICONS = {
@@ -79,6 +80,7 @@ class Bar(object):
         self.current_cycle = 0
         self.cycles_until_full_redraw = 9
         self.lerp_cache = {}
+        self.active_monitor = 1
         self.output = {}
         self.print_order = {
                 "hidden": ["command_format", "right_justify", "utils"],
@@ -100,13 +102,17 @@ class Bar(object):
 
         if self.hidden:
             self.output = {
-                    "command_format": command_format(len(self.monitors)),
+                    "command_format":
+                        command_format(len(self.monitors),
+                                       self.active_monitor),
                     "right_justify": right_justify(),
-                    "utils": get_utils(self.hidden)
+                    "get_utils": get_utils(self.hidden)
                     }
         else:
             self.output = {
-                "command_format": command_format(len(self.monitors)),
+                "command_format":
+                    command_format(len(self.monitors),
+                                   self.active_monitor),
                 "temps": get_temps(self.lerp_cache, self.lerp_multiplicant),
                 "cpu": cpu_pct(self.lerp_cache, self.lerp_multiplicant),
                 "desktops": get_desktops(self.monitors, self.pid),
@@ -211,11 +217,13 @@ def init_color_lerp(start_c, end_c):
 
 
 # always stick lemonbar on the correct monitor
-def command_format(monitor_count):
+def command_format(monitor_count, monitor):
+                # -AARRGGBB
+    bg_color = "%{B#55222266}"
     if monitor_count == 2:
-        return "%{Sl}"
+        return "%%{S%s}" % monitor + bg_color
     else:
-        return "%{S0}"
+        return "%%{S%s}" % monitor + bg_color
 
 
 # wrap Popen to make it not so horrible every time we want to shell out
