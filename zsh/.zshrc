@@ -8,6 +8,9 @@ setopt interactivecomments
 # setopt hist_find_no_dups
 setopt hist_ignore_dups
 
+zstyle ':completion:*' menu select
+zmodload zsh/complist
+
 # export PATH="$HOME/bin:$PATH"
 
 export KERNEL="$(uname -s)"
@@ -21,9 +24,17 @@ export EDITOR="vim"
 
 export GPGKEY='4096R/1CF9C381'
 
+#
+# bindings
+#
+
 bindkey -v
 bindkey '^R' history-incremental-search-backward
 bindkey -v '^?' backward-delete-char 
+bindkey -M menuselect 'h' vi-backward-char
+bindkey -M menuselect 'k' vi-up-line-or-history
+bindkey -M menuselect 'l' vi-forward-char
+bindkey -M menuselect 'j' vi-down-line-or-history
 
 # zshrc executed without POSIX compat
 # use array type (http://zsh.sourceforge.net/FAQ/zshfaq03.html)
