@@ -6,8 +6,12 @@ BAR_REFRESH="xargs kill -USR1 < $XDG_RUNTIME_DIR/lemonbar/bar.py"
 super + Return
 	urxvt
 
-super + e
-	google-chrome-stable &
+# super + {shift +,_} e
+# 	google-chrome-stable {, --incognito}
+
+
+super + {shift +,_} e
+    google-chrome-stable {--incognito, }
 
 # program launcher
 # super + space
@@ -21,6 +25,21 @@ super + space
          -location 1 \
          -font "Lato Regular 14" \
          -show run
+
+
+#
+# receptacles !
+#
+
+# murder receptacles
+super + F1
+    kill-receptacles.sh
+
+
+# receptacles
+super + period
+    bspc node -i
+
 
 # make kxhkd reload its configuration files:
 super + Escape
@@ -157,11 +176,11 @@ super + {Left,Down,Up,Right}
 
 # focus
 ~button1
-	bspc pointer -g focus
+	bspc node pointed -f
 
 # start move/resize
 super + button{1,3}
-	; bspc pointer -g {move,resize_side}
+	; bspc node pointed -g {move,resize_side}
 
 # super + button2
 #     ; urxvt
@@ -169,4 +188,4 @@ super + button{1,3}
 
 # end move/resize
 super + @button{1,3}
-	bspc pointer -u
+	bspc node pointed -f
