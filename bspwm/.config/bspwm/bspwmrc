@@ -4,7 +4,7 @@
 HEIGHT=10
 LEMONBAR_PID="$XDG_RUNTIME_DIR/lemonbar/bar.py"
 
-systemctl --user start synergy.service
+# systemctl --user start synergy.service
 systemctl --user start synergyd.service
 systemctl --user start deluged.service
 
@@ -16,7 +16,7 @@ if [ -z "$DELUGE_PROC" ]; then
 fi
 
 # background
-feh --bg-scale /home/seth/.wallpapers/neat.png &
+feh --bg-scale $(randopaper.py) &
 
 MONITOR_GAME="HDMI-0"
 MONITOR_MAIN="DP-4"
