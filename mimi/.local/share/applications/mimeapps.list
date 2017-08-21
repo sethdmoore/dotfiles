@@ -8,6 +8,7 @@ image/webp=google-chrome.desktop;
 x-scheme-handler/ftp=google-chrome.desktop;
 x-scheme-handler/tg=telegramdesktop.desktop;
 image/jpeg=feh.desktop;
+image/png=feh.desktop;
 video/=mpv;
 video/mp4=mpv.desktop;
 
