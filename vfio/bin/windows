@@ -6,10 +6,12 @@
 main() {
   printf -- "Setting CPU to MAX_FREQ/Performance\n"
   sudo cpuctl perf
-  printf -- "Changing to single monitor configurastion\n"
-  monitorctl single
+  printf -- "Changing to dual monitor configuration\n"
+  monitorctl dual
   printf -- "Stopping synergyd\n"
   systemctl --user stop synergyd
+  printf -- "Starting synergy\n"
+  systemctl --user start synergy
   printf -- "Starting windows\n"
   sudo virsh start win10
 }

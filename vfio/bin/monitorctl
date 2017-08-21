@@ -1,49 +1,15 @@
 #!/bin/sh
-
 MONITOR_TO_TOGGLE="HDMI-0"
 MONITOR_TO_KEEP="DP-4"
-MONITOR_STATE_DIR="$XDG_RUNTIME_DIR/monitorctl"
-DESKTOP_STATE="$MONITOR_STATE_DIR/monitors"
 
 multihead() {
-  # read the last desktop state and attempt to restore it
-  # if [ -z "$DESKTOP_STATE" ]; then
-  #   printf -- "No DESKTOP_STATE defined\n"
-  # fi
-
-   #if [ -f "$DESKTOP_STATE" ]; then
-   #  while read desktop; do
-   #    bspc desktop --to-monitor "$MONITOR_TO_TOGGLE"
-   #  done < "$DESKTOP_STATE"
-
-   #  rm -v -- "$DESKTOP_STATE"
-   #fi
-
-  xrandr --output "$MONITOR_TO_TOGGLE" \
-    --auto \
-    --left-of "$MONITOR_TO_KEEP"
-    sh ~/.config/bspwm/bspwmrc
+  xrandr --output "$MONITOR_TO_TOGGLE" --auto --left-of "$MONITOR_TO_KEEP"
+  sh ~/.config/bspwm/bspwmrc
 }
 
-singlehead() {
-  local desktops retval
+dualhead() {
+  xrandr --output "$MONITOR_TO_TOGGLE" --off
 
-  xrandr --output "$MONITOR_TO_TOGGLE" \
-    --off
-
-  # desktops=$(bspc query -D -m "$MONITOR_TO_TOGGLE")
-  # retval=$?
-
-  # if [ ! "$retval" -eq 0 ]; then
-  #   return
-  # fi
-
-  # printf "%s\n" $desktops >> "$DESKTOP_STATE"
-
-
-  # for desktop in $desktops; do
-  #   bspc desktop --to-monitor "$MONITOR_TO_KEEP" "$desktop"
-  # done
   sh ~/.config/bspwm/bspwmrc
 }
 
@@ -51,7 +17,7 @@ print_help() {
   cat <<EOF
 monitorctl <arg>
 <no arg>  print help
-single    single monitor
+dual      two monitors
 multi     multihead monitor
 EOF
 }
@@ -60,19 +26,13 @@ main() {
   local arg
   arg=$1
 
-  # track the desktops
-  if [ ! -d "$MONITOR_STATE_DIR" ]; then
-    mkdir "$MONITOR_STATE_DIR"
-  fi
-
-  if [ "$arg" = "single" ]; then
-    singlehead
+  if [ "$arg" = "dual" ]; then
+    dualhead
   elif [ "$arg" = "multi" ]; then
     multihead
   else
     print_help
   fi
-
 }
 
 main $@
