@@ -1,2 +1,2 @@
 #!/bin/sh
-feh  --bg-scale '/home/seth/.wallpapers/trip.jpg' 
+feh --image-bg black --bg-max '/home/seth/.wallpapers/trip.jpg'
