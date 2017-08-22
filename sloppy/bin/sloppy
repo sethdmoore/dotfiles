@@ -13,13 +13,18 @@ FS_LIMIT="10M"
 
 # telegram limits to 480p
 WIDTH_MAX="854"
-HEIGHT_MAX="480"
+
+print_help() {
+  cat <<EOH
+sloppy <options>
+  --no-mouse: Do not capture the mouse, nor follow its movements
+EOH
+  exit 1
+}
 
 clean_up() {
   local pidfile
   pidfile=$1
-
-  echo $pidfile
 
   if [ -e "$pidfile" ]; then
     pid=$(cat "$pidfile")
@@ -33,6 +38,7 @@ clean_up() {
       # shell builtin kill doesn't support signal names
       /bin/kill -SIGINT "$pid"
     fi
+    # shell truthiness is the inverse of everything else :|
     return 0
   else
     return 1
@@ -42,7 +48,7 @@ clean_up() {
 region_cap() {
   # $x,$y are coords for capture | $w,$h dimensions of capture
   # $nw is the modified new width, usually copied from width
-  local x y w h nw dim input cap_mouse pidfile follow_mouse
+  local x y w h nw input cap_mouse pidfile follow_mouse
   read -r x y w h cap_mouse pidfile <<< "$1 $2 $3 $4 $5 $6"
 
   # scales the maximum width to WIDTH_MAX and then rounds the height down
@@ -52,18 +58,18 @@ region_cap() {
     nw="$w"
   fi
 
-
+  # only follow the mouse pointer if we're capturing it
+  # this seems like a sane default for me, but I'm not sure about anyone else
   if [ "$cap_mouse" -eq "1" ]; then
     follow_mouse="-follow_mouse 100"
   else
     follow_mouse=""
   fi
 
-  dim="$x,$y"
-  input=":0.0+$dim"
+  input=":0.0+$x,$y"
   # -vf scale="854:-2" \
 
-  # we bg ffmpeg so we can async write the pidfile
+  # we run ffmpeg in a child proc so we can write the pidfile on the main proc
   ffmpeg \
     -vsync passthrough -frame_drop_threshold 4 \
     -f x11grab \
@@ -87,13 +93,13 @@ region_cap() {
   wait "$pid"
 
   # finally, clean up
-  # truncate the pidfile so we don't kill an exited process
+  # truncate the pidfile so we don't try to kill an exited process
   printf -- "" > "$pidfile"
   clean_up "$pidfile"
 }
 
 upload() {
-  # echo curl -sS -F "files[]=@${FILE}" https://pomf.space/upload.php | jq '.files[0].url' | xsel --clipboard
+  # curl -sS -F "files[]=@${FILE}" https://pomf.space/upload.php | jq '.files[0].url' | xsel --clipboard
   echo
 }
 
@@ -109,9 +115,10 @@ main() {
     cap_mouse="1"
   fi
 
-  # allow hitting the capture hotkey a second time to stop capture
+  # allow running a second instance of sloppy to stop capture
+  # EG: hitting the hotkey for sloppy will gracefully terminate
   # if we've cleaned up, we're exiting gracefully
-  clean_up "$pidfile" && exit 0
+  clean_up "$PIDFILE" && exit 0
 
   output="$(slop -f "%x %y %w %h %g %i")"
   if [ "$?" -ne 0 ]; then
