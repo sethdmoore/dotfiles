@@ -16,7 +16,7 @@ if [ -z "$DELUGE_PROC" ]; then
 fi
 
 # background
-feh --bg-scale $(randopaper.py) &
+feh --bg-max $(randopaper.py) &
 
 MONITOR_GAME="HDMI-0"
 MONITOR_MAIN="DP-4"
