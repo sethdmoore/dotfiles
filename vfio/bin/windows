@@ -1,11 +1,12 @@
-#!/bin/sh
-
+#!/bin/sh 
 # not needed.
 # export QEMU_AUDIO_DRV=pa
 
 main() {
   printf -- "Setting CPU to MAX_FREQ/Performance\n"
   sudo cpuctl perf
+  printf -- "Stopping live wallpapers"
+  killall xwinwrap
   printf -- "Changing to dual monitor configuration\n"
   monitorctl dual
   printf -- "Stopping synergyd\n"
