@@ -9,10 +9,14 @@ x-scheme-handler/ftp=google-chrome.desktop;
 x-scheme-handler/tg=telegramdesktop.desktop;
 image/jpeg=feh.desktop;
 image/png=feh.desktop;
-video/=mpv;
+video/=mpv.desktop;
 video/mp4=mpv.desktop;
+video/webm=mpv.desktop;
 
 [Default Applications]
 x-scheme-handler/tg=telegramdesktop.desktop;
 image/jpeg=feh.desktop
 video/mp4=mpv.desktop
+
+[Removed Associations]
+video/=vlc.desktop
