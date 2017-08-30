@@ -82,6 +82,16 @@ super + g
 	bspc node -s biggest
 
 #
+# ROTATE LAYOUT
+#
+
+super + equal
+    bspc node @/ -R 90
+
+super + minus
+    bspc node @/ -R 270
+
+#
 # state/flags
 #
 
@@ -145,6 +155,12 @@ super + ctrl + {h,j,k,l}
 # preselect the ratio
 super + ctrl + {1-9}
 	bspc node -o 0.{1-9}
+
+super + KP_Add
+    bspc config window_gap $(($(bspc config window_gap) + 4))
+
+super + KP_Subtract
+    bspc config window_gap $(($(bspc config window_gap) - 4))
 
 # cancel the preselection for the focused node
 super + ctrl + space
