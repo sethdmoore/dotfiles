@@ -23,6 +23,7 @@ export GO15VENDOREXPERIMENT=1
 export EDITOR="vim"
 
 export GPGKEY='4096R/1CF9C381'
+export GPG_TTY=$(tty)
 
 #
 # bindings
@@ -70,8 +71,7 @@ source_dot_files() {
 }
 
 start_tmux() {
-    local REATTACH
-    if [ -e "$TMUX" ]; then
+    if [ -n "$TMUX" ]; then
         return
     fi
 
@@ -80,12 +80,11 @@ start_tmux() {
     HAS_SESSION=$?
 
     # determine if any clients are attached
-    if [ $HAS_SESSION == 0 ]; then
-        tmux list-clients | wc | grep -E '\s+0\s+0\s+0' > /dev/null
-        REATTACH=$?
+    if [ "$HAS_SESSION" -eq 0 ]; then
+        tmux attach -d
+    else
+        tmux new-session
     fi
-
-    tmux attach || tmux new-session
 }
 
 
