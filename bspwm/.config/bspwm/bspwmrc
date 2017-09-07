@@ -71,9 +71,9 @@ bspc rule -r '*:*'
 
 # steam
 bspc rule -a Steam:Steam state=tiled
-if [ ! $(pgrep -i steam) ]; then
-  bspc rule -a Steam -o desktop=^2
-fi
+# if [ ! $(pgrep -i steam) ]; then
+#   bspc rule -a Steam -o desktop=^2
+# fi
 
 # firestorm
 bspc rule -a do-not-directly-run-firestorm-bin -o desktop=^5

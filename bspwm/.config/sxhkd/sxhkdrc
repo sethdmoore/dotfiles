@@ -156,10 +156,10 @@ super + ctrl + {h,j,k,l}
 super + ctrl + {1-9}
 	bspc node -o 0.{1-9}
 
-super + KP_Add
+super + KP_Subtract
     bspc config window_gap $(($(bspc config window_gap) + 4))
 
-super + KP_Subtract
+super + KP_Add
     bspc config window_gap $(($(bspc config window_gap) - 4))
 
 # cancel the preselection for the focused node
