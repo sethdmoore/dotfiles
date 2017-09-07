@@ -5,10 +5,10 @@ function main() {
   mode="$1"
 
   if [ "$mode" = "--clipboard" ]; then
-    maim -s | xclip -selection clipboard -t image/png
+    maim --hidecursor -s | xclip -selection clipboard -t image/png
   else
     stamp=$(date -u +"%Y-%m-%dT%H_%M_%SZ")
-    maim -s "$PWD/maim-$stamp.png"
+    maim --hidecursor -s "$PWD/maim-$stamp.png"
   fi
 }
 

@@ -12,7 +12,7 @@ QUANT="26"
 FS_LIMIT="10M"
 
 # telegram limits to 480p
-WIDTH_MAX="854"
+WIDTH_MAX="1920"
 
 print_help() {
   cat <<EOH
@@ -21,10 +21,6 @@ sloppy <options>
 EOH
   exit 1
 }
-
-# telegram() {
-#
-# }
 
 clean_up() {
   local pidfile
