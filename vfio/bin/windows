@@ -1,11 +1,11 @@
-#!/bin/sh 
+#!/bin/sh
 # not needed.
 # export QEMU_AUDIO_DRV=pa
 
-main() {
+start_windows() {
   printf -- "Setting CPU to MAX_FREQ/Performance\n"
   sudo cpuctl perf
-  printf -- "Stopping live wallpapers"
+  printf -- "Stopping live wallpapers\n"
   killall xwinwrap
   printf -- "Changing to dual monitor configuration\n"
   monitorctl dual
@@ -15,6 +15,25 @@ main() {
   systemctl --user start synergy
   printf -- "Starting windows\n"
   sudo virsh start win10
+}
+
+undo_settings() {
+  printf -- "Restoring CPU minimum frequency\n"
+  sudo cpuctl save
+  printf -- "Stopping synergy\n"
+  systemctl --user stop synergy
+  printf -- "Starting synergyd\n"
+  systemctl --user start synergyd
+}
+
+main() {
+  local mode
+  mode="$1"
+  if [ "$mode" = "off" ]; then
+    undo_settings
+  else
+    start_windows
+  fi
 }
 
 main $@
