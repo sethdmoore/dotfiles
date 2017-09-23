@@ -27,6 +27,9 @@ super + space
          -show run
 
 
+super + backslash
+    {setxkbmap us, setxkbmap ru}
+
 #
 # receptacles !
 #
