@@ -1,7 +1,7 @@
 #!/bin/sh
 
-
-MPV_COMMAND="mpv --loop-playlist=inf --hwdec=auto -wid WID "
+# MPV_COMMAND="mpv --loop-playlist=inf --hwdec=auto -wid WID "
+MPV_COMMAND="mpv --loop-playlist=inf --hwdec=cuda -wid WID --vo=opengl"
 WALLPAPER="$HOME/.live_wallpapers/jelly.mp4"
 WALLPAPER="$HOME/.live_wallpapers/perfect_jelly.mp4"
 
@@ -25,11 +25,11 @@ main() {
   for monitor in $(seq 1 $num_monitors); do
     geom=$((1920 * $((monitor - 1))))
 
-    if [ "$monitor" -eq "$num_monitors" ]; then
-      # monitor 3 is a square beast
-      res="1280x1024"
-      extra_opt="--panscan 1.0"
-    fi
+    # if [ "$monitor" -eq "$num_monitors" ]; then
+    #   # monitor 3 is a square beast
+    #   res="1280x1024"
+    #   extra_opt="--panscan 1.0"
+    # fi
 
     xwinwrap -ov -g "${res}+${geom}+0" -- \
       $MPV_COMMAND $extra_opt $WALLPAPER &
