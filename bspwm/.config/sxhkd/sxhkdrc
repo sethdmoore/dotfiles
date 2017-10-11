@@ -1,7 +1,6 @@
 #
 # Program specific bindings
 #
-BAR_REFRESH="xargs kill -USR1 < $XDG_RUNTIME_DIR/lemonbar/bar.py"
 
 super + Return
 	urxvt
@@ -26,9 +25,12 @@ super + space
          -font "Lato Regular 14" \
          -show run
 
+super + u
+     notify-send "a $BAR_REFRESH"
 
 super + backslash
-    {setxkbmap us, setxkbmap ru}
+    {setxkbmap us, setxkbmap ru} && \
+    bar-refresh
 
 #
 # receptacles !
@@ -145,7 +147,7 @@ super + {o,i}
 # focus or send to the given desktop
 super + {_,shift + }{1-9,0}
 	bspc {desktop -f,node -d} '^{1-9,10}'; \
-	xargs kill -USR1 < $XDG_RUNTIME_DIR/lemonbar/bar.py
+    bar-refresh
 
 #
 # preselect
