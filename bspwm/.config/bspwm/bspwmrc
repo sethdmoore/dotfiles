@@ -8,19 +8,22 @@ LEMONBAR_PID="$XDG_RUNTIME_DIR/lemonbar/bar.py"
 systemctl --user start synergyd.service
 systemctl --user start deluged.service
 
+# clear any rules so that sourcing bspwmrc is idempotent
+bspc rule -r '*:*'
+
 DELUGE_PROC=$(pgrep -xf '/usr/bin/python2 /usr/bin/deluge')
 if [ -z "$DELUGE_PROC" ]; then
   # deluge
-  bspc rule -a Deluge -o desktop=^6
+  bspc rule -a 'Deluge:*' -o desktop=^5
   nohup deluge  > /dev/null 2>&1 &
 fi
 
 # background
 feh --bg-max $(randopaper.py) &
 
-MONITOR_GAME="HDMI-0"
-MONITOR_MAIN="DP-4"
-MONITOR_CHAT="DP-2"
+# MONITOR_GAME="HDMI-0"
+MONITOR_MAIN="DP-2"
+MONITOR_CHAT="DP-4"
 
 MONITORS=$(xrandr -q | grep "*" | wc -l)
 
@@ -65,9 +68,6 @@ bspc config gapless_monocle       true
 bspc config focus_follows_pointer true
 bspc config remove_disabled_monitors true
 
-
-# clear any rules so that sourcing bspwmrc is idempotent
-bspc rule -r '*:*'
 
 # steam
 bspc rule -a Steam:Steam state=tiled
