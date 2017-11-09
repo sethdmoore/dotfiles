@@ -14,14 +14,14 @@ bspc rule -r '*:*'
 DELUGE_PROC=$(pgrep -xf '/usr/bin/python2 /usr/bin/deluge')
 if [ -z "$DELUGE_PROC" ]; then
   # deluge
-  bspc rule -a 'Deluge:*' -o desktop=^5
+  bspc rule -a 'Deluge:*' -o desktop=^6
   nohup deluge  > /dev/null 2>&1 &
 fi
 
 # background
 feh --bg-max $(randopaper.py) &
 
-# MONITOR_GAME="HDMI-0"
+MONITOR_GAME="HDMI-0"
 MONITOR_MAIN="DP-2"
 MONITOR_CHAT="DP-4"
 
