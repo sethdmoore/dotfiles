@@ -29,7 +29,7 @@ super + u
      notify-send "a $BAR_REFRESH"
 
 super + backslash
-    {setxkbmap us, setxkbmap ru} && \
+    setxkbmap {us, ru} && \
     bar-refresh
 
 #
@@ -126,7 +126,8 @@ super + {_,shift + }c
 
 # focus the next/previous desktop
 super + bracket{left,right}
-	bspc desktop -f {prev,next}
+	bspc desktop -f {prev,next}; \
+    bar-refresh
 
 # side clicks of the wheel change desktops
 # just kidding, this annoys the shit out of me
@@ -210,3 +211,13 @@ super + button{1,3}
 # end move/resize
 super + @button{1,3}
 	bspc node pointed -f
+
+#
+# ¯\_(ツ)_/¯
+#
+
+super + @KP_End
+    sleep 0.6 && xdotool type --clearmodifiers --delay 20 ' ¯\_(ツ)_/¯'
+
+super + @KP_Down
+    sleep 0.6 && xdotool type --clearmodifiers --delay 20 '( ͡° ͜ʖ ͡°)'
