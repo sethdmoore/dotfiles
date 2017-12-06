@@ -4,13 +4,13 @@ export PATH="/home/seth/bin/:$PATH"
 
 bar.py | sh &
 
-sleep 0.8
+sleep 2.0
 
 PANEL_WM_NAME="lemonybar"
 wid=$(xdo id -a "$PANEL_WM_NAME")
 tries_left=30
 while [ -z "$wid" -a "$tries_left" -gt 0 ] ; do
-  sleep 0.09
+  sleep 0.2
   wid=$(xdo id -a "$PANEL_WM_NAME")
   tries_left=$((tries_left - 1))
 done
