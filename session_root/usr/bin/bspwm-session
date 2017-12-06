@@ -4,12 +4,12 @@ export GTK2_RC_FILES="/usr/share/themes/Arc-Dark/gtk-2.0/gtkrc"
 export GTK_MODULES="canberra-gtk-module"
 export GTK_THEME="Arc-Dark"
 
-setxkbmap -layout us,ru
+setxkbmap -layout us
 # setxkbmap -option 'grp:alt_shift_toggle'
 nvidia-settings --load-config-only
 sxhkd &
 compton &
 # feh --bg-scale /home/seth/.wallpapers/neat.png &
 /home/seth/.config/feh/fehrc
-bar-wrapper &
+/home/seth/bin/bar-wrapper &
 bspwm
