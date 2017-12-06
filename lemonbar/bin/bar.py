@@ -19,6 +19,7 @@ ICONS = {
     "calendar": u'\uF073',
     "check_empty": u'\uF096',
     "check": u'\uF046',
+    "flag": u'\uF024',
     "unknown": u'\uF059',
     "desktop_generic": u'\uF07B',
     "monitor_generic": u'\uF108',
@@ -45,7 +46,8 @@ ACTIVE_DESKTOP_COLOR = "%{F#0084AA}"
 INACTIVE_DESKTOP_COLOR = "%{F#004488}"
 
 # MONITOR_SORT = ["DVI-I-3", "DVI-I-2"]
-MONITOR_SORT = ["HDMI-0", "DP-4", "DP-2"]
+MONITOR_SORT = ["HDMI-0", "DP-2", "DP-4"]
+# MONITOR_SORT = ["DP-2", "DP-4"]
 TEMPERATURE_SORT = ["cpu", "gpu"]
 
 # reasonable, I think. 40C for low, 90+ for horrible
@@ -63,6 +65,8 @@ LEMONBAR_BIN = ["lemonbar", "-n", "lemonybar",
 NVIDIA_TEMP_BIN = ["nvidia-smi",
                    "--query-gpu=temperature.gpu",
                    "--format=csv,noheader"]
+
+XKBMAP_BIN = ["setxkbmap", "-query"]
 
 # this probably won't change
 CPU_TEMP_FILE = "/sys/class/thermal/thermal_zone0/temp"
@@ -85,7 +89,7 @@ class Bar(object):
         self.print_order = {
                 "hidden": ["command_format", "right_justify", "utils"],
                 "visible": ["command_format", "temps", "cpu", "desktops",
-                            "right_justify", "date", "get_utils"]
+                            "right_justify", "date", "get_layout", "get_utils"]
         }
 
         self.fifo_file = ""
@@ -118,6 +122,7 @@ class Bar(object):
                 "desktops": get_desktops(self.monitors, self.pid),
                 "right_justify": right_justify(),
                 "date": date_print(),
+                "get_layout": get_layout(),
                 "get_utils": get_utils(self.hidden)
             }
 
@@ -218,7 +223,8 @@ def init_color_lerp(start_c, end_c):
 
 # always stick lemonbar on the correct monitor
 def command_format(monitor_count, monitor):
-                # -AARRGGBB
+    # -AARRGGBB
+    monitor=1
     bg_color = "%{B#55222266}"
     if monitor_count == 2:
         return "%%{S%s}" % monitor + bg_color
@@ -347,6 +353,16 @@ def get_utils(hidden):
     return_str += "%{A:urxvt &:}" + ICONS["monitor_generic"] + "%{A}" + "  "
     return_str += "%%{A:xargs kill -SIGINT < %s &:}" % PID_FILE + icon_hide + "%{A}" + "  "
     return return_str
+
+
+def get_layout():
+    out = shell_out(XKBMAP_BIN)
+    layout = " " + ICONS["flag"]
+    if out:
+        layout += " " + out.split("\n")[-1].split(":")[-1].strip().upper()
+    else:
+        layout = ""
+    return layout
 
 
 def get_desktops(monitors, pid):
