@@ -21,6 +21,8 @@ augroup CursorLine
   au WinLeave * setlocal nocursorline
 augroup END
 
+" un-nerf your swap file
+set viminfo='20,<1000
 
 " #Section splits
 " More 'natural' splits
@@ -48,6 +50,7 @@ autocmd FileType ruby setlocal sw=2 ts=2 et
 autocmd FileType sh setlocal sw=2 ts=2 et
 autocmd FileType python setlocal sw=4 ts=4 et
 autocmd FileType go setlocal sw=4 ts=4 noet
+autocmd FileType cs setlocal sw=4 ts=4 noet
 
 " #Section :plugins
 " turn off horrendous 'folding' / collapsing of markdown
