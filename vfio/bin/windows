@@ -20,6 +20,8 @@ start_windows() {
 undo_settings() {
   printf -- "Restoring CPU minimum frequency\n"
   sudo cpuctl save
+  printf -- "Shutting down windows"
+  sudo virsh shutdown win10
   printf -- "Stopping synergy\n"
   systemctl --user stop synergy
   printf -- "Starting synergyd\n"
