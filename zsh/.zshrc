@@ -22,6 +22,7 @@ export HISTFILE=~/.zsh_history
 export GO15VENDOREXPERIMENT=1
 export EDITOR="vim"
 
+export CURLOPT_TIMEOUT=60
 export GPGKEY='4096R/1CF9C381'
 export GPG_TTY=$(tty)
 
