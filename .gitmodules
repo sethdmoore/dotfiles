@@ -43,3 +43,6 @@
 [submodule "vim-indent-object"]
 	path = vim/.vim/pack/plugins/start/vim-indent-object
 	url = https://github.com/michaeljsmith/vim-indent-object
+[submodule "Tabmerge"]
+	path = vim/.vim/pack/plugins/start/tabmerge
+	url = https://github.com/vim-scripts/Tabmerge
