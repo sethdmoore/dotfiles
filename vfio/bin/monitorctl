@@ -3,7 +3,7 @@ MONITOR_TO_TOGGLE="HDMI-0"
 MONITOR_TO_KEEP="DP-4"
 
 multihead() {
-  xrandr --output "$MONITOR_TO_TOGGLE" --auto --left-of "$MONITOR_TO_KEEP"
+  xrandr --output "$MONITOR_TO_TOGGLE" --mode 1920x1080 --left-of "$MONITOR_TO_KEEP"
   sh ~/.config/bspwm/bspwmrc
 }
 

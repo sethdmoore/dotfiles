@@ -16,39 +16,40 @@
 ! *color12: #729FCF
 ! *color13: #AD7FA8
 ! *color14: #fcaf3e
-! *color15: #EEEEEC 
+! *color15: #EEEEEC
 
 ! Base16 Atelier Lakeside
 ! Scheme: Bram de Haan (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/lakeside/)
 
-#define base00 #161b1d
-#define base01 #1f292e
-#define base02 #516d7b
-#define base03 #5a7b8c
-#define base04 #7195a8
-#define base05 #7ea2b4
-#define base06 #c1e4f6
-#define base07 #ebf8ff
-#define base08 #d22d72
-#define base09 #935c25
-#define base0A #8a8a0f
-#define base0B #568c3b
-#define base0C #2d8f6f
-#define base0D #257fad
-#define base0E #6b6bb8
-#define base0F #b72dd2
+#define base00 #111111
+#define base01 #aa4450
+#define base02 #719611
+#define base03 #ff9800
+#define base04 #6688aa
+#define base05 #8f6f8f
+#define base06 #528b8b
+#define base07 #d3d3d3
+#define base08 #181818
+#define base09 #ff6a6a
+#define base0A #b1d631
+#define base0B #87875f
+#define base0C #90b0d1
+#define base0D #8181a6
+#define base0E #87ceeb
+#define base0F #c1cdc1
 
 ! human-friendly colors
 # define white #ffffff
 !!! grayscale
-# define gray0  base00
-# define gray1  base01
-# define gray2  base02
-# define gray3  base03
-# define gray4  base04
-# define gray5  base05
-# define gray6  base06
-# define gray7  base07
+# define gray0  #111111
+# define gray1  #222222
+# define gray2  #333333
+# define gray3  #444444
+# define gray4  #555555
+# define gray5  #666666
+# define gray6  #777777
+# define gray7  #888888
+
 !!! extra colors
 #define yellow  base0A
 #define orange  base09
@@ -59,27 +60,39 @@
 #define cyan    base0C
 #define green   base0B
 
-*.foreground:   base05
-*.background:   base00
-*.cursorColor:  base05
+! █▓▒░ sorcerer colors
+*foreground:   #c2c2b0
+*background:   #222222
+*cursorColor:  #c2c2b0
+! black
+*color0:       base00
+*color8:       base08
+! red
+*color1:       base01
+*color9:       base09
+! green
+*color2:       base02
+*color10:      base0A
+! yellow
+*color3:       base03
+*color11:      base0B
+! blue
+*color4:       base04
+*color12:      base0C
+! magenta
+*color5:       base05
+*color13:      base0D
+! cyan
+*color6:       base06
+*color14:      base0E
+! white
+*color7:       base07
+*color15:      base0F
+! stylized
+*colorIT:      #719611
+*colorBD:      #d3d3d3
+*colorUL:      #528b8b
 
-*.color0:       base00
-*.color1:       base08
-*.color2:       base0B
-*.color3:       base0A
-*.color4:       base0D
-*.color5:       base0E
-*.color6:       base0C
-*.color7:       base05
-
-*.color8:       base03
-*.color9:       base09
-*.color10:      base0C
-*.color11:      base02
-*.color12:      base04
-*.color13:      base06
-*.color14:      base0F
-*.color15:      base07
 
 URxvt.scrollBar: false
 URxvt.scrollBar_right: false
@@ -98,6 +111,9 @@ URxvt.letterSpace: -0.5
 
 ! rofi.color-normal: gray1,blue,gray1,blue,white
 ! activebg, text, pinstripe1, potentialprog bg, potentialprog fg
-rofi.color-normal: gray0,blue,gray1,blue,white
-rofi.color-window: gray0, gray0
-rofi.color-active: gray0, gray1
+rofi.color-enabled: true
+! rofi.color-normal: blue,gray0,gray1,blue,white
+! rofi.color-normal: blue, blue, blue, blue, blue
+! rofi.color-normal: blue, blue, blue, blue, blue
+rofi.color-window: gray0,gray0
+! rofi.color-active: color9,color8

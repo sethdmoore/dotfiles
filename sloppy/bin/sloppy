@@ -13,6 +13,7 @@ FS_LIMIT="10M"
 
 # telegram limits to 480p
 WIDTH_MAX="854"
+# WIDTH_MAX="850"
 
 print_help() {
   cat <<EOH
@@ -57,7 +58,7 @@ region_cap() {
 
   # scales the maximum width to WIDTH_MAX and then rounds the height down
   if [ "$w" -gt "$WIDTH_MAX" ]; then
-    nw="854"
+    nw="$WIDTH_MAX"
   else
     nw="$w"
   fi
@@ -82,9 +83,9 @@ region_cap() {
     -video_size "$w"x"$h" \
     -framerate 60 \
     -i "$input" \
-    -vcodec libx264 \
     -vf scale="$nw:-2" \
     -preset ultrafast -crf:v "$QUANT" \
+    -pix_fmt yuv420p \
     -fs 10M \
     -y \
     "$FILE" &
@@ -100,6 +101,7 @@ region_cap() {
   # truncate the pidfile so we don't try to kill an exited process
   printf -- "" > "$pidfile"
   clean_up "$pidfile"
+  sleep 3
 }
 
 upload() {
