@@ -1,5 +1,5 @@
 [Unit]
-Description=SSH key agent
+Description=Lemonbar wrapper
 After=display-manager.service
 
 [Service]
