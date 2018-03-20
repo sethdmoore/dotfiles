@@ -8,7 +8,7 @@ sleep 2.0
 
 PANEL_WM_NAME="lemonybar"
 wid=$(xdo id -a "$PANEL_WM_NAME")
-tries_left=30
+tries_left=200
 while [ -z "$wid" -a "$tries_left" -gt 0 ] ; do
   sleep 0.2
   wid=$(xdo id -a "$PANEL_WM_NAME")

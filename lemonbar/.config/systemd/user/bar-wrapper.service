@@ -1,0 +1,11 @@
+[Unit]
+Description=SSH key agent
+After=display-manager.service
+
+[Service]
+Type=forking
+ExecStart=/home/seth/bin/bar-wrapper
+ExecStartPost=/home/seth/bin/sort.sh
+
+[Install]
+WantedBy=default.target
