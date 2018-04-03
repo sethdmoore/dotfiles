@@ -52,10 +52,12 @@ autocmd FileType sh setlocal sw=2 ts=2 et
 autocmd FileType python setlocal sw=4 ts=4 et
 autocmd FileType go setlocal sw=4 ts=4 noet
 autocmd FileType cs setlocal sw=4 ts=4 noet
+autocmd FileType terraform setlocal commentstring=#%s
 
 " #Section :plugins
 " turn off horrendous 'folding' / collapsing of markdown
 let g:vim_markdown_folding_disabled = 1
+let g:terraform_align=1
 
 " #Section :keybinds
 " This unsets the 'last search pattern' register by hitting return
