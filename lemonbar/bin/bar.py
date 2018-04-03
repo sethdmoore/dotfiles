@@ -46,7 +46,7 @@ ACTIVE_DESKTOP_COLOR = "%{F#0084AA}"
 INACTIVE_DESKTOP_COLOR = "%{F#004488}"
 
 # MONITOR_SORT = ["DVI-I-3", "DVI-I-2"]
-MONITOR_SORT = ["HDMI-0", "DP-2", "DP-4"]
+MONITOR_SORT = ["DVI-I-1", "DP-2", "DP-4"]
 # MONITOR_SORT = ["DP-2", "DP-4"]
 TEMPERATURE_SORT = ["cpu", "gpu"]
 
@@ -441,6 +441,7 @@ def get_monitors():
             monitors.append(unsorted_monitors[idx])
         # this should only occur if your MONITOR_SORT is invalid
         except Exception as e:
+            print("Exception: %s" % e)
             pass
 
     # failsafe
