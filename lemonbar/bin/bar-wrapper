@@ -1,21 +1,7 @@
 #!/bin/sh
 
 export PATH="/home/seth/bin/:$PATH"
-
-bar.py | sh &
-
-sleep 2.0
-
 PANEL_WM_NAME="lemonybar"
-wid=$(xdo id -a "$PANEL_WM_NAME")
-tries_left=200
-while [ -z "$wid" -a "$tries_left" -gt 0 ] ; do
-  sleep 0.2
-  wid=$(xdo id -a "$PANEL_WM_NAME")
-  tries_left=$((tries_left - 1))
-done
 
-# sort lemonbar
-for w in $wid; do
-    xdo id -N Bspwm -n root | xargs -I% xdo above -t "%" "$w"
-done
+sh -c "sleep 1 && xdo lower -a $PANEL_WM_NAME" &
+bar.py | sh &
