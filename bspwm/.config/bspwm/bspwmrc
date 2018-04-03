@@ -21,7 +21,7 @@ fi
 # background
 feh --bg-max $(randopaper.py) &
 
-MONITOR_GAME="HDMI-0"
+MONITOR_GAME="DVI-I-1"
 MONITOR_MAIN="DP-2"
 MONITOR_CHAT="DP-4"
 

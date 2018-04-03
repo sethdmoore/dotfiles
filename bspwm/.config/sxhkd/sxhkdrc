@@ -101,8 +101,12 @@ super + minus
 #
 
 # set the window state
-super + {t,shift + t,s,f}
-	bspc node -t {tiled,pseudo_tiled,floating,fullscreen -l above}
+super + {t,shift + t,s}
+	bspc node -t {tiled,pseudo_tiled,floating}
+
+super + f
+    bspc node -t fullscreen -l above
+    # bar-refresh
 
 # set the node flags
 super + ctrl + {x,y,z}
