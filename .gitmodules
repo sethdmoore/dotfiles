@@ -46,3 +46,6 @@
 [submodule "Tabmerge"]
 	path = vim/.vim/pack/plugins/start/tabmerge
 	url = https://github.com/vim-scripts/Tabmerge
+[submodule "vim-terraform"]
+	path = vim/.vim/pack/plugins/start/vim-terraform
+	url = https://github.com/hashivim/vim-terraform.git
