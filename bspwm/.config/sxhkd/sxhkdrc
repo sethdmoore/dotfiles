@@ -106,7 +106,6 @@ super + {t,shift + t,s}
 
 super + f
     bspc node -t fullscreen -l above
-    # bar-refresh
 
 # set the node flags
 super + ctrl + {x,y,z}
@@ -221,7 +220,7 @@ super + @button{1,3}
 #
 
 super + @KP_End
-    sleep 0.6 && xdotool type --clearmodifiers --delay 20 ' ¯\_(ツ)_/¯'
+    sleep 0.6 && xdotool type --clearmodifiers --delay 50 ' ¯\_(ツ)_/¯'
 
 super + @KP_Down
-    sleep 0.6 && xdotool type --clearmodifiers --delay 20 '( ͡° ͜ʖ ͡°)'
+    sleep 0.6 && xdotool type --clearmodifiers --delay 50 '( ͡° ͜ʖ ͡°)'
