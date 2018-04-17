@@ -22,6 +22,7 @@ triplehead() {
     printf -- "Setting to 3 monitors\n"
     nvidia-settings --assign CurrentMetaMode="$TRIPLE" >/dev/null
     sh ~/.config/bspwm/bspwmrc
+    systemctl --user restart synergyd.service
   fi
 }
 
@@ -37,6 +38,7 @@ dualhead() {
     printf -- "Setting to 2 monitors\n"
     nvidia-settings --assign CurrentMetaMode="$DOUBLE" >/dev/null
     sh ~/.config/bspwm/bspwmrc
+    systemctl --user restart synergyd.service
   fi
 
 }
