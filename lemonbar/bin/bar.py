@@ -60,6 +60,8 @@ FIFO_FILE = "/".join((TEMP_DIR, "bar.fifo"))
 
 LEMONBAR_BIN = ["lemonbar", "-n", "lemonybar",
                 "-f", "fontawesome-webfont:size=14",
+                # "-f", "Font Awesome 5 Free:size=14",
+                # "-f", "Font Awesome 5 Brands:size=14",
                 "-f", "lato-regular:size=14"]
 
 NVIDIA_TEMP_BIN = ["nvidia-smi",
