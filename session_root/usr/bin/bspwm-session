@@ -11,4 +11,5 @@ sxhkd &
 compton &
 # feh --bg-scale /home/seth/.wallpapers/neat.png &
 /home/seth/.config/feh/fehrc
+
 bspwm
