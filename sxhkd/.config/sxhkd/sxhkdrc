@@ -234,3 +234,6 @@ super + @KP_End
 
 super + @KP_Down
     sleep 0.6 && xdotool type --clearmodifiers --delay 50 '( ͡° ͜ʖ ͡°)'
+
+super + @KP_Next
+    sleep 0.6 && xdotool type --clearmodifiers --delay 50 '(˵ ͡° ͜ʖ ͡°˵)'
