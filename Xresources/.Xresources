@@ -103,10 +103,13 @@ URxvt.resize-font.smaller: C-Down
 URxvt.resize-font.bigger: C-Up
 URxvt.url-launcher: /usr/bin/xdg-open
 URxvt.matcher.button: 1
-URxvt.font: xft:DroidSansMono:size=8:antialias=true
+! URxvt.font: xft:Droid Sans Mono:size=8:antialias=true,xft:Symbola
+URxvt.font: xft:Oxygen Mono:pixelsize=12:Symbola
+! URxvt.font: xft:droid sans mono:size=8:antialias=true,xft:Symbola
 ! URxvt.font: xft:-*-fontawesome-*-*-*-*-*-*-*-*-*-*-*-*
 URxvt.lineSpace: -9
-URxvt.letterSpace: -0.5
+URxvt.letterSpace: 1.0
+! URxvt.letterSpace: -6.0
 ! URxvt.font: 9x15
 
 ! rofi.color-normal: gray1,blue,gray1,blue,white
