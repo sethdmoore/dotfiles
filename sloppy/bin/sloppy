@@ -57,11 +57,21 @@ region_cap() {
   read -r x y w h cap_mouse pidfile <<< "$1 $2 $3 $4 $5 $6"
 
   # scales the maximum width to WIDTH_MAX and then rounds the height down
+  remainder=$(($w % 2))
+  echo $remainder
+
+  # ensure we're only working on even numbers due to x264 limitations
+  if [ "$remainder" -ne 0 ]; then
+    w=$(($w + 1))
+    echo "Uneven: $nw from $w"
+  fi
+
   if [ "$w" -gt "$WIDTH_MAX" ]; then
     nw="$WIDTH_MAX"
   else
     nw="$w"
   fi
+
 
   # only follow the mouse pointer if we're capturing it
   # this seems like a sane default for me, but I'm not sure about anyone else
