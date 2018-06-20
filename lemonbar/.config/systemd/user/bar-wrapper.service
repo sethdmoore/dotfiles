@@ -7,4 +7,4 @@ Type=forking
 ExecStart=/home/seth/bin/bar-wrapper
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical.target
