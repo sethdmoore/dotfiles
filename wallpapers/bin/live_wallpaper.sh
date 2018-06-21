@@ -2,8 +2,7 @@
 
 # MPV_COMMAND="mpv --loop-playlist=inf --hwdec=auto -wid WID "
 MPV_COMMAND="mpv --loop-playlist=inf --hwdec=cuda -wid WID --vo=opengl"
-WALLPAPER="$HOME/.live_wallpapers/jelly.mp4"
-WALLPAPER="$HOME/.live_wallpapers/perfect_jelly.mp4"
+WALLPAPER="$(randopaper.py $HOME/.live_wallpapers)"
 
 count_monitors() {
   local monitors
