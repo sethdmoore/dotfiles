@@ -29,6 +29,23 @@ function git-clean-all() {
     done
 }
 
+function rdp() {
+    local host user
+    host="$1"
+    user="$2"
+
+    if [ -z "$user" ]; then
+        user="Administrator"
+    fi
+
+    xfreerdp \
+        --plugin cliprdr \
+        --composition \
+        -g 1920x1080 \
+        -u "${user}" \
+        "${host}"
+}
+
 if [ "$KERNEL" = "Darwin" ]; then
     # alias lockscreen="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
     alias ls="ls -G $@"
