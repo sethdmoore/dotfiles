@@ -25,6 +25,9 @@ super + space
          -font "Lato Regular 14" \
          -show run
 
+alt + Tab
+    rofi -show
+
 super + u
      notify-send "a $BAR_REFRESH"
 
