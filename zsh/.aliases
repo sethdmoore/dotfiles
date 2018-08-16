@@ -20,6 +20,17 @@ function reload() {
     fi
 }
 
+
+function openssl_expiry() {
+    local site
+    site="$1"
+
+    openssl s_client \
+        -connect "${site}:443" \
+        -servername "${site}" 2>/dev/null \
+        | openssl x509 -noout -dates
+}
+
 function git-clean-all() {
     local cwd dir
     cwd="$(pwd)"
