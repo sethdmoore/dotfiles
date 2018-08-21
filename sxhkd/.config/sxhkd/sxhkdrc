@@ -26,10 +26,8 @@ super + space
          -show run
 
 alt + Tab
-    rofi -show
-
-super + u
-     notify-send "a $BAR_REFRESH"
+    rofi -show && \
+    bar-refresh
 
 super + backslash
     setxkbmap {us, ru} && \
@@ -239,4 +237,4 @@ super + @KP_Down
     sleep 0.6 && xdotool type --clearmodifiers --delay 50 '( ͡° ͜ʖ ͡°)'
 
 super + @KP_Next
-    sleep 0.6 && xdotool type --clearmodifiers --delay 50 '(˵ ͡° ͜ʖ ͡°˵)'
+    SLEEP 0.6 && xdotool type --clearmodifiers --delay 50 '(˵ ͡° ͜ʖ ͡°˵)'
