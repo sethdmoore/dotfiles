@@ -1,0 +1,13 @@
+# enable synergyd / synergyc depending on mouse presence
+# retrieve USB information with udevadm monitor
+# User ATTR{VendorId} and ATTR{ProductID} doesn't seem to 
+# be reliable for 'remove' events.
+# https://unix.stackexchange.com/questions/178341/udev-rule-action-add-is-working-but-action-remove-isnt-working
+# $ udevadm monitor --property > output
+
+## Debug
+# ACTION=="add",     ENV{ID_MODEL}=="Gaming_Mouse_G502", RUN+="/usr/bin/touch /tmp/ADDED"
+# ACTION=="remove",  ENV{ID_MODEL}=="Gaming_Mouse_G502", RUN+="/usr/bin/touch /tmp/REMOVED"
+
+ACTION=="add",     ENV{ID_MODEL}=="Gaming_Mouse_G502", RUN+="/usr/bin/su -l seth -c '/usr/local/bin/synergy_toggle.sh server'"
+ACTION=="remove",  ENV{ID_MODEL}=="Gaming_Mouse_G502", RUN+="/usr/bin/su -l seth -c '/usr/local/bin/synergy_toggle.sh client'"
