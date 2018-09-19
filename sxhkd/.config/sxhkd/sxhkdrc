@@ -64,8 +64,8 @@ super + {_,shift +} b
             "" && \
         urxvt -geometry 80x4 -e sloppy {--no-mouse, }
 
-super + {_, shift +} v
-    maimy {--clipboard, }
+super + {_, shift +, alt +} v
+    maimy {, --clipboard, --clipboard --magnify}
 
 # quit bspwm normally
 super + alt + Escape
@@ -237,4 +237,9 @@ super + @KP_Down
     sleep 0.6 && xdotool type --clearmodifiers --delay 50 '( ͡° ͜ʖ ͡°)'
 
 super + @KP_Next
-    SLEEP 0.6 && xdotool type --clearmodifiers --delay 50 '(˵ ͡° ͜ʖ ͡°˵)'
+    sleep 0.6 && xdotool type --clearmodifiers --delay 50 '(˵ ͡° ͜ʖ ͡°˵)'
+
+super + u
+    bspc rule -a URxvt -o "state=floating" -o "focused=on" \
+            "" && urxvt -geometry 80x4 -e \
+            sh -c "printf 'memewriter: '; read MSG; memewriter foo; sleep 1"
