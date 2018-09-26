@@ -1,12 +1,17 @@
 #!/bin/sh
 
 function main() {
-  local mode stamp
+  local mode additional stamp
   mode="$1"
+  additional_mode="$2"
+  echo "$mode2" > /home/seth/test
 
-  if [ "$mode" = "--clipboard" ]; then
+  if [ "$mode" = "--clipboard" ] && [ "$additional_mode" = "--magnify" ]; then
+    maim --hidecursor -s | convert - -resize 1000% - | xclip -selection clipboard -t image/png 
+  elif [ "$mode" = "--clipboard" ]; then
     maim --hidecursor -s | xclip -selection clipboard -t image/png
   else
+    echo "$mode $additional $stamp" > /tmp/debug
     stamp=$(date -u +"%Y-%m-%dT%H_%M_%SZ")
     maim --hidecursor -s "$PWD/maim-$stamp.png"
   fi
