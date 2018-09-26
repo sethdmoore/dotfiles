@@ -40,7 +40,7 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 
 # zshrc executed without POSIX compat
 # use array type (http://zsh.sourceforge.net/FAQ/zshfaq03.html)
-MY_DOT_FILES=(".aliases" ".auth")
+MY_DOT_FILES=(".aliases" ".auth" ".private_environment")
 
 append_path() {
     local IFS path_iterator array_path appender match
