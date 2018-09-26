@@ -65,7 +65,7 @@ source_dot_files() {
     local dot
     # don't need IFS abuse since we're using arraytype
     for dot in $MY_DOT_FILES; do
-        if [ -f "${HOME}/${dot}" ]; then
+        if [ -e "${HOME}/${dot}" ]; then
             source "${HOME}/${dot}"
         fi
     done
@@ -173,6 +173,11 @@ if [ ! "$KERNEL" = "Linux" ]; then
     else
         NO_FZF=true
     fi
+fi
+
+# less colors
+if [ -e "$HOME/.config/ls/lesscolors" ]; then
+    eval $(dircolors -b "$HOME/.config/ls/lesscolors")
 fi
 
 if [ "$NO_FZF" ]; then
