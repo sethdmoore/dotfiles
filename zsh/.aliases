@@ -21,11 +21,11 @@ function reload() {
 }
 
 
-function openssl_expiry() {
+function check_ssl_expiry() {
     local site
     site="$1"
 
-    openssl s_client \
+    printf '\n' | timeout 5 openssl s_client \
         -connect "${site}:443" \
         -servername "${site}" 2>/dev/null \
         | openssl x509 -noout -dates

@@ -86,6 +86,14 @@ map <silent> <C-n> :NERDTreeFocus<CR>
 nnoremap <C-_> :split<CR>
 nnoremap <C-\> :vsplit<CR>
 
+" Tabs with sane bindings
+nnoremap <M-t> :tabnew<CR>
+nnoremap <M-w> :q<CR>
+for i in range(1,6)
+  let key = 'map ' . '<M-' . i . '> ' . i . 'gt<CR>'
+  execute key
+endfor
+
 
 " trash
 command Curlfmt s/ -H / \\\r    -H /g
