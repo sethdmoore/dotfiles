@@ -677,13 +677,13 @@
 	<key>NSWindow Frame NSFontPanel</key>
 	<string>2467 147 445 77 1440 0 1920 1057 </string>
 	<key>NSWindow Frame SessionsPreferences</key>
-	<string>269 275 599 388 0 0 1280 777 </string>
+	<string>1964 515 606 456 1440 0 1920 1057 </string>
 	<key>NSWindow Frame SharedPreferences</key>
-	<string>2064 590 918 381 1440 0 1920 1080 </string>
+	<string>946 264 796 473 0 0 1920 1057 </string>
 	<key>NSWindow Frame iTerm Window 0</key>
-	<string>1761 0 958 862 1440 0 1920 1057 </string>
+	<string>-1436 77 1432 859 -1440 68 1440 877 </string>
 	<key>NSWindow Frame iTerm Window 1</key>
-	<string>2644 704 490 329 1440 0 1920 1080 </string>
+	<string>2 11 956 1039 0 0 1920 1057 </string>
 	<key>NSWindow Frame iTerm Window 2</key>
 	<string>1708 87 490 329 1440 0 1920 1080 </string>
 	<key>NSWindow Frame iTerm Window 3</key>
@@ -1428,6 +1428,8 @@
 	</dict>
 	<key>PrefsCustomFolder</key>
 	<string>/Users/smoore/dotfiles/osx</string>
+	<key>Print In Black And White</key>
+	<true/>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUFeedAlternateAppNameKey</key>
@@ -1437,7 +1439,7 @@
 	<key>SUHasLaunchedBefore</key>
 	<true/>
 	<key>SULastCheckTime</key>
-	<date>2017-06-26T17:40:39Z</date>
+	<date>2017-08-14T04:18:28Z</date>
 	<key>SUSendProfileInfo</key>
 	<false/>
 	<key>ShowFullScreenTabBar</key>
