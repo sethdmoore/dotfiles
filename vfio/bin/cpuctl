@@ -10,49 +10,49 @@ EOH
 }
 
 set_cpu_gov() {
-	core=$1
-	governor=$2 target_path="/sys/devices/system/cpu/cpu$core/cpufreq/scaling_governor"
-	echo $governor > $target_path
-	printf -- 'cpu %s: %s\n' $core $(cat $target_path)
+  core=$1
+  governor=$2 target_path="/sys/devices/system/cpu/cpu$core/cpufreq/scaling_governor"
+  echo $governor > $target_path
+  printf -- 'cpu %s: %s\n' $core $(cat $target_path)
 
 }
 
 
 set_min_freq() {
-	core=$1
-	freq=$2
-	target_path="/sys/devices/system/cpu/cpu$core/cpufreq/scaling_min_freq"
-	echo $freq > $target_path
-	printf -- 'cpu %s set to %sMhz\n' $core $(cat $target_path)
+  core=$1
+  freq=$2
+  target_path="/sys/devices/system/cpu/cpu$core/cpufreq/scaling_min_freq"
+  echo $freq > $target_path
+  printf -- 'cpu %s set to %sMhz\n' $core $(cat $target_path)
 }
 
 
 set_params() {
-	core=$1
-	governor=$2
-	freq=$3
-	set_min_freq $core $freq
-	set_cpu_gov $core $governor
+  core=$1
+  governor=$2
+  freq=$3
+  set_min_freq $core $freq
+  set_cpu_gov $core $governor
 }
 
 
 main() {
-	state=$1
-	if [ "$state" = "perf" ]; then
+  state=$1
+  if [ "$state" = "perf" ]; then
     # cpu_freq=4700000
     cpu_freq=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq)
-		governor='performance'
-	elif [ "$state" = "save" ]; then
+    governor='performance'
+  elif [ "$state" = "save" ]; then
     # can't read min_freq back since we overwrite it with "perf"
     cpu_freq=0
-		governor='powersave'
+    governor='powersave'
   else
     print_help
-	fi
+  fi
 
-	for core in {0..7}; do
-		set_params $core $governor $cpu_freq
-	done
+  for core in {0..7}; do
+    set_params $core $governor $cpu_freq
+  done
 }
 
 main $*
