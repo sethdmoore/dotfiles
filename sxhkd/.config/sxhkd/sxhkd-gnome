@@ -1,0 +1,51 @@
+#
+# Program specific bindings
+#
+
+super + Return
+	urxvt
+
+super + {shift +,_} e
+    google-chrome-stable {--incognito, }
+
+super + backslash
+    setxkbmap {us, ru}
+
+# make kxhkd reload its configuration files:
+super + Escape
+	pkill -USR1 -x sxhkd
+
+#
+# bspwm hotkeys
+#
+
+#
+# capture
+#
+super + {_,shift +} b
+    urxvt -geometry 80x4 -e sloppy {--no-mouse, }
+
+super + {_, shift +, alt +} v
+    maimy {, --clipboard, --clipboard --magnify}
+
+# move a floating window
+super + {Left,Down,Up,Right}
+	xdo move {-x -20,-y +20,-y -20,-x +20}
+
+#
+# ¯\_(ツ)_/¯
+#
+
+super + @KP_End
+    sleep 0.6 && xdotool type --clearmodifiers --delay 50 ' ¯\_(ツ)_/¯'
+
+super + @KP_Down
+    sleep 0.6 && xdotool type --clearmodifiers --delay 50 '( ͡° ͜ʖ ͡°)'
+
+super + @KP_Next
+    sleep 0.6 && xdotool type --clearmodifiers --delay 50 '(˵ ͡° ͜ʖ ͡°˵)'
+
+# super + u
+#     bspc rule -a URxvt -o "state=floating" -o "focused=on" \
+#             "" && urxvt -geometry 80x4 -e \
+#             sh -c "printf 'memewriter: '; read MSG; memewriter foo; sleep 1"
