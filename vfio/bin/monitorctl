@@ -1,65 +1,58 @@
 #!/bin/sh
-MONITOR_TO_TOGGLE="DVI-I-1"
-MONITOR_TO_KEEP="DP-2"
 
-TRIPLE="DP-4: 1280x1024_75 +3840+0, DVI-I-1: 1920x1080_144 +0+0, DP-2: 1920x1080_144 +1920+0"
-DOUBLE="DP-4: 1280x1024_75 +1920+0, DP-2: 1920x1080_144 +0+0"
+## Old setup
+# TRIPLE="DP-4: 1280x1024_75 +3840+0, DVI-I-1: 1920x1080_144 +0+0, DP-2: 1920x1080_144 +1920+0"
+# DOUBLE="DP-4: 1280x1024_75 +1920+0, DP-2: 1920x1080_144 +0+0"
+
+DOUBLE="DVI-I-1: 1920x1080_144 +0+0, DP-4: 1920x1080_144 +1920+0"
+SINGLE="DP-4: 1920x1080_144 +1920+0"
+
 
 monitorcount() {
   printf -- "$(xrandr -q | grep '*' | wc -l)"
 }
 
 
-triplehead() {
-  # xrandr --output "$MONITOR_TO_TOGGLE" --mode 1920x1080 --left-of "$MONITOR_TO_KEEP"
-  local count
-  count="$(monitorcount)"
+setmode() {
+  count="$1"
+  mode="$2"
+  current_count="$(monitorcount)"
 
-  if [ "$count" -eq 3 ]; then
-    printf -- "Already at $count monitors\n"
+  if [ "$current_count" -eq "$count" ]; then
+    printf -- "Already at ${current_count} monitors\n"
     exit 0
   else
-    printf -- "Setting to 3 monitors\n"
-    nvidia-settings --assign CurrentMetaMode="$TRIPLE" >/dev/null
-    sh ~/.config/bspwm/bspwmrc
-    systemctl --user restart synergyd.service
+    printf -- "Setting to ${count} monitors\n"
+    nvidia-settings --assign CurrentMetaMode="$mode" >/dev/null
+
+    if [ "$DESKTOP_SESSION" != "gnome" ]; then
+      sh ~/.config/bspwm/bspwmrc 2>/dev/null
+    fi
+
+    # systemctl --user restart synergyd.service
   fi
 }
 
-dualhead() {
-  # xrandr --output "$MONITOR_TO_TOGGLE" --off
-  local count
-  count="$(monitorcount)"
-
-  if [ "$count" -eq 2 ]; then
-    printf -- "Already at $count monitors\n"
-    exit 0
-  else
-    printf -- "Setting to 2 monitors\n"
-    nvidia-settings --assign CurrentMetaMode="$DOUBLE" >/dev/null
-    sh ~/.config/bspwm/bspwmrc
-    systemctl --user restart synergyd.service
-  fi
-
-}
 
 print_help() {
   cat <<EOF
 monitorctl <arg>
-<no arg>  print help
-dual      dual monitors
-triple    triple monitors
+  <no arg>  print help
+  single    dual monitors
+  dual      dual monitors
 EOF
+# triple    triple monitors
 }
+
 
 main() {
   local arg
   arg=$1
 
-  if [ "$arg" = "dual" ]; then
-    dualhead
-  elif [ "$arg" = "triple" ]; then
-    triplehead
+  if [ "$arg" = "single" ]; then
+    setmode 1 "$SINGLE"
+  elif [ "$arg" = "dual" ]; then
+    setmode 2 "$DUAL"
   else
     print_help
   fi
