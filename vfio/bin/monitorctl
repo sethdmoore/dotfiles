@@ -52,7 +52,7 @@ main() {
   if [ "$arg" = "single" ]; then
     setmode 1 "$SINGLE"
   elif [ "$arg" = "dual" ]; then
-    setmode 2 "$DUAL"
+    setmode 2 "$DOUBLE"
   else
     print_help
   fi
