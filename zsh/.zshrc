@@ -89,9 +89,9 @@ start_tmux() {
 }
 
 
-if [ ! -d "${HOME}/go" ]; then
+if [ ! -d "${HOME}/dev/go" ]; then
     printf "Creating GOPATH: ${HOME}/go\n"
-    mkdir -p "${HOME}/go/src"
+    mkdir -p "${HOME}/dev/go/src"
 fi
 
 if [ ! -d "${HOME}/.vim" ]; then
@@ -138,7 +138,7 @@ if [ -d "${HOME}/go" ]; then
     fi
 
     # this directory will be created later
-    export GOPATH="${HOME}/go"
+    export GOPATH="${HOME}/dev/go"
 fi
 
 # if golang is installed, add go bins to PATH
