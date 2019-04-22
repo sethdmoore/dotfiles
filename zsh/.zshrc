@@ -132,7 +132,7 @@ elif [ "$KERNEL" = "Linux" ]; then
 fi
 
 # golang tools
-if [ -d "${HOME}/go" ]; then
+if [ -d "${HOME}/dev/go" ]; then
     # this directory will be created later
     export GOPATH="${HOME}/dev/go"
 
