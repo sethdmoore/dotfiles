@@ -133,12 +133,12 @@ fi
 
 # golang tools
 if [ -d "${HOME}/go" ]; then
-    if [ -d "${HOME}/go/bin" ]; then
-        append_path "${HOME}/go/bin"
-    fi
-
     # this directory will be created later
     export GOPATH="${HOME}/dev/go"
+
+    if [ -d "${GOPATH}/bin" ]; then
+        append_path "${GOPATH}/bin"
+    fi
 fi
 
 # if golang is installed, add go bins to PATH
