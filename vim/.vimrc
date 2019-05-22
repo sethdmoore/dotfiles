@@ -82,6 +82,11 @@ nnoremap <C-H> <C-W><C-H>
 " NERDTree is awkward to type
 map <silent> <C-n> :NERDTreeFocus<CR>
 
+" use depolete
+let g:deoplete#enable_at_startup = 1
+
+" syntastic
+let g:syntastic_cs_checkers = ['code_checker']
 
 nnoremap <C-_> :split<CR>
 nnoremap <C-\> :vsplit<CR>

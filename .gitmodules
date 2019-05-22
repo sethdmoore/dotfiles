@@ -52,3 +52,9 @@
 [submodule "vim/.vim/pack/plugins/start/vim-puppet"]
 	path = vim/.vim/pack/plugins/start/vim-puppet
 	url = git://github.com/rodjek/vim-puppet.git
+[submodule "omnisharp-vim"]
+	path = vim/.vim/pack/plugins/start/omnisharp-vim
+	url = git://github.com/OmniSharp/omnisharp-vim.git
+[submodule "depolete"]
+	path = vim/.vim/pack/plugins/start/deoplete
+	url = https://github.com/Shougo/deoplete.nvim.git
