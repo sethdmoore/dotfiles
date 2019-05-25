@@ -57,7 +57,7 @@ function rdp() {
         "${host}"
 }
 
-if [ "$KERNEL" = "Darwin" ]; then
+if [ "$KERNEL" = "darwin" ]; then
     # alias lockscreen="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
     alias ls="ls -G $@"
     alias lockscreen="pmset displaysleepnow"
@@ -65,7 +65,7 @@ if [ "$KERNEL" = "Darwin" ]; then
     function bannertime() {
         defaults write com.apple.notificationcenterui bannerTime $@
     }
-elif [ "$KERNEL" = "Linux" ]; then
+elif [ "$KERNEL" = "linux" ] || [ "$KERNEL" = "microsoft" ]; then
     alias ls="ls --color $@"
 
     function temps() {
