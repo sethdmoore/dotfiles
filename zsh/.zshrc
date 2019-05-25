@@ -13,7 +13,6 @@ zmodload zsh/complist
 
 # export PATH="$HOME/bin:$PATH"
 
-export KERNEL="$(uname -s)"
 export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
 # export RPROMPT="$(date +%H:%M)"
 export HISTSIZE=1000
@@ -41,6 +40,20 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 # zshrc executed without POSIX compat
 # use array type (http://zsh.sourceforge.net/FAQ/zshfaq03.html)
 MY_DOT_FILES=(".aliases" ".auth" ".private_environment")
+
+# split returns the len of input s, use that as end of array
+# basically see if Microsoft put their name in the kernel build
+KERNEL_BUILD="$(uname -r | \
+                awk '{l=split($0, k, "-");
+                      print tolower(k[l])}')"
+
+# WSL detection, otherwise kernel will be darwin || linux
+if [ "$KERNEL_BUILD" = "microsoft" ]; then
+    KERNEL="$KERNEL_BUILD"
+else
+    KERNEL="$(uname -s | \
+              awk '{print tolower($0)}')"
+fi
 
 append_path() {
     local IFS path_iterator array_path appender match
@@ -88,7 +101,6 @@ start_tmux() {
     fi
 }
 
-
 if [ ! -d "${HOME}/dev/go" ]; then
     printf "Creating GOPATH: ${HOME}/go\n"
     mkdir -p "${HOME}/dev/go/src"
@@ -99,36 +111,27 @@ if [ ! -d "${HOME}/.vim" ]; then
     mkdir -p "${HOME}/.vim"
 fi
 
-if [ ! -d "${HOME}/.vim/backup" ]; then
-    printf "Creating vim backup: ${HOME}/.vim/backup\n"
-    mkdir -p "${HOME}/.vim/backup"
-fi
-
-if [ ! -d "${HOME}/.vim/swp" ]; then
-    printf "Creating vim swap: ${HOME}/.vim/swp\n"
-    mkdir -p "${HOME}/.vim/swp"
-fi
-
-if [ "$KERNEL" = "Darwin" ]; then
+if [ "$KERNEL" = "darwin" ]; then
     # append to zsh array 9_9
     MY_DOT_FILES+=(".rbenv_env" ".travis/travis.sh" ".dockerenv")
     append_path "/usr/local/sbin"
-elif [ "$KERNEL" = "Linux" ]; then
+elif [ "$KERNEL" = "linux" ]; then
     FZF_ZSH_COMPLETION="/usr/share/fzf/completion.zsh"
     FZF_ZSH_BINDINGS="/usr/share/fzf/key-bindings.zsh"
 
     # connect to the ssh-agent sock
     export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+elif [ "$KERNEL" = "microsoft" ]; then
+    FZF_ZSH_BINDINGS="${HOME}/.fzf/shell/key-bindings.zsh"
+    FZF_ZSH_COMPLETION="${HOME}/.fzf/shell/key-bindings.zsh"
+fi
 
-    # fzf
-    if [ -f "$FZF_ZSH_COMPLETION" ] && [ -f "$FZF_ZSH_BINDINGS" ]; then
-        source "$FZF_ZSH_BINDINGS"
-        source "$FZF_ZSH_COMPLETION"
-    else
-        printf -- "WTF \n"
-        cat "$FZF_ZSH_COMPLETION"
-        NO_FZF=true
-    fi
+# fzf
+if [ -f "$FZF_ZSH_COMPLETION" ] && [ -f "$FZF_ZSH_BINDINGS" ]; then
+    source "$FZF_ZSH_BINDINGS"
+    source "$FZF_ZSH_COMPLETION"
+else
+    NO_FZF=true
 fi
 
 # golang tools
@@ -183,3 +186,45 @@ fi
 if [ "$NO_FZF" ]; then
     printf -- "NOTE: fzf is missing, please install with your pkg manager\n"
 fi
+
+run_ssh_agent() {
+    ssh-agent -s > ~/.ssh/.agent 2>/dev/null
+    . ~/.ssh/.agent >/dev/null
+}
+
+source_ssh_agent() {
+    if [ "$KERNEL" != "microsoft" ]; then
+        return
+    fi
+
+    agent_count="$(pgrep -c ssh-agent)"
+
+    if [ "$agent_count" -eq "0" ]; then
+        # start the agent
+        printf -- "INFO: starting ssh-agent\n"
+        run_ssh_agent
+    elif [ "$agent_count" -gt "1" ]; then
+        # too many agents
+        echo "WARN: ${agent_count} ssh-agents found"
+        killall ssh-agent 2>/dev/null
+        run_ssh_agent
+    elif [ "$agent_count" -eq "1" ]; then
+        # source the running agent
+        . ~/.ssh/.agent >/dev/null
+    fi
+
+    if ! agent_pid=$(
+       pgrep ssh-agent
+    ); then
+        echo "ERROR: ssh-agent: not running"
+    fi
+
+    if [ "$SSH_AGENT_PID" -ne "$agent_pid" ]; then
+        printf -- "WARN: SSH_AGENT_PID %s != %s\n" \
+            $SSH_AGENT_PID $agent_pid
+        killall ssh-agent
+        run_ssh_agent
+    fi
+}
+
+source_ssh_agent
