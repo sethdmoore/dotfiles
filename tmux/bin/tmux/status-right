@@ -1,6 +1,6 @@
 #!/bin/sh
 # import common lib for syntax
-. lib
+. ./lib
 
 date_section="${a}$(date +%H:%M)${d}"
 hostname="${b}#{host}${d}"
