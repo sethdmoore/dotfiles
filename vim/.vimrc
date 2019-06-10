@@ -40,9 +40,9 @@ set directory^=~/.vim/swp//
 set noundofile
 
 
-" activates filetype detection
-filetype plugin indent on
-syntax on
+" activates filetype detection / vim-plug does this
+" filetype plugin indent on
+" syntax on
 
 " #Section :format
 set et
@@ -57,10 +57,37 @@ autocmd FileType go setlocal sw=4 ts=4 noet
 autocmd FileType cs setlocal sw=4 ts=4 noet
 autocmd FileType terraform setlocal commentstring=#%s
 
-" #Section :plugins
-" turn off horrendous 'folding' / collapsing of markdown
-let g:vim_markdown_folding_disabled = 1
-let g:terraform_align=1
+
+" Specify a directory for plugins
+" - Avoid using standard Vim directory names like 'plugin'
+call plug#begin('~/.vim/plugged')
+    Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle'  }
+    Plug 'nvie/vim-flake8'
+    Plug 'jiangmiao/auto-pairs'
+    Plug 'vim-syntastic/syntastic'
+    Plug 'vim-scripts/Tabmerge'
+    Plug 'ntpeters/vim-better-whitespace'
+    Plug 'hashivim/vim-terraform'
+    Plug 'tpope/vim-surround'
+    Plug 'tpope/vim-repeat'
+    Plug 'rodjek/vim-puppet'
+    Plug 'michaeljsmith/vim-indent-object'
+    Plug 'godlygeek/tabular'
+    Plug 'dhruvasagar/vim-table-mode'
+    if has('nvim')
+      Plug 'OmniSharp/omnisharp-vim', { 'do': ':OmniSharpInstall'}
+      Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+      Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+    else
+      Plug 'fatih/vim-go'
+      Plug 'OmniSharp/omnisharp-vim'
+      " deoplete deps for pleb non-nvim users
+      Plug 'Shougo/deoplete.nvim'
+      Plug 'roxma/nvim-yarp'
+      Plug 'roxma/vim-hug-neovim-rpc'
+    endif
+call plug#end()
+
 
 " #Section :keybinds
 " This unsets the 'last search pattern' register by hitting return
@@ -79,14 +106,24 @@ nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
 
+
+" #Section :plugins
+" turn off horrendous 'folding' / collapsing of markdown
+let g:vim_markdown_folding_disabled = 1
+let g:terraform_align=1
+
 " NERDTree is awkward to type
 map <silent> <C-n> :NERDTreeFocus<CR>
 
-" use depolete
+" use deoplete
 let g:deoplete#enable_at_startup = 1
-
+" <TAB>: completion
+" https://github.com/Shougo/deoplete.nvim/issues/816
+"
 " syntastic
 let g:syntastic_cs_checkers = ['code_checker']
+
+let g:OmniSharp_server_stdio = 1
 
 nnoremap <C-_> :split<CR>
 nnoremap <C-\> :vsplit<CR>
@@ -94,6 +131,7 @@ nnoremap <C-\> :vsplit<CR>
 " Tabs with sane bindings
 nnoremap <M-t> :tabnew<CR>
 nnoremap <M-w> :q<CR>
+" alt-{1..6} to switch tabs
 for i in range(1,6)
   let key = 'map ' . '<M-' . i . '> ' . i . 'gt<CR>'
   execute key
@@ -102,7 +140,6 @@ endfor
 
 " trash
 command Curlfmt s/ -H / \\\r    -H /g
-
 
 " best colors of all time
 " https://github.com/xero/sourcerer.vim

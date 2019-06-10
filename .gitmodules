@@ -1,60 +1,15 @@
 [submodule ".resources/sourcerer"]
 	path = .resources/sourcerer
 	url = https://github.com/xero/sourcerer
-[submodule "vim/.vim/pack/vim/.vim/pack/start/vim-go"]
-	path = vim/.vim/pack/plugins/start/vim-go
-	url = https://github.com/fatih/vim-go
-[submodule "vim/.vim/pack/vim/.vim/pack/start/vim-repeat"]
-	path = vim/.vim/pack/plugins/start/vim-repeat
-	url = https://github.com/tpope/vim-repeat
-[submodule "vim/.vim/pack/vim/.vim/pack/start/vim-surround"]
-	path = vim/.vim/pack/plugins/start/vim-surround
-	url = https://github.com/tpope/vim-surround
-[submodule "vim/.vim/pack/vim/.vim/pack/start/vim-flake8"]
-	path = vim/.vim/pack/plugins/start/vim-flake8
-	url = https://github.com/nvie/vim-flake8
-[submodule "vim/.vim/pack/vim/.vim/pack/start/auto-pairs"]
-	path = vim/.vim/pack/plugins/start/auto-pairs
-	url = https://github.com/jiangmiao/auto-pairs
-[submodule "vim/.vim/pack/vim/.vim/pack/start/vim-better-whitespace"]
-	path = vim/.vim/pack/plugins/start/vim-better-whitespace
-	url = https://github.com/ntpeters/vim-better-whitespace
-[submodule "vim/.vim/pack/plugins/start/vim-markdown"]
-	path = vim/.vim/pack/plugins/start/vim-markdown
-	url = https://github.com/plasticboy/vim-markdown
 [submodule "osx/base16_iterm2"]
 	path = osx/base16_iterm2
 	url = https://github.com/chriskempson/base16-iterm2.git
 [submodule "0mniscient-discord-themes"]
 	path = .resources/omnisicient-discord-themes
 	url = https://github.com/0mniscient/Discord-Themes.git
-[submodule "vim-table-mode"]
-	path = vim/.vim/pack/plugins/start/vim-table-mode
-	url = https://github.com/dhruvasagar/vim-table-mode.git
 [submodule "base16"]
 	path = .resources/vim/base16
 	url = https://github.com/chriskempson/base16-vim.git
-[submodule "nerdtree"]
-	path = vim/.vim/pack/plugins/start/nerdtree
-	url = https://github.com/scrooloose/nerdtree.git
-[submodule "syntastic"]
-	path = vim/.vim/pack/plugins/start/syntastic
-	url = https://github.com/vim-syntastic/syntastic.git
-[submodule "vim-indent-object"]
-	path = vim/.vim/pack/plugins/start/vim-indent-object
-	url = https://github.com/michaeljsmith/vim-indent-object
-[submodule "Tabmerge"]
-	path = vim/.vim/pack/plugins/start/tabmerge
-	url = https://github.com/vim-scripts/Tabmerge
-[submodule "vim-terraform"]
-	path = vim/.vim/pack/plugins/start/vim-terraform
-	url = https://github.com/hashivim/vim-terraform.git
-[submodule "vim/.vim/pack/plugins/start/vim-puppet"]
-	path = vim/.vim/pack/plugins/start/vim-puppet
-	url = git://github.com/rodjek/vim-puppet.git
-[submodule "omnisharp-vim"]
-	path = vim/.vim/pack/plugins/start/omnisharp-vim
-	url = git://github.com/OmniSharp/omnisharp-vim.git
-[submodule "depolete"]
-	path = vim/.vim/pack/plugins/start/deoplete
-	url = https://github.com/Shougo/deoplete.nvim.git
+[submodule "plug.vim"]
+	path = vim/.vim/autoload/vim-plug
+	url = https://github.com/junegunn/vim-plug.git
