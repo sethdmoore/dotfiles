@@ -28,8 +28,8 @@ augroup omnisharp_commands
     autocmd FileType cs nnoremap <buffer> <Leader>fx :OmniSharpFixUsings<CR>
     autocmd FileType cs nnoremap <buffer> <Leader>tt :OmniSharpTypeLookup<CR>
     autocmd FileType cs nnoremap <buffer> <Leader>dc :OmniSharpDocumentation<CR>
-    autocmd FileType cs nnoremap <buffer> <C-\> :OmniSharpSignatureHelp<CR>
-    autocmd FileType cs inoremap <buffer> <C-\> <C-o>:OmniSharpSignatureHelp<CR>
+    autocmd FileType cs nnoremap <buffer> <C-i> :OmniSharpSignatureHelp<CR>
+    autocmd FileType cs inoremap <buffer> <C-i> <C-o>:OmniSharpSignatureHelp<CR>
 
     " Navigate up and down by method/property/field
     autocmd FileType cs nnoremap <buffer> <C-k> :OmniSharpNavigateUp<CR>
