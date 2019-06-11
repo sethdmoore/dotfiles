@@ -19,7 +19,8 @@ export HISTSIZE=1000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
 export GO15VENDOREXPERIMENT=1
-export EDITOR="vim"
+export EDITOR="nvim"
+# export VIMINIT="source ~/.config/vim/.vimrc"
 
 export CURLOPT_TIMEOUT=60
 export GPGKEY='4096R/1CF9C381'
@@ -56,8 +57,9 @@ else
 fi
 
 append_path() {
-    local IFS path_iterator array_path appender match
+    local IFS path_iterator array_path appender match mode
     appender="${1}"
+    mode="${2}"
     match="false"
 
     IFS=':'
@@ -71,7 +73,11 @@ append_path() {
     done
     unset IFS
 
-    export PATH="$PATH:${appender}"
+    if [ "${mode}" = "prepend" ]; then
+        export PATH="${appender}:$PATH"
+    else
+        export PATH="$PATH:${appender}"
+    fi
 }
 
 source_dot_files() {
@@ -124,6 +130,12 @@ elif [ "$KERNEL" = "linux" ]; then
 elif [ "$KERNEL" = "microsoft" ]; then
     FZF_ZSH_BINDINGS="${HOME}/.fzf/shell/key-bindings.zsh"
     FZF_ZSH_COMPLETION="${HOME}/.fzf/shell/key-bindings.zsh"
+    # fix bad umask on WSL
+    # https://www.turek.dev/post/fix-wsl-file-permissions/
+    # https://github.com/Microsoft/WSL/issues/352
+    if [ "$(umask)" = "000" ]; then
+      umask 0022
+    fi
 fi
 
 # fzf
@@ -150,7 +162,7 @@ if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
 fi
 
 if [ -d "${HOME}/bin" ]; then
-    append_path "${HOME}/bin"
+    append_path "${HOME}/bin" "prepend"
 fi
 
 source_dot_files
