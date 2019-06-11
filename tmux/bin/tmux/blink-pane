@@ -1,4 +1,5 @@
 #!/bin/sh
 
 tmux set window-active-style "bg=colour236"
-sleep
+sleep 0.2
+tmux set window-active-style "bg=colour234"
