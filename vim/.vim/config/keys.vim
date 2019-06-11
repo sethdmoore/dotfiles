@@ -34,7 +34,7 @@ endfor
 function! PluginBindings()
     " NERDTree is awkward to type
     if exists(":NERDTree")
-        map <silent> <C-n> :NERDTreeFocus<CR>
+        map <silent> <C-n> :NERDTreeToggle<CR>
     endif
 endfunction
 
