@@ -15,7 +15,7 @@ call deoplete#custom#option({
 call deoplete#custom#option('omni_patterns', {
     \ 'cs': '\w*',
     \})
-" let g:deoplete#auto_complete_start_length = 0
+let g:deoplete#auto_complete_start_length = 1
 " let g:deoplete#sources#cs = ['omni', 'file', 'buffer', 'ultisnips']
 "
 autocmd InsertEnter * call deoplete#enable()
