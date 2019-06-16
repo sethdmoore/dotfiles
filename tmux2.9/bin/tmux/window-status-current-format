@@ -1,0 +1,9 @@
+#!/bin/sh
+# import common lib for syntax
+. lib
+
+output="[-${aa}#{?window_zoomed_flag,${i} ,  }"
+output="${output}#{window_name}"
+output="${output}#{?window_zoomed_flag, ${i},  }${d}-]"
+
+printf -- "$output"
