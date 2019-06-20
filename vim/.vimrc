@@ -9,6 +9,9 @@ set sessionoptions-=options
 " fix backspace behavior
 set backspace=indent,eol,start
 
+set completeopt=longest,menuone,preview
+" set completeopt+=menuone,noinsert
+
 " I hate this
 set nofoldenable
 
