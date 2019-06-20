@@ -22,6 +22,7 @@ call plug#begin('~/.vim/plugged')
     Plug 'junegunn/fzf.vim'
     Plug 'OmniSharp/omnisharp-vim'
     Plug 'deoplete-plugins/deoplete-go', { 'do': 'make' }
+    Plug 'deoplete-plugins/deoplete-jedi'
     if has('nvim')
       Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
     else
