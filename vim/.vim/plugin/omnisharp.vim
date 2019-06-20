@@ -31,8 +31,8 @@ augroup omnisharp_commands
     " autocmd FileType cs inoremap <buffer> <C-i> <C-o>:OmniSharpSignatureHelp<CR>
 
     " Navigate up and down by method/property/field
-    autocmd FileType cs nnoremap <buffer> <C-k> :OmniSharpNavigateUp<CR>
-    autocmd FileType cs nnoremap <buffer> <C-j> :OmniSharpNavigateDown<CR>
+    autocmd FileType cs nnoremap <buffer> <M-k> :OmniSharpNavigateUp<CR>
+    autocmd FileType cs nnoremap <buffer> <M-j> :OmniSharpNavigateDown<CR>
 
     " Find all code errors/warnings for the current solution and populate the quickfix window
     autocmd FileType cs nnoremap <buffer> <Leader>cc :OmniSharpGlobalCodeCheck<CR>

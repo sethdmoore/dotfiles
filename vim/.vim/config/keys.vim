@@ -9,15 +9,21 @@ imap <F1> <C-o>:echo<CR>
 "remap colon to semicolon
 map ; :
 
+map <Leader>! <C-W>T<CR>
+
 " #Section :splits
 " Fix up the split keybinds
-nnoremap <C-_> :split<CR>
-nnoremap <C-\> :vsplit<CR>
+" nnoremap <C-_> :split<CR>
+nnoremap <Leader>- :split<CR>
+nnoremap <Leader>\ :vsplit<CR>
+" nnoremap <C-\> :vsplit<CR>
 " C-hjkl for navigating splits
 nnoremap <C-J> <C-W><C-J>
 nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
+
+
 
 " Tabs with sane bindings
 nnoremap <M-t> :tabnew<CR>

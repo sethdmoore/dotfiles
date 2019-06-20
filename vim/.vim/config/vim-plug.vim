@@ -4,7 +4,6 @@ call plug#begin('~/.vim/plugged')
     Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle'  }
     Plug 'nvie/vim-flake8'
     Plug 'jiangmiao/auto-pairs'
-    " Plug 'vim-syntastic/syntastic'
     Plug 'vim-scripts/Tabmerge'
     Plug 'ntpeters/vim-better-whitespace'
     Plug 'hashivim/vim-terraform'
