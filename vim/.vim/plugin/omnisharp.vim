@@ -1,13 +1,12 @@
-autocmd FileType cs setlocal omnifunc=OmniSharp#Complete
-
-set completeopt=longest,menuone,preview
+"autocmd FileType cs setlocal omnifunc=OmniSharp#Complete
 
 let g:OmniSharp_highlight_types = 2
 let g:OmniSharp_selector_ui = 'fzf'
 let g:OmniSharp_server_stdio = 1
+let g:OmniSharp_server_stdio_quickload = 1
+" let g:OmniSharp_server_use_mono = 1
 let g:OmniSharp_want_snippet = 1
-let g:OmniSharp_timeout = 5
-let g:ale_linters = { 'cs': ['OmniSharp'] }
+let g:OmniSharp_timeout = 10
 
 augroup omnisharp_commands
     autocmd!
@@ -27,6 +26,7 @@ augroup omnisharp_commands
     autocmd FileType cs nnoremap <buffer> <Leader>fx :OmniSharpFixUsings<CR>
     autocmd FileType cs nnoremap <buffer> <Leader>tt :OmniSharpTypeLookup<CR>
     autocmd FileType cs nnoremap <buffer> <Leader>dc :OmniSharpDocumentation<CR>
+    " Ctrl-i == tab, don't use this
     " autocmd FileType cs nnoremap <buffer> <C-i> :OmniSharpSignatureHelp<CR>
     " autocmd FileType cs inoremap <buffer> <C-i> <C-o>:OmniSharpSignatureHelp<CR>
 
