@@ -8,14 +8,18 @@ let g:deoplete#enable_ignore_case = 1
 call deoplete#custom#option({
     \ 'auto_complete_delay': 200,
     \ 'smart_case': v:true,
-    \ 'sources': { 'cs': ['cs', 'ultisnips', 'buffer', 'file'], }
+    \ 'omni_patterns': {
+    \   'cs': '\w*',
+    \ },
+    \ 'sources': { 'cs':     ['cs', 'ultisnips', 'buffer', 'file'],
+    \              'python': ['jedi', 'ultisnips', 'buffer', 'file'],
+    \ },
     \ })
 
 
-call deoplete#custom#option('omni_patterns', {
-    \ 'cs': '\w*',
-    \})
+" call deoplete#custom#option('omni_patterns', {
+"     \ 'cs': '\w*',
+"     \})
 let g:deoplete#auto_complete_start_length = 1
-" let g:deoplete#sources#cs = ['omni', 'file', 'buffer', 'ultisnips']
 "
 autocmd InsertEnter * call deoplete#enable()
