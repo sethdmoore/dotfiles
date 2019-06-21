@@ -18,10 +18,10 @@ nnoremap <Leader>- :split<CR>
 nnoremap <Leader>\ :vsplit<CR>
 
 " Rotate splits
-" horizontal
-nmap <Leader>h :wincmd H<CR>
 " vertical
-nmap <Leader>v :wincmd J<CR>
+nmap <Leader>v :wincmd H<CR>
+" horizontal
+nmap <Leader>h :wincmd J<CR>
 
 " nnoremap <C-\> :vsplit<CR>
 " C-hjkl for navigating splits
