@@ -7,11 +7,12 @@ let g:deoplete#enable_ignore_case = 1
 " call deoplete#custom#option('sources', { 'cs': ['omnisharp'], })
 call deoplete#custom#option({
     \   'auto_complete_delay': 500,
+    \   'auto_refresh_delay': 50,
     \   'smart_case': v:true,
     \   'omni_patterns': {
     \     'cs': '\w*',
     \   },
-    \   'sources': { 'cs':     ['omnisharp'],
+    \   'sources': { 'cs':     ['omnisharp', 'ultisnips', 'buffer', 'file'],
     \                'python': ['jedi', 'ultisnips', 'buffer', 'file'],
     \   },
     \ })

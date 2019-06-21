@@ -2,6 +2,7 @@
 " - Avoid using standard Vim directory names like 'plugin'
 call plug#begin('~/.vim/plugged')
     Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle'  }
+    Plug 'dhruvasagar/vim-zoom'
     Plug 'nvie/vim-flake8'
     Plug 'jiangmiao/auto-pairs'
     Plug 'vim-scripts/Tabmerge'
