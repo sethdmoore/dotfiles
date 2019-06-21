@@ -1,16 +1,16 @@
-"autocmd FileType cs setlocal omnifunc=OmniSharp#Complete
+" autocmd FileType cs setlocal omnifunc=OmniSharp#Complete
 
 let g:OmniSharp_highlight_types = 2
 let g:OmniSharp_selector_ui = 'fzf'
 let g:OmniSharp_server_stdio = 1
 let g:OmniSharp_server_stdio_quickload = 1
-let g:OmniSharp_server_loading_timeout = 1
+let g:OmniSharp_server_loading_timeout = 5
 let g:OmniSharp_server_display_loading = 1
 
 
 " let g:OmniSharp_server_use_mono = 1
 let g:OmniSharp_want_snippet = 1
-let g:OmniSharp_timeout = 1
+let g:OmniSharp_timeout = 5
 
 augroup omnisharp_commands
     autocmd!
@@ -58,3 +58,5 @@ nnoremap <Leader>cf :OmniSharpCodeFormat<CR>
 " Start the omnisharp server for the current solution
 nnoremap <Leader>ss :OmniSharpStartServer<CR>
 nnoremap <Leader>sp :OmniSharpStopServer<CR>
+
+" autocmd InsertEnter cs :OmniSharpHighlightTypes
