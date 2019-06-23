@@ -42,15 +42,10 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 # use array type (http://zsh.sourceforge.net/FAQ/zshfaq03.html)
 MY_DOT_FILES=(".aliases" ".auth" ".private_environment")
 
-# split returns the len of input s, use that as end of array
-# basically see if Microsoft put their name in the kernel build
-KERNEL_BUILD="$(uname -r | \
-                awk '{l=split($0, k, "-");
-                      print tolower(k[l])}')"
-
-# WSL detection, otherwise kernel will be darwin || linux
-if [ "$KERNEL_BUILD" = "microsoft" ]; then
-    KERNEL="$KERNEL_BUILD"
+# use grep like a sane person,
+# instead of awk substring splitting to determine ms kernel
+if uname -r | grep -i "microsoft" >/dev/null 2>&1; then
+    KERNEL='microsoft'
 else
     KERNEL="$(uname -s | \
               awk '{print tolower($0)}')"
@@ -203,6 +198,11 @@ run_ssh_agent() {
     ssh-agent -s > ~/.ssh/.agent 2>/dev/null
     . ~/.ssh/.agent >/dev/null
 }
+
+# lazy load nvm
+if [ -z "$NVM_BIN" ]; then
+    alias nvm='unalias nvm && . ~/.nvm/nvm.sh'
+fi
 
 source_ssh_agent() {
     if [ "$KERNEL" != "microsoft" ]; then
