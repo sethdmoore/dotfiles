@@ -6,8 +6,8 @@ let g:deoplete#enable_at_startup = 0
 let g:deoplete#enable_ignore_case = 1
 " call deoplete#custom#option('sources', { 'cs': ['omnisharp'], })
 call deoplete#custom#option({
-    \   'auto_complete_delay': 500,
-    \   'auto_refresh_delay': 50,
+    \   'auto_complete_delay': 50,
+    \   'auto_refresh_delay': 10,
     \   'smart_case': v:true,
     \   'omni_patterns': {
     \     'cs': '\w*',
@@ -39,6 +39,9 @@ call deoplete#custom#option({
 call deoplete#custom#option('min_pattern_length', 1)
 let g:deoplete#auto_complete_start_length = 1
 
-call deoplete#enable_logging('DEBUG', '/home/seth/deoplete.log')
-autocmd VimEnter * call deoplete#initialize()
-autocmd InsertEnter * call deoplete#enable()
+" call deoplete#enable_logging('DEBUG', '/home/seth/deoplete.log')
+" autocmd VimEnter * call deoplete#initialize()
+" autocmd InsertEnter * call deoplete#enable()
+
+call deoplete#initialize()
+autocmd VimEnter * call deoplete#enable()

@@ -47,17 +47,26 @@ set noundofile
 
 
 " #Section :format
+" defaults
 set et
 set sw=4
 set ts=4
+
 autocmd FileType ruby setlocal sw=2 ts=2 et
+autocmd FileType vim setlocal sw=2 ts=2 et
 autocmd FileType yaml setlocal sw=2 ts=2 et
 autocmd FileType sh setlocal sw=2 ts=2 et
 autocmd FileType python setlocal sw=4 ts=4 et
 autocmd FileType go setlocal sw=4 ts=4 noet
 autocmd FileType cs setlocal sw=4 ts=4 et
-autocmd FileType vim setlocal sw=4 ts=4 et
+autocmd FileType vim,vimrc setlocal sw=2 ts=2 et
 autocmd FileType terraform setlocal commentstring=#%s
+autocmd FileType vue call SetVueOptions()
+
+function SetVueOptions()
+  syntax sync fromstart
+  setlocal sw=2 ts=2 et
+endfunction
 
 source ~/.vim/config/vim-plug.vim
 source ~/.vim/config/keys.vim
