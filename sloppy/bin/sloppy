@@ -82,7 +82,7 @@ region_cap() {
   fi
 
   # input=":0.0+$x,$y"
-  input="${DISPLAY}+$x,$y"
+  input="$DISPLAY+$x,$y"
   # -vf scale="854:-2" \
 
   # we run ffmpeg in a child proc so we can write the pidfile on the main proc
@@ -97,7 +97,7 @@ region_cap() {
     -vf scale="$nw:-2" \
     -preset ultrafast -crf:v "$QUANT" \
     -pix_fmt yuv420p \
-    -fs 10M \
+    -fs "$FS_LIMIT" \
     -y \
     "$FILE" &
 
@@ -145,5 +145,8 @@ main() {
   read -r x y w h g id <<< "$output"
   region_cap "$x $y $w $h $cap_mouse $PIDFILE"
 }
+
+# clean up on ctrl-c
+trap 'clean_up' 2
 
 main $@
