@@ -81,7 +81,8 @@ region_cap() {
     follow_mouse=""
   fi
 
-  input=":0.0+$x,$y"
+  # input=":0.0+$x,$y"
+  input="${DISPLAY}+$x,$y"
   # -vf scale="854:-2" \
 
   # we run ffmpeg in a child proc so we can write the pidfile on the main proc
