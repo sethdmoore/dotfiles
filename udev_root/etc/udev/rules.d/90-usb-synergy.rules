@@ -4,10 +4,12 @@
 # be reliable for 'remove' events.
 # https://unix.stackexchange.com/questions/178341/udev-rule-action-add-is-working-but-action-remove-isnt-working
 # $ udevadm monitor --property > output
+# ID_MODEL is more consistent, get from
+# $ udevadm monitor --environment --udev | grep ID_MODEL
 
 ## Debug
 # ACTION=="add",     ENV{ID_MODEL}=="Gaming_Mouse_G502", RUN+="/usr/bin/touch /tmp/ADDED"
 # ACTION=="remove",  ENV{ID_MODEL}=="Gaming_Mouse_G502", RUN+="/usr/bin/touch /tmp/REMOVED"
 
-ACTION=="add",     ENV{ID_MODEL}=="Gaming_Mouse_G502", RUN+="/usr/bin/su -l seth -c '/usr/local/bin/synergy_toggle.sh server'"
-ACTION=="remove",  ENV{ID_MODEL}=="Gaming_Mouse_G502", RUN+="/usr/bin/su -l seth -c '/usr/local/bin/synergy_toggle.sh client'"
+ACTION=="add",     ENV{ID_MODEL}=="G502_HERO_Gaming_Mouse", RUN+="/usr/bin/su -l seth -c '/usr/local/bin/synergy_toggle.sh server'"
+ACTION=="remove",  ENV{ID_MODEL}=="G502_HERO_Gaming_Mouse", RUN+="/usr/bin/su -l seth -c '/usr/local/bin/synergy_toggle.sh client'"
