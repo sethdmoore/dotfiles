@@ -6,6 +6,11 @@ let g:OmniSharp_server_stdio = 1
 let g:OmniSharp_server_stdio_quickload = 1
 let g:OmniSharp_server_loading_timeout = 5
 let g:OmniSharp_server_display_loading = 1
+let g:omnicomplete_fetch_full_documentation = 1
+
+" if kernel == 'windows'
+"   let g:OmniSharp_server_path = '/home/seth/.local/share/omnisharp/rn'
+" endif
 
 
 " let g:OmniSharp_server_use_mono = 1
