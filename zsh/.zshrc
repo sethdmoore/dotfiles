@@ -20,6 +20,7 @@ export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
 export GO15VENDOREXPERIMENT=1
 export EDITOR="nvim"
+export KERNEL
 # export VIMINIT="source ~/.config/vim/.vimrc"
 
 export CURLOPT_TIMEOUT=60
@@ -105,6 +106,11 @@ start_tmux() {
 if [ ! -d "${HOME}/dev/go" ]; then
     printf "Creating GOPATH: ${HOME}/go\n"
     mkdir -p "${HOME}/dev/go/src"
+fi
+
+if [ ! -d "${HOME}/bin" ]; then
+    printf "Creating local bin: ${HOME}/bin\n"
+    mkdir -p "${HOME}/bin"
 fi
 
 if [ ! -d "${HOME}/.vim" ]; then

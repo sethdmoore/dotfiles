@@ -4,3 +4,5 @@
 bookmarks
 gtk/.config/gtk-3.0/bookmarks
 vim/.vim/.netrwhist
+vim/.vim/plugged
+nvim/.config/gocode

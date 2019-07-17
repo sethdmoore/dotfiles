@@ -1,4 +1,5 @@
 " #Section :general
+let kernel=$KERNEL
 set ruler
 set backspace=2
 set nocompatible
