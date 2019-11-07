@@ -13,7 +13,12 @@ zmodload zsh/complist
 
 # export PATH="$HOME/bin:$PATH"
 
-export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
+# only display PWD when outside of tmux
+if [ -z "$TMUX" ]; then
+    export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
+else
+    export PS1="%(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
+fi
 # export RPROMPT="$(date +%H:%M)"
 export HISTSIZE=1000
 export SAVEHIST=10000
@@ -242,6 +247,14 @@ source_ssh_agent() {
             $SSH_AGENT_PID $agent_pid
         killall ssh-agent
         run_ssh_agent
+    fi
+}
+
+precmd() {
+    if [ -n "$TMUX" ]; then
+      # PROMPT_COMMAND
+      printf "\033]2;#[fg=colour39]$(pwd)#[default]\033\\"
+      # eval "$PROMPT_COMMAND"
     fi
 }
 
