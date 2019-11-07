@@ -252,9 +252,8 @@ source_ssh_agent() {
 
 precmd() {
     if [ -n "$TMUX" ]; then
-      # PROMPT_COMMAND
-      printf "\033]2;#[fg=colour39]$(pwd)#[default]\033\\"
-      # eval "$PROMPT_COMMAND"
+      # PROMPT_COMMAND, show PWD (relative to $HOME on window title
+      printf "\033]2;#[fg=colour39]${PWD/$HOME/~}#[default]\033\\"
     fi
 }
 
