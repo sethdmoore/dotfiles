@@ -1,0 +1,48 @@
+#!/bin/sh
+
+function init() {
+  if ! which ffmpeg >/dev/null 2>&1; then
+    printf -- "ERROR: missing ffmpeg, please install it!\n"
+    exit 2
+  fi
+}
+
+
+function validate() {
+  if ! file "$1" | grep GIF; then
+    printf -- "ERROR: Input file is likely not a gif!\n"
+    printf -- "       Please see output below.\n"
+    file "$1"
+    exit 2
+  fi
+}
+
+
+function convert() {
+  basename="$1"
+  if ! ffmpeg \
+    -loglevel warning \
+    -i "$basename".gif \
+    -movflags faststart \
+    -pix_fmt yuv420p \
+    -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" \
+    "$basename".mp4; then
+      printf -- "ERROR: nonzero exit code on transcoding. The process has failed.\n"
+      exit 2
+  fi
+}
+
+
+function main() {
+  init
+
+  filename="$1"
+  validate "$filename"
+  basename="$(basename $filename .gif)"
+
+  convert "$basename"
+
+  printf -- 'INFO: successfully converted %s.gif to %s.mp4\n' $basename $basename
+}
+
+main "$@"
