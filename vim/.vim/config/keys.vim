@@ -6,6 +6,8 @@ nnoremap <CR> :noh<CR><CR>
 nmap <F1> :echo<CR>
 imap <F1> <C-o>:echo<CR>
 
+nmap <F6> :exec '!'.getline('.')
+
 "remap colon to semicolon
 map ; :
 
