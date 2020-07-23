@@ -13,6 +13,9 @@ map ; :
 
 map <Leader>! <C-W>T<CR>
 
+" replace word under cursor with something new
+:nnoremap <Leader>s :s/\<<C-r><C-w>\>//g<Left><Left>
+
 " #Section :splits
 " Fix up the split keybinds
 " nnoremap <C-_> :split<CR>
