@@ -17,7 +17,7 @@ call plug#begin('~/.vim/plugged')
     Plug 'dhruvasagar/vim-table-mode' " leader-t-m for MD table support
     Plug 'ervandew/supertab' " do crazy shit with tab
     "Plug 'SirVer/ultisnips' " code snips, needs set up
-    Plug 'w0rp/ale' " async linting
+    " Plug 'w0rp/ale' " async linting
     Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' } " fuzzy finder in vim
     Plug 'junegunn/fzf.vim' " see above
     Plug 'Shougo/neosnippet.vim'
