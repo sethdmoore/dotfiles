@@ -42,9 +42,9 @@ set winheight=5
 set winminheight=5
 
 " dump swp / backup files in temp, instead of polluting local dirs
-set backupdir=~/.vim/backup//
-set directory^=~/.vim/swp//
-set noundofile
+" set backupdir=~/.vim/backup//
+" set directory^=~/.vim/swp//
+" set noundofile
 
 
 " #Section :format
@@ -63,11 +63,6 @@ autocmd FileType cs setlocal sw=4 ts=4 et
 autocmd FileType vim,vimrc setlocal sw=2 ts=2 et
 autocmd FileType terraform setlocal commentstring=#%s
 autocmd FileType vue call SetVueOptions()
-
-function SetVueOptions()
-  syntax sync fromstart
-  setlocal sw=2 ts=2 et
-endfunction
 
 source ~/.vim/config/vim-plug.vim
 source ~/.vim/config/keys.vim
