@@ -51,9 +51,9 @@ endfor
 " Plugin specific bindings
 function! PluginBindings()
     " NERDTree is awkward to type
-    if exists(":CocCommand explorer")
-        map <silent> <C-n> :CocCommand explorer<CR>
-    endif
+    "if exists(":CocCommand explorer")
+    map <silent> <C-n> :CocCommand explorer<CR>
+    "endif
 
     if exists(":Tabmerge")
         map <Leader>m :Tabmerge<CR>
