@@ -9,7 +9,13 @@ alias reload="source ${HOME}/.zshrc"
 ### Editing Aliases ###
 alias aliases="$EDITOR ${HOME}/.aliases && source ${HOME}/.aliases"
 alias todo="$EDITOR ${HOME}/TODO.md"
-alias gocoverage="go test -coverprofile=coverage.out && go tool cover -html=coverage.out"
+function gocoverage() {
+    go test ./... \
+        -coverprofile=coverage.out \
+        && go tool cover \
+        -html=coverage.out \
+        && rm coverage.out"
+}
 
 # convenience
 function reload() {
