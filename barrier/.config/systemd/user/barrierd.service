@@ -1,0 +1,10 @@
+[Unit]
+Description=Barrier server service
+After=display-manager.service
+
+[Service]
+ExecStart=/usr/bin/barriers -c /home/seth/.config/Debauchee/screens.conf -f --enable-crypto --name seth.home
+Restart=on-failure
+
+[Install]
+WantedBy=graphical.target
