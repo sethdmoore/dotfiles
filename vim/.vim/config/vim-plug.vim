@@ -20,15 +20,8 @@ call plug#begin('~/.vim/plugged')
     " Plug 'w0rp/ale' " async linting
     Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' } " fuzzy finder in vim
     Plug 'junegunn/fzf.vim' " see above
-    " Plug 'Shougo/neosnippet.vim'
-    " Plug 'Shougo/neosnippet-snippets'
-    " Plug 'Shougo/neopairs.vim'
     " Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' } " rock solid vim stuff
-    " disable deoplete
-    "Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' } " autocomplete / IDE
-    "Plug 'deoplete-plugins/deoplete-go', { 'do': 'make' } " not sure if this conflicts with fatih/vim-go
-    "Plug 'deoplete-plugins/deoplete-jedi' "python IDE stuff
-    "Plug 'OmniSharp/omnisharp-vim' " develop C# anywhere
+    Plug 'OmniSharp/omnisharp-vim' " develop C# anywhere
     " try COC.vim
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
 call plug#end()
