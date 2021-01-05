@@ -1,6 +1,6 @@
 #!/bin/sh
 # import common lib for syntax
-. lib
+. tmux-lib
 
 output="[-${aa}#{?window_zoomed_flag,${i} ,  }"
 output="${output}#{window_name}"

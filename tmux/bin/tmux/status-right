@@ -1,8 +1,86 @@
 #!/bin/sh
-# import common lib for syntax
-. ./lib
 
-date_section="${a}$(date +%H:%M)${d}"
-hostname="${b}#{host}${d}"
-public_ip="${a}$(dig +short myip.opendns.com @resolver1.opendns.com)${d}"
-printf -- "| ${date_section} | ${hostname} | ${public_ip} "
+# import common lib for syntax
+. tmux-lib
+
+# check our IPv4 every INTERVAL seconds
+LOOKUP_INTERVAL=1200
+
+# IPv4 cachefile
+IPV4_CACHEFILE="/tmp/tmux_ipv4_cache"
+
+
+init() {
+  if ! [ -e "$IPV4_CACHEFILE" ]; then
+    touch "$IPV4_CACHEFILE"
+    lookup_ipv4 &>/dev/null
+  fi
+}
+
+
+# lookup IPv4 against opendns, write to our cache
+lookup_ipv4() {
+  message="$1"
+  if [ -z "$message" ]; then
+    message="OK"
+  fi
+
+  ipv4="$(dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null)"
+  time_now=$(date +%s)
+
+  # newline is required at end of file for read(1) to work
+  printf -- '%s|%s|%s\n' $time_now $ipv4 $message > "$IPV4_CACHEFILE"
+  printf -- '%s' $ipv4
+}
+
+
+get_ipv4() {
+  # printf -- $(dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null)
+
+  time_now=$(date +%s)
+
+  IFS='|'
+  if ! read timestamp ipv4 message < "$IPV4_CACHEFILE"; then
+    printf -- $(lookup_ipv4 "ERROR: Can't read last cachefile")
+    return
+  fi
+
+  # timestamp is not an integer > 0 == invalid
+  # cachefile corrupted
+  if ! test "$timestamp" -gt 0 2>/dev/null; then
+    printf -- $(lookup_ipv4 "ERROR: timestamp $timestamp invalid")
+    return
+  fi
+
+  delta=$(($time_now - $timestamp))
+
+  if [ "$delta" -gt "$LOOKUP_INTERVAL" ] ; then
+    printf -- $(lookup_ipv4 "Cache Expired: delta: $delta > interval: $LOOKUP_INTERVAL")
+    return
+  fi
+
+  printf -- "$ipv4"
+}
+
+
+main() {
+  init
+
+  date_section="${a}$(date +%H:%M:%S)${d}"
+
+  hostname="${b}localhost${d}"
+  ipv4="127.0.0.1"
+
+  if [ "$TMUX_CENSOR_INFO" = "false" ] || [ -z "$TMUX_CENSOR_INFO" ]; then
+    # don't expose these unless environment allows it
+    hostname="${b}#{host}${d}"
+    ipv4=$(get_ipv4)
+  fi
+
+  public_ip="${a}${ipv4}${d}"
+
+  printf -- "| ${date_section} | ${hostname} | ${public_ip} "
+}
+
+
+main

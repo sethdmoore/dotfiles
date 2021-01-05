@@ -1,9 +1,10 @@
 #!/bin/sh
 # import common lib for syntax
-. lib
+. tmux-lib
 
 output="  #{?window_zoomed_flag,${i} ,  }"
-output="${output}#{?window_bell_flag,#{bl},}#{window_name}${d}"
+output="${output}#{?window_bell_flag,${oj}${i},}#{window_name}${d}"
+output="${output}#{?window_bell_flag,${oj}${i},}${d}"
 output="${output}#{?window_zoomed_flag, ${i},  }  "
 
 printf -- "$output"

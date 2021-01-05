@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ "$1" = "off" ]; then
+  tmux set-environment -ug TMUX_CENSOR_INFO
+else
+  tmux set-environment -g TMUX_CENSOR_INFO true
+fi
