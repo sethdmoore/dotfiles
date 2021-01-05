@@ -147,7 +147,9 @@ if [ -f "$FZF_ZSH_COMPLETION" ] && [ -f "$FZF_ZSH_BINDINGS" ]; then
     source "$FZF_ZSH_BINDINGS"
     source "$FZF_ZSH_COMPLETION"
 else
-    NO_FZF=true
+    if ! command -v fzf &>/dev/null ; then
+      NO_FZF=true
+    fi
 fi
 
 # golang tools
