@@ -1,0 +1,10 @@
+[Unit]
+Description=UDP Hotkey server service
+After=network-online.service
+
+[Service]
+ExecStart=/home/seth/dev/go/bin/serial-hotkey
+Restart=always
+
+[Install]
+WantedBy=default.target

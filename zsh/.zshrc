@@ -23,10 +23,8 @@ fi
 export HISTSIZE=1000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
-export GO15VENDOREXPERIMENT=1
 export EDITOR="nvim"
 export KERNEL
-# export VIMINIT="source ~/.config/vim/.vimrc"
 
 export CURLOPT_TIMEOUT=60
 export GPGKEY='4096R/1CF9C381'
