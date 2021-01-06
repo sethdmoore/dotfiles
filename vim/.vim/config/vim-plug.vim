@@ -1,7 +1,8 @@
 " Specify a directory for plugins
 " - Avoid using standard Vim directory names like 'plugin'
 call plug#begin('~/.vim/plugged')
-    Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle'  } " filesystem tree
+    " COC explorer replaces
+    " Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle'  } " filesystem tree
     Plug 'dhruvasagar/vim-zoom' " prefix-z style zooming
     " Plug 'nvie/vim-flake8' " python pep8
     Plug 'posva/vim-vue' " vue file highlighting
@@ -15,6 +16,7 @@ call plug#begin('~/.vim/plugged')
     Plug 'michaeljsmith/vim-indent-object' " better indenting
     Plug 'godlygeek/tabular' " line up ya text like it's ruby
     Plug 'dhruvasagar/vim-table-mode' " leader-t-m for MD table support
+    Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install'  }
     " Plug 'ervandew/supertab' " do crazy shit with tab
     " Plug 'SirVer/ultisnips' " code snips, needs set up
     " Plug 'w0rp/ale' " async linting
