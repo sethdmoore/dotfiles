@@ -16,7 +16,7 @@ call plug#begin('~/.vim/plugged')
     Plug 'michaeljsmith/vim-indent-object' " better indenting
     Plug 'godlygeek/tabular' " line up ya text like it's ruby
     Plug 'dhruvasagar/vim-table-mode' " leader-t-m for MD table support
-    Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install'  }
+    Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
     " Plug 'ervandew/supertab' " do crazy shit with tab
     " Plug 'SirVer/ultisnips' " code snips, needs set up
     " Plug 'w0rp/ale' " async linting
