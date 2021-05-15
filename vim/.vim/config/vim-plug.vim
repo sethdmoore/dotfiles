@@ -26,4 +26,7 @@ call plug#begin('~/.vim/plugged')
     " Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' } " rock solid vim stuff
     Plug 'OmniSharp/omnisharp-vim' " develop C# anywhere
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
+
+    " Attempt to commit coc plugins
+    Plug 'coc-extensions/coc-omnisharp', {'do': 'yarn install --frozen-lockfile'}
 call plug#end()
