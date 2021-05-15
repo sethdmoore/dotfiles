@@ -6,7 +6,12 @@ nnoremap <CR> :noh<CR><CR>
 nmap <F1> :echo<CR>
 imap <F1> <C-o>:echo<CR>
 
+" Exec the current line as shell command
 nmap <F6> :exec '!'.getline('.')
+
+" allow writing to any file with sudo
+" EG: you opened a file you don't own and forgot sudo prefix
+cmap w!! w !sudo tee > /dev/null %
 
 "remap colon to semicolon
 map ; :
