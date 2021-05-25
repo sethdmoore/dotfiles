@@ -38,8 +38,12 @@ set viminfo='20,<1000
 " More 'natural' splits
 set splitbelow
 set splitright
-set winheight=5
-set winminheight=5
+
+" These options mess up CoC
+" probably don't set them
+" I don't remember what they do anyway
+" " set winheight=5
+" " set winminheight=5
 
 " dump swp / backup files in temp, instead of polluting local dirs
 " set backupdir=~/.vim/backup//
