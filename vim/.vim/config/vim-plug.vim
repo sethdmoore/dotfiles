@@ -9,7 +9,6 @@ call plug#begin('~/.vim/plugged')
     " Plug 'nvie/vim-flake8' " python pep8
     Plug 'posva/vim-vue' " vue file highlighting
     " Plug 'jiangmiao/auto-pairs' " match parens and quotes
-    Plug 'wfxr/minimap.vim'
     Plug 'vim-scripts/Tabmerge' " like tmux join-pane
     Plug 'ntpeters/vim-better-whitespace' " highlight ugly trailing whitespace
     Plug 'hashivim/vim-terraform' " highlight support for terraform

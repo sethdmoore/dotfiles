@@ -154,7 +154,7 @@ nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 
 " extensions
-leg g:coc_global_extensions = [
+let g:coc_global_extensions = [
       \'coc-explorer',
       \'coc-go',
       \'coc-jedi',
