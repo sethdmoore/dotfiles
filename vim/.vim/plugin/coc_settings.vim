@@ -132,6 +132,9 @@ set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 " set statusline+=\ \|\ 
 " set statusline+=%f
 
+let g:node_client_debug = 1
+let $NODE_CLIENT_LOG_FILE = '/tmp/coc.log'
+
 " Mappings for CoCList
 " Show all diagnostics.
 nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
@@ -149,3 +152,15 @@ nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
 nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
 " Resume latest coc list.
 nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
+
+" extensions
+leg g:coc_global_extensions = [
+      \'coc-explorer',
+      \'coc-go',
+      \'coc-jedi',
+      \'coc-json',
+      \'coc-xml',
+      \'coc-tsserver',
+      \'coc-markdownlint',
+      \'coc-omnisharp',
+\]

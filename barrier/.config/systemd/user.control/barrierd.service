@@ -1,10 +1,14 @@
 [Unit]
 Description=Barrier server service
-After=display-manager.service
+# After=network-online.service
+# Requires=graphical-session.target
+# After=display-manager.service
+PartOf=graphical-session.target
+# Requires=network-online.service
 
 [Service]
 ExecStart=/usr/bin/barriers -c /home/seth/.config/Debauchee/screens.conf -f --enable-crypto --name seth.home
 Restart=on-failure
 
 [Install]
-WantedBy=graphical.target
+WantedBy=xsession.target
