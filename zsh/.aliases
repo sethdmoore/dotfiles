@@ -9,6 +9,25 @@ alias reload="source ${HOME}/.zshrc"
 ### Editing Aliases ###
 alias aliases="$EDITOR ${HOME}/.aliases && source ${HOME}/.aliases"
 alias todo="$EDITOR ${HOME}/TODO.md"
+alias bare_ssh="ssh -F /dev/null -oIdentityAgent=no"
+
+function key_fingerprint() {
+    # Generate an md5 fingerprint from a private key
+    # validate against fingerprint on AWS
+    key_file="$1"
+    openssl pkey -in "$key_file" -pubout -outform DER | openssl md5 -c
+}
+
+function site_fingerprint() {
+    site="$1"
+    # filter https
+    site="$(echo $site | sed 's_https://__')"
+    # echo $site
+    # return
+    openssl s_client -connect "${site}":443 < /dev/null 2>/dev/null | \
+        openssl x509 -fingerprint -noout -in /dev/stdin
+}
+
 function gocoverage() {
     go test ./... \
         -coverprofile=coverage.out \
