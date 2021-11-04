@@ -1,3 +1,6 @@
+# Profiling for when zshrc gets slow again
+# zmodload zsh/zprof
+
 autoload -U colors && colors
 # add git autocomplete
 autoload -Uz compinit && compinit
@@ -7,6 +10,7 @@ setopt share_history
 setopt interactivecomments
 # setopt hist_find_no_dups
 setopt hist_ignore_dups
+setopt hist_ignore_space
 
 zstyle ':completion:*' menu select
 zmodload zsh/complist
@@ -23,7 +27,8 @@ fi
 export HISTSIZE=1000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
-export EDITOR="nvim"
+export HISTIGNORESPACE=1
+export EDITOR="$(which nvim)"
 export KERNEL
 
 export CURLOPT_TIMEOUT=60
@@ -152,6 +157,13 @@ else
     fi
 fi
 
+# homebrew, need to rely on some tools
+if [ "$KERNEL" = "darwin" ]; then
+  if ! command -v gfind &>/dev/null ; then
+      echo 'Missing `gfind`, please run `brew install findutils`'
+  fi
+fi
+
 # golang tools
 if [ -d "${HOME}/dev/go" ]; then
     # this directory will be created later
@@ -160,6 +172,12 @@ if [ -d "${HOME}/dev/go" ]; then
     if [ -d "${GOPATH}/bin" ]; then
         append_path "${GOPATH}/bin"
     fi
+fi
+
+# python3 -m pip install <module>
+# python3 -m pip install --user <module>
+if [ -d "${HOME}/.local/bin" ]; then
+    append_path "${HOME}/.local/bin"
 fi
 
 # if golang is installed, add go bins to PATH
@@ -210,10 +228,21 @@ run_ssh_agent() {
     . ~/.ssh/.agent >/dev/null
 }
 
-# lazy load nvm
-if [ -z "$NVM_BIN" ]; then
-    alias nvm='unalias nvm && . ~/.nvm/nvm.sh'
-fi
+# shim / lazy load nvm because it's incredibly slow
+nvm() {
+    local nvm_sh="$HOME/.nvm/nvm.sh"
+    if ! [ -e "$nvm_sh" ]; then
+        echo "INFO: Install nvm to $HOME/.nvm/nvm.sh first"
+        return
+    fi
+
+    # undefine this function
+    unset -f nvm
+    # read the actual nvm file on demand
+    source "$HOME/.nvm/nvm.sh"
+    # shim our arguments back to actual nvm
+    nvm $*
+}
 
 source_ssh_agent() {
     if [ "$KERNEL" != "microsoft" ]; then
@@ -250,11 +279,14 @@ source_ssh_agent() {
     fi
 }
 
+# tmux pane title display
 precmd() {
     if [ -n "$TMUX" ]; then
-      # PROMPT_COMMAND, show PWD (relative to $HOME on window title
-      printf "\033]2;#[fg=colour39]${PWD/$HOME/~}#[default]\033\\"
+        # PROMPT_COMMAND, show PWD (relative to $HOME on window title
+        printf "\033]2;#[fg=colour39]${PWD/$HOME/~}#[default]\033\\"
     fi
 }
 
 source_ssh_agent
+# zprof
+# ^ uncomment for profiling ^
