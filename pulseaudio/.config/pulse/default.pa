@@ -1,0 +1,11 @@
+#!/usr/bin/pulseaudio -nF
+
+## Include defaults
+.include /etc/pulse/default.pa
+
+## Rename devices
+update-sink-proplist alsa_output.PCM2704C_3.analog-stereo device.description="PCM2704C Mixer #3"
+update-sink-proplist alsa_output.PCM2704C_4.analog-stereo device.description="PCM2704C Mixer #4"
+
+update-source-proplist alsa_output.PCM2704C_3.analog-stereo.monitor device.description="PCM2704C_3"
+update-source-proplist alsa_output.PCM2704C_4.analog-stereo.monitor device.description="PCM2704C_4"
