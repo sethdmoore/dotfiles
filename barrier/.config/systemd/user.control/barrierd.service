@@ -7,7 +7,7 @@ PartOf=graphical-session.target
 # Requires=network-online.service
 
 [Service]
-ExecStart=/usr/bin/barriers -c /home/seth/.config/Debauchee/screens.conf -f --enable-crypto --name seth.home
+ExecStart=/usr/bin/barriers -c /home/seth/.config/Debauchee/screens.conf -f --enable-crypto --name seth.linklocal
 Restart=on-failure
 
 [Install]

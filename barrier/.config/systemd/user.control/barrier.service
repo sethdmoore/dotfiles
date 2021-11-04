@@ -3,7 +3,7 @@ Description=Barrier client service
 After=display-manager.service
 
 [Service]
-ExecStart=/usr/bin/barrierc --no-daemon --restart --enable-crypto seth-pc.home
+ExecStart=/usr/bin/barrierc --no-daemon --restart --enable-crypto 10.100.0.127
 # no encryption
 # ExecStart=/usr/bin/synergyc --no-daemon --restart seth-pc.home
 Restart=on-failure
