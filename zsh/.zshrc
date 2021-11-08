@@ -1,6 +1,5 @@
 # Profiling for when zshrc gets slow again
 # zmodload zsh/zprof
-set -x
 autoload -U colors && colors
 # add git autocomplete
 autoload -Uz compinit && compinit
@@ -77,7 +76,6 @@ determine_kernel() {
 append_path() {
     # Build PATH and disallow duplicate entries
     if [ -n "$TMUX" ]; then
-        echo "$1"
         return
     fi
 
@@ -178,8 +176,7 @@ source_fzf() {
 setup_path_additions() {
     # if golang is installed, add go bins to PATH
     if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
-        echo no op
-        # append_path "/usr/local/go/bin"
+        append_path "/usr/local/go/bin"
     fi
 
     # python3 -m pip install <module>
