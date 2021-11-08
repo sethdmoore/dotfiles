@@ -174,9 +174,13 @@ source_fzf() {
 }
 
 setup_path_additions() {
-    # if golang is installed, add go bins to PATH
-    if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
-        append_path "/usr/local/go/bin"
+    # on macs, we have /usr/libexec/path_helper to create some system
+    # level PATHS. Only add the go path if this directory does not exist
+    if [ ! -e "/etc/paths.d/go" ]; then
+        # if golang is installed, add go bins to PATH
+        if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
+            append_path "/usr/local/go/bin"
+        fi
     fi
 
     # python3 -m pip install <module>
