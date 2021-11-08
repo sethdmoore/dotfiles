@@ -65,6 +65,22 @@ function git-clean-all() {
     done
 }
 
+# shim / lazy load nvm because it's incredibly slow
+function nvm() {
+    local nvm_sh="$HOME/.nvm/nvm.sh"
+    if ! [ -e "$nvm_sh" ]; then
+        echo "INFO: Install nvm to $HOME/.nvm/nvm.sh first"
+        return
+    fi
+
+    # undefine this function
+    unset -f nvm
+    # read the actual nvm file on demand
+    source "$HOME/.nvm/nvm.sh"
+    # shim our arguments back to actual nvm
+    nvm $*
+}
+
 function rdp() {
     local host user
     host="$1"
