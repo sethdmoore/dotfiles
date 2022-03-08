@@ -132,9 +132,6 @@ set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 " set statusline+=\ \|\ 
 " set statusline+=%f
 
-let g:node_client_debug = 1
-let $NODE_CLIENT_LOG_FILE = '/tmp/coc.log'
-
 " Mappings for CoCList
 " Show all diagnostics.
 nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
