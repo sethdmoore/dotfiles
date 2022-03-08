@@ -8,7 +8,7 @@ alias reload="source ${HOME}/.zshrc"
 
 ### Editing Aliases ###
 alias aliases="$EDITOR ${HOME}/.aliases && source ${HOME}/.aliases"
-alias todo="$EDITOR ${HOME}/TODO.md"
+alias todo="$EDITOR ${HOME}/org/TODO.md"
 alias bare_ssh="ssh -F /dev/null -oIdentityAgent=no"
 
 function key_fingerprint() {
