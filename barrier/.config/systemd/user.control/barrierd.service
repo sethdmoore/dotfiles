@@ -11,5 +11,5 @@ PartOf=graphical-session.target
 ExecStart=/usr/bin/barriers -c /home/seth/.config/Debauchee/screens.conf -f --name seth.linklocal
 Restart=on-failure
 
-[Install]
-WantedBy=xsession.target
+# [Install]
+# WantedBy=xsession.target
