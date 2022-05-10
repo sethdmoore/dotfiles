@@ -31,7 +31,7 @@ set_params() {
   core=$1
   governor=$2
   freq=$3
-  set_min_freq $core $freq
+  # set_min_freq $core $freq
   set_cpu_gov $core $governor
 }
 
@@ -50,7 +50,7 @@ main() {
     print_help
   fi
 
-  for core in {0..7}; do
+  for core in {0..31}; do
     set_params $core $governor $cpu_freq
   done
 }
