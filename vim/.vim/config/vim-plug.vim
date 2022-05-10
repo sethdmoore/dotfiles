@@ -25,4 +25,5 @@ call plug#begin('~/.vim/plugged')
     " Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' } " rock solid vim stuff
     Plug 'OmniSharp/omnisharp-vim' " develop C# anywhere
     Plug 'neoclide/coc.nvim', {'branch': 'release'}
+    Plug 'clktmr/vim-gdscript3'
 call plug#end()
