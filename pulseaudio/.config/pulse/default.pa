@@ -1,5 +1,7 @@
 #!/usr/bin/pulseaudio -nF
 
+# command line shebang #!/usr/bin/pulseaudio -nC
+
 ## Include defaults
 .include /etc/pulse/default.pa
 
