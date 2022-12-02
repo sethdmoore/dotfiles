@@ -23,12 +23,15 @@ else
     export PS1="%(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
 fi
 
+# EDITOR is always vim, but flavor is what's available
+
+export EDITOR="$(which nvim)"
+
 # export RPROMPT="$(date +%H:%M)"
 export HISTSIZE=1000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
 export HISTIGNORESPACE=1
-export EDITOR="$(which nvim)"
 export LOCAL_ENV_DIR="${HOME}/.config/local_environment"
 export KERNEL
 
@@ -297,6 +300,23 @@ setup_pip_bins_osx() {
     append_path "${HOME}/Library/Python/${PYTHON_MAJOR_VERSION}/bin"
 }
 
+set_editor() {
+  if command -v lvim 2>&1 >/dev/null; then
+    export EDITOR="$(which lvim)"
+  elif command -v nvim 2>&1 >/dev/null; then
+    echo "NOTE: consider migrating EDITOR to lvim over nvim"
+    export EDITOR="$(which nvim)"
+  elif command -v vim 2>&1 >/dev/null; then
+    echo "NOTE: consider migrating EDITOR to lvim over vim"
+    EDITOR="$(which vim)"
+  elif command -v vi 2>&1 >/dev/null; then
+    echo "WARN: only vi is available. This is anarchy!"
+    EDITOR="$(which vi)"
+  else
+    echo "ERR: no sane EDITOR available therefore unset. Abandon all hope."
+  fi
+}
+
 main() {
     # create directories
     setup_workspace
@@ -316,6 +336,9 @@ main() {
     # source our dots, should be second to last function
     # as we inject additional items per function
     source_dot_files
+
+    # set EDITOR based on availability
+    set_editor
 
     # determine whether we want tmux automatically started or not
     auto_start_tmux
