@@ -260,6 +260,18 @@ setup_os_specific_fixes() {
           echo 'Missing `gfind`, please run `brew install findutils`'
       fi
 
+      if ! command -v mpv &>/dev/null ; then
+          if ! [ -e "/Applications/mpv.app/Contents/MacOS/mpv" ]; then
+              echo 'Missing `mpv`, please install it'
+          else
+              alias mpv='/Applications/mpv.app/Contents/MacOS/mpv'
+          fi
+      fi
+
+      # ssh-add -K is deprecated, use
+      # environment variable for apple keyring (ssh-add)
+      export APPLE_SSH_ADD_BEHAVIOR='macos'
+
       setup_pip_bins_osx
   elif [ "$KERNEL" = "linux" ]; then
       FZF_ZSH_COMPLETION="/usr/share/fzf/completion.zsh"
