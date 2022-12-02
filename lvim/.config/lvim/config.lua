@@ -18,7 +18,14 @@ lvim.colorscheme = "lunar"
 -- keymappings [view all the defaults by pressing <leader>Lk]
 lvim.leader = "space"
 -- add your own keymapping
-lvim.keys.normal_mode["<C-s>"] = ":w<cr>"
+-- semicolon equivalent to colon
+vim.keymap.set("n", ";", ":")
+
+-- f1 is obnoxious, obviously use :help
+lvim.keys.normal_mode["<F1>"] = "<nop>"
+lvim.keys.insert_mode["<F1>"] = "<nop>"
+
+-- end customization
 -- lvim.keys.normal_mode["<S-l>"] = ":BufferLineCycleNext<CR>"
 -- lvim.keys.normal_mode["<S-h>"] = ":BufferLineCyclePrev<CR>"
 -- unmap a default keymapping
