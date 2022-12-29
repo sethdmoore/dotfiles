@@ -25,6 +25,10 @@ vim.keymap.set("n", ";", ":")
 lvim.keys.normal_mode["<F1>"] = "<nop>"
 lvim.keys.insert_mode["<F1>"] = "<nop>"
 
+-- splits because.
+lvim.keys.normal_mode["<leader>\\"] = ":vsplit<CR>"
+lvim.keys.normal_mode["<leader>-"] = ":split<CR>"
+
 -- end customization
 -- lvim.keys.normal_mode["<S-l>"] = ":BufferLineCycleNext<CR>"
 -- lvim.keys.normal_mode["<S-h>"] = ":BufferLineCyclePrev<CR>"
