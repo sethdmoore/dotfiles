@@ -55,6 +55,7 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 # use array type (http://zsh.sourceforge.net/FAQ/zshfaq03.html)
 MY_DOT_FILES=(
     "${HOME}/.config/zsh/aliases"
+    "${HOME}/.config/zsh/ENV"
     "${HOME}/.auth"
     "${HOME}/.private_environment"
 )
