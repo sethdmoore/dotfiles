@@ -6,10 +6,11 @@ FILE="/tmp/region_cap.mp4"
 PIDFILE="$XDG_RUNTIME_DIR/sloppy.pid"
 
 # value between 1 and 31, higher is better
-QUANT="26"
+QUANT="28"
 
 # telegram limits 10 megabytes
-FS_LIMIT="10M"
+# discord limits to 8MB
+FS_LIMIT="8M"
 
 # telegram limits to 480p
 WIDTH_MAX="854"
@@ -50,6 +51,7 @@ clean_up() {
   fi
 }
 
+
 region_cap() {
   # $x,$y are coords for capture | $w,$h dimensions of capture
   # $nw is the modified new width, usually copied from width
@@ -81,13 +83,12 @@ region_cap() {
     follow_mouse=""
   fi
 
-  # input=":0.0+$x,$y"
   input="$DISPLAY+$x,$y"
   # -vf scale="854:-2" \
 
   # we run ffmpeg in a child proc so we can write the pidfile on the main proc
   ffmpeg \
-    -vsync passthrough -frame_drop_threshold 4 \
+    -frame_drop_threshold 4 \
     -f x11grab \
     $follow_mouse \
     -draw_mouse "$cap_mouse" \
@@ -95,7 +96,9 @@ region_cap() {
     -framerate 60 \
     -i "$input" \
     -vf scale="$nw:-2" \
-    -preset ultrafast -crf:v "$QUANT" \
+    -preset medium \
+    -c:v libx265 \
+    -crf:v "$QUANT" \
     -pix_fmt yuv420p \
     -fs "$FS_LIMIT" \
     -y \
