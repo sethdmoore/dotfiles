@@ -284,6 +284,9 @@ setup_os_specific_fixes() {
         MY_DOT_FILES+=("$FZF_ZSH_COMPLETION" "$FZF_ZSH_BINDINGS")
         # connect to the ssh-agent sock
         export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+    elif [ "$KERNEL" = "mingw" ]; then
+        export DISPLAY=":0"
+        implement_xclip
     elif [ "$KERNEL" = "microsoft" ]; then
         FZF_ZSH_BINDINGS="${HOME}/.fzf/shell/key-bindings.zsh"
         FZF_ZSH_COMPLETION="${HOME}/.fzf/shell/key-bindings.zsh"
@@ -297,6 +300,19 @@ setup_os_specific_fixes() {
         fi
         setup_ssh_agent
     fi
+}
+
+implement_xclip() {
+    if [ -e "${HOME}/bin/xclip" ]; then
+        return
+    fi
+    echo "Creating fake xclip in ~/bin/xclip"
+    cat <<EOF > "${HOME}/bin/xclip"
+#!/bin/sh
+if  [ -p /dev/stdin ]; then
+    cat - > /dev/clipboard
+fi
+EOF
 }
 
 setup_pip_bins_osx() {
