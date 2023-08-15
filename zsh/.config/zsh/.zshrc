@@ -65,8 +65,11 @@ determine_kernel() {
     if [ ! -e "$kernel" ]; then
         # use grep like a sane person,
         # instead of awk substring splitting to determine ms kernel
-        if uname -r | grep -i "microsoft" >/dev/null 2>&1; then
+        parsed_kernel="$(uname -s)"
+        if echo "$parsed_kernel" | grep -qi "microsoft"; then
             KERNEL='microsoft'
+        elif echo "$parsed_kernel" | grep -qi "ming"; then
+            KERNEL='mingw'
         else
             KERNEL="$(uname -s | \
                       awk '{print tolower($0)}')"
@@ -238,63 +241,62 @@ setup_ssh_agent() {
 }
 
 setup_precmd() {
-  # tmux pane title display
-  precmd() {
-      if [ -n "$TMUX" ]; then
-          # PROMPT_COMMAND, show PWD (relative to $HOME on window title
-          printf "\033]2;#[fg=colour39]${PWD/$HOME/~}#[default]\033\\"
-      fi
-  }
+    # tmux pane title display
+    precmd() {
+        if [ -n "$TMUX" ]; then
+            # PROMPT_COMMAND, show PWD (relative to $HOME on window title
+            printf "\033]2;#[fg=colour39]${PWD/$HOME/~}#[default]\033\\"
+        fi
+    }
 }
 
 setup_os_specific_fixes() {
-  if [ "$KERNEL" = "darwin" ]; then
-      # append to zsh array 9_9
-      # MY_DOT_FILES+=(".rbenv_env" ".travis/travis.sh" ".dockerenv")
-      if [ -e "${HOME}/.fzf.zsh" ]; then
-          MY_DOT_FILES+=("${HOME}/.fzf.zsh")
-      else
-          printf -- "NOTE: fzf is missing, please install with your pkg manager\n"
-      fi
+    if [ "$KERNEL" = "darwin" ]; then
+        # append to zsh array 9_9
+        # MY_DOT_FILES+=(".rbenv_env" ".travis/travis.sh" ".dockerenv")
+        if [ -e "${HOME}/.fzf.zsh" ]; then
+            MY_DOT_FILES+=("${HOME}/.fzf.zsh")
+        else
+            printf -- "NOTE: fzf is missing, please install with your pkg manager\n"
+        fi
 
-      if ! command -v gfind &>/dev/null ; then
-          echo 'Missing `gfind`, please run `brew install findutils`'
-      fi
+        if ! command -v gfind &>/dev/null ; then
+            echo 'Missing `gfind`, please run `brew install findutils`'
+        fi
 
-      if ! command -v mpv &>/dev/null ; then
-          if ! [ -e "/Applications/mpv.app/Contents/MacOS/mpv" ]; then
-              echo 'Missing `mpv`, please install it'
-          else
-              alias mpv='/Applications/mpv.app/Contents/MacOS/mpv'
-          fi
-      fi
+        if ! command -v mpv &>/dev/null ; then
+            if ! [ -e "/Applications/mpv.app/Contents/MacOS/mpv" ]; then
+                echo 'Missing `mpv`, please install it'
+            else
+                alias mpv='/Applications/mpv.app/Contents/MacOS/mpv'
+            fi
+        fi
 
-      # ssh-add -K is deprecated, use
-      # environment variable for apple keyring (ssh-add)
-      export APPLE_SSH_ADD_BEHAVIOR='macos'
+        # ssh-add -K is deprecated, use
+        # environment variable for apple keyring (ssh-add)
+        export APPLE_SSH_ADD_BEHAVIOR='macos'
 
-      setup_pip_bins_osx
-  elif [ "$KERNEL" = "linux" ]; then
-      FZF_ZSH_COMPLETION="/usr/share/fzf/completion.zsh"
-      FZF_ZSH_BINDINGS="/usr/share/fzf/key-bindings.zsh"
+        setup_pip_bins_osx
+    elif [ "$KERNEL" = "linux" ]; then
+        FZF_ZSH_COMPLETION="/usr/share/fzf/completion.zsh"
+        FZF_ZSH_BINDINGS="/usr/share/fzf/key-bindings.zsh"
 
-      MY_DOT_FILES+=("$FZF_ZSH_COMPLETION" "$FZF_ZSH_BINDINGS")
-      # connect to the ssh-agent sock
-      export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
-  elif [ "$KERNEL" = "microsoft" ]; then
-      FZF_ZSH_BINDINGS="${HOME}/.fzf/shell/key-bindings.zsh"
-      FZF_ZSH_COMPLETION="${HOME}/.fzf/shell/key-bindings.zsh"
-
-      MY_DOT_FILES+=("$FZF_ZSH_COMPLETION" "$FZF_ZSH_BINDINGS")
-      # fix bad umask on WSL
-      # https://www.turek.dev/post/fix-wsl-file-permissions/
-      # https://github.com/Microsoft/WSL/issues/352
-      if [ "$(umask)" = "000" ]; then
-        umask 0022
-      fi
-
-      setup_ssh_agent
-  fi
+        MY_DOT_FILES+=("$FZF_ZSH_COMPLETION" "$FZF_ZSH_BINDINGS")
+        # connect to the ssh-agent sock
+        export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+    elif [ "$KERNEL" = "microsoft" ]; then
+        FZF_ZSH_BINDINGS="${HOME}/.fzf/shell/key-bindings.zsh"
+        FZF_ZSH_COMPLETION="${HOME}/.fzf/shell/key-bindings.zsh"
+  
+        MY_DOT_FILES+=("$FZF_ZSH_COMPLETION" "$FZF_ZSH_BINDINGS")
+        # fix bad umask on WSL
+        # https://www.turek.dev/post/fix-wsl-file-permissions/
+        # https://github.com/Microsoft/WSL/issues/352
+        if [ "$(umask)" = "000" ]; then
+            umask 0022
+        fi
+        setup_ssh_agent
+    fi
 }
 
 setup_pip_bins_osx() {
@@ -314,20 +316,20 @@ setup_pip_bins_osx() {
 }
 
 set_editor() {
-  if command -v lvim 2>&1 >/dev/null; then
-    export EDITOR="$(which lvim)"
-  elif command -v nvim 2>&1 >/dev/null; then
-    echo "NOTE: consider migrating EDITOR to lvim over nvim"
-    export EDITOR="$(which nvim)"
-  elif command -v vim 2>&1 >/dev/null; then
-    echo "NOTE: consider migrating EDITOR to lvim over vim"
-    EDITOR="$(which vim)"
-  elif command -v vi 2>&1 >/dev/null; then
-    echo "WARN: only vi is available. This is anarchy!"
-    EDITOR="$(which vi)"
-  else
-    echo "ERR: no sane EDITOR available therefore unset. Abandon all hope."
-  fi
+    if command -v lvim 2>&1 >/dev/null; then
+        export EDITOR="$(which lvim)"
+    elif command -v nvim 2>&1 >/dev/null; then
+       echo "NOTE: consider migrating EDITOR to lvim over nvim"
+        export EDITOR="$(which nvim)"
+    elif command -v vim 2>&1 >/dev/null; then
+        echo "NOTE: consider migrating EDITOR to lvim over vim"
+        EDITOR="$(which vim)"
+    elif command -v vi 2>&1 >/dev/null; then
+        echo "WARN: only vi is available. This is anarchy!"
+        EDITOR="$(which vi)"
+    else
+        echo "ERR: no sane EDITOR available therefore unset. Abandon all hope."
+    fi
 }
 
 main() {
