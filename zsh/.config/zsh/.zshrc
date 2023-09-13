@@ -180,10 +180,12 @@ source_fzf() {
 setup_path_additions() {
     # on macs, we have /usr/libexec/path_helper to create some system
     # level PATHS. Only add the go path if this directory does not exist
-    if [ ! -e "/etc/paths.d/go" ]; then
-        # if golang is installed, add go bins to PATH
-        if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
-            append_path "/usr/local/go/bin"
+    if [ "$KERNEL" = "darwin" ]; then
+        if [ ! -e "/etc/paths.d/go" ]; then
+            # if golang is installed, add go bins to PATH
+            if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
+                append_path "/usr/local/go/bin"
+            fi
         fi
     fi
 
@@ -257,6 +259,16 @@ setup_os_specific_fixes() {
           printf -- "NOTE: fzf is missing, please install with your pkg manager\n"
       fi
 
+
+      # Apply tmux-256color
+      if [ -e "${XDG_DATA_HOME}/terminfo" ]; then
+          export TERMINFO_DIRS=$TERMINFO_DIRS:$HOME/.local/share/terminfo
+      else
+          echo "CRITICAL: tmux-256color is set by dotfiles"
+          echo "https://gpanders.com/blog/the-definitive-guide-to-using-tmux-256color-on-macos/"
+          echo "https://archive.ph/4daXH"
+      fi
+
       if ! command -v gfind &>/dev/null ; then
           echo 'Missing `gfind`, please run `brew install findutils`'
       fi
@@ -268,6 +280,8 @@ setup_os_specific_fixes() {
               alias mpv='/Applications/mpv.app/Contents/MacOS/mpv'
           fi
       fi
+
+      append_path "/Applications/Postgres.app/Contents/Versions/latest/bin"
 
       # ssh-add -K is deprecated, use
       # environment variable for apple keyring (ssh-add)
