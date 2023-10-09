@@ -1,0 +1,2 @@
+# ctrl + `  - use skhd --observe to get keycaps
+ctrl - 0x32 : open /Applications/Alacritty.app
