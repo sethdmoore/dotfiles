@@ -206,7 +206,12 @@ lvim.plugins = {
       vim.g.minimap_git_colors = 1
     end,
   },
+  -- {
+  --   "habamax/vim-godot"
+  -- },
 }
+
+-- require'lspconfig'.gdscript.setup{}
 
 -- Autocommands (https://neovim.io/doc/user/autocmd.html)
 -- vim.api.nvim_create_autocmd("BufEnter", {
