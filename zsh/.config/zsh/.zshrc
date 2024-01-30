@@ -58,6 +58,7 @@ MY_DOT_FILES=(
     "${HOME}/.config/zsh/ENV"
     "${HOME}/.auth"
     "${HOME}/.private_environment"
+    "${HOME}/.local/share/cargo/env"
 )
 
 determine_kernel() {

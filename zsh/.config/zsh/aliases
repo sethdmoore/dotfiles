@@ -2,7 +2,7 @@
 # alias hist="cat -n ${HOME}/.bash_history"
 
 ### utility aliasees ###
-alias cidr="cat ${HOME}/.cidr"
+alias cidr="cat ${ZDOTDIR}/.cidr"
 alias env="env | sort"
 alias reload="source ${HOME}/.zshrc"
 
