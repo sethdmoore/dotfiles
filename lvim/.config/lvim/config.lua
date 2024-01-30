@@ -11,7 +11,9 @@ an executable
 -- general
 lvim.log.level = "warn"
 lvim.format_on_save.enabled = false
+-- <leader>sp  -- search for color
 lvim.colorscheme = "lunar"
+-- lvim.colorscheme = "slate"
 -- to disable icons and use a minimalist setup, uncomment the following
 -- lvim.use_icons = false
 
@@ -174,12 +176,37 @@ lvim.builtin.treesitter.highlight.enable = true
 -- }
 
 -- Additional Plugins
--- lvim.plugins = {
---     {
---       "folke/trouble.nvim",
---       cmd = "TroubleToggle",
---     },
--- }
+lvim.plugins = {
+  {
+    "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
+    event = "InsertEnter",
+    config = function()
+      require("copilot").setup({})
+    end,
+  },
+  {
+    "zbirenbaum/copilot-cmp",
+    config = function ()
+      require("copilot_cmp").setup()
+    end
+  },
+  {
+    'wfxr/minimap.vim',
+    build = "cargo install --locked code-minimap",
+    -- cmd = {"Minimap", "MinimapClose", "MinimapToggle", "MinimapRefresh", "MinimapUpdateHighlight"},
+    init = function ()
+      -- vim.cmd ("let g:minimap_width = 10")
+      -- vim.cmd ("let g:minimap_auto_start = 1")
+      -- vim.cmd ("let g:minimap_auto_start_win_enter = 1")
+      -- vim.cmd ("let g:minimap_git_colors = 1")
+      vim.g.minimap_width = 10
+      vim.g.minimap_auto_start = 1
+      vim.g.minimap_auto_start_win_enter = 1
+      vim.g.minimap_git_colors = 1
+    end,
+  },
+}
 
 -- Autocommands (https://neovim.io/doc/user/autocmd.html)
 -- vim.api.nvim_create_autocmd("BufEnter", {
