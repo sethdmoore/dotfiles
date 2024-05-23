@@ -11,5 +11,5 @@
 # ACTION=="add",     ENV{ID_MODEL}=="Gaming_Mouse_G502", RUN+="/usr/bin/touch /tmp/ADDED"
 # ACTION=="remove",  ENV{ID_MODEL}=="Gaming_Mouse_G502", RUN+="/usr/bin/touch /tmp/REMOVED"
 
-ACTION=="add",     ENV{ID_MODEL}=="G502_HERO_Gaming_Mouse", RUN+="/usr/bin/su -l seth -c '/usr/local/bin/barrier_toggle.sh server'"
-ACTION=="remove",  ENV{ID_MODEL}=="G502_HERO_Gaming_Mouse", RUN+="/usr/bin/su -l seth -c '/usr/local/bin/barrier_toggle.sh client'"
+ACTION=="add",     ENV{ID_MODEL}=="G502_X", RUN+="/usr/bin/su -l seth -c '/usr/local/bin/barrier_toggle.sh server'"
+ACTION=="remove",  ENV{ID_MODEL}=="G502_X", RUN+="/usr/bin/su -l seth -c '/usr/local/bin/barrier_toggle.sh client'"
