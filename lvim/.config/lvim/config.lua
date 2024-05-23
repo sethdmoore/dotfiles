@@ -30,6 +30,13 @@ lvim.keys.insert_mode["<F1>"] = "<nop>"
 -- splits because.
 lvim.keys.normal_mode["<leader>\\"] = ":vsplit<CR>"
 lvim.keys.normal_mode["<leader>-"] = ":split<CR>"
+-- Quick chat with Copilot
+lvim.keys.normal_mode["<leader>ccq"] = function()
+    local input = vim.fn.input("Quick Chat: ")
+    if input ~= "" then
+      vim.cmd("CopilotChatBuffer " .. input)
+    end
+  end
 
 -- end customization
 -- lvim.keys.normal_mode["<S-l>"] = ":BufferLineCycleNext<CR>"
@@ -191,25 +198,26 @@ lvim.plugins = {
       require("copilot_cmp").setup()
     end
   },
-  {
-    'wfxr/minimap.vim',
-    build = "cargo install --locked code-minimap",
-    -- cmd = {"Minimap", "MinimapClose", "MinimapToggle", "MinimapRefresh", "MinimapUpdateHighlight"},
-    init = function ()
-      -- vim.cmd ("let g:minimap_width = 10")
-      -- vim.cmd ("let g:minimap_auto_start = 1")
-      -- vim.cmd ("let g:minimap_auto_start_win_enter = 1")
-      -- vim.cmd ("let g:minimap_git_colors = 1")
-      vim.g.minimap_width = 10
-      vim.g.minimap_auto_start = 1
-      vim.g.minimap_auto_start_win_enter = 1
-      vim.g.minimap_git_colors = 1
-    end,
-  },
+  -- {
+  --   'wfxr/minimap.vim',
+  --   build = "cargo install --locked code-minimap",
+  --   -- cmd = {"Minimap", "MinimapClose", "MinimapToggle", "MinimapRefresh", "MinimapUpdateHighlight"},
+  --   init = function ()
+  --     -- vim.cmd ("let g:minimap_width = 10")
+  --     -- vim.cmd ("let g:minimap_auto_start = 1")
+  --     -- vim.cmd ("let g:minimap_auto_start_win_enter = 1")
+  --     -- vim.cmd ("let g:minimap_git_colors = 1")
+  --     vim.g.minimap_width = 10
+  --     vim.g.minimap_auto_start = 1
+  --     vim.g.minimap_auto_start_win_enter = 1
+  --     vim.g.minimap_git_colors = 1
+  --   end,
+  -- },
   -- {
   --   "habamax/vim-godot"
   -- },
 }
+
 
 -- require'lspconfig'.gdscript.setup{}
 

@@ -199,6 +199,14 @@ setup_path_additions() {
         append_path "${HOME}/.local/bin"
     fi
 
+    # macports disgustingly writes / creates ~/.zprofile -
+    # ignoring the value of ZDOTDIR
+    # this fixes macports
+    if [ -d "/opt/local/bin" ] || [ -d "/opt/local/sbin" ]; then
+        append_path "/opt/local/sbin" "prepend"
+        append_path "/opt/local/bin" "prepend"
+    fi
+
     if [ -d "${HOME}/bin" ]; then
         append_path "${HOME}/bin" "prepend"
     fi
@@ -263,6 +271,13 @@ setup_os_specific_fixes() {
             printf -- "NOTE: fzf is missing, please install with your pkg manager\n"
         fi
 
+        if ! [ -f "/tmp/zsh-ssh-agent" ]; then
+            if ! ssh-add -l > /dev/null 2>&1; then
+                ssh-add --apple-load-keychain > /dev/null 2>&1
+                touch "/tmp/zsh-ssh-agent"
+            fi
+        fi
+
         # Apply tmux-256color
         if [ -e "${XDG_DATA_HOME}/terminfo" ]; then
             export TERMINFO_DIRS=$TERMINFO_DIRS:$HOME/.local/share/terminfo
@@ -302,7 +317,7 @@ setup_os_specific_fixes() {
     elif [ "$KERNEL" = "microsoft" ]; then
         FZF_ZSH_BINDINGS="${HOME}/.fzf/shell/key-bindings.zsh"
         FZF_ZSH_COMPLETION="${HOME}/.fzf/shell/key-bindings.zsh"
-  
+
         MY_DOT_FILES+=("$FZF_ZSH_COMPLETION" "$FZF_ZSH_BINDINGS")
         # fix bad umask on WSL
         # https://www.turek.dev/post/fix-wsl-file-permissions/
