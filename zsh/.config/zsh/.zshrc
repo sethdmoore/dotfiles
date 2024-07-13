@@ -359,9 +359,7 @@ setup_pip_bins_osx() {
 }
 
 set_editor() {
-    if command -v lvim 2>&1 >/dev/null; then
-        export EDITOR="$(which lvim)"
-    elif command -v nvim 2>&1 >/dev/null; then
+    if command -v nvim 2>&1 >/dev/null; then
        echo "NOTE: consider migrating EDITOR to lvim over nvim"
         export EDITOR="$(which nvim)"
     elif command -v vim 2>&1 >/dev/null; then
