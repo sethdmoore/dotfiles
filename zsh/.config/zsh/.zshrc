@@ -360,16 +360,12 @@ setup_pip_bins_osx() {
 
 set_editor() {
     if command -v nvim 2>&1 >/dev/null; then
-       echo "NOTE: consider migrating EDITOR to lvim over nvim"
-        export EDITOR="$(which nvim)"
-    elif command -v vim 2>&1 >/dev/null; then
-        echo "NOTE: consider migrating EDITOR to lvim over vim"
-        EDITOR="$(which vim)"
+        EDITOR="$(which nvim)"
     elif command -v vi 2>&1 >/dev/null; then
         echo "WARN: only vi is available. This is anarchy!"
         EDITOR="$(which vi)"
     else
-        echo "ERR: no sane EDITOR available therefore unset. Abandon all hope."
+        echo "ERROR: no sane EDITOR available therefore unset. Abandon all hope."
     fi
 }
 
