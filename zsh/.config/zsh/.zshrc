@@ -14,18 +14,8 @@ setopt hist_ignore_space
 zstyle ':completion:*' menu select
 zmodload zsh/complist
 
-# only display PWD when outside of tmux
-# This doesn't like living in a function so leave it here for now
-# probably something to do with local variables: $fg, etc
-if [ -z "$TMUX" ]; then
-    export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
-else
-    export PS1="%(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
-fi
 
-# EDITOR is always vim, but flavor is what's available
-
-export EDITOR="$(which nvim)"
+export EDITOR
 
 # export RPROMPT="$(date +%H:%M)"
 export HISTSIZE=1000
@@ -60,6 +50,17 @@ MY_DOT_FILES=(
     "${HOME}/.private_environment"
     "${HOME}/.local/share/cargo/env"
 )
+
+set_ps1() {
+  # only display PWD when outside of tmux
+  # This doesn't like living in a function so leave it here for now
+  # probably something to do with local variables: $fg, etc
+  if [ -z "$TMUX" ]; then
+      export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
+  else
+      export PS1="%(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
+  fi
+}
 
 determine_kernel() {
     local kernel="${HOME}/.config/local_environment/kernel"
@@ -370,6 +371,11 @@ set_editor() {
 }
 
 main() {
+    # decide whether to bother people
+    # prereq
+
+    set_ps1
+
     # create directories
     setup_workspace
 
