@@ -46,15 +46,12 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 MY_DOT_FILES=(
     "${HOME}/.config/zsh/aliases"
     "${HOME}/.config/zsh/ENV"
-    "${HOME}/.auth"
     "${HOME}/.private_environment"
     "${HOME}/.local/share/cargo/env"
 )
 
 set_ps1() {
   # only display PWD when outside of tmux
-  # This doesn't like living in a function so leave it here for now
-  # probably something to do with local variables: $fg, etc
   if [ -z "$TMUX" ]; then
       export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
   else
@@ -105,12 +102,8 @@ append_path() {
     unset IFS
 
     if [ "${mode}" = "prepend" ]; then
-        # XXX: debug
-        # export PATH="${appender}:$PATH"
         PATH="${appender}:$PATH"
     else
-        # XXX: debug
-        # export PATH="$PATH:${appender}"
         PATH="$PATH:${appender}"
     fi
 }
@@ -292,18 +285,6 @@ setup_os_specific_fixes() {
             echo 'Missing `gfind`, please run `brew install findutils`'
         fi
 
-        if ! command -v mpv &>/dev/null ; then
-            if ! [ -e "/Applications/mpv.app/Contents/MacOS/mpv" ]; then
-                echo 'Missing `mpv`, please install it'
-            else
-                alias mpv='/Applications/mpv.app/Contents/MacOS/mpv'
-            fi
-        fi
-
-        if command -v postgres &>/dev/null; then
-            append_path "/Applications/Postgres.app/Contents/Versions/latest/bin"
-        fi
-
         setup_pip_bins_osx
     elif [ "$KERNEL" = "linux" ]; then
         FZF_ZSH_COMPLETION="/usr/share/fzf/completion.zsh"
@@ -362,6 +343,8 @@ setup_pip_bins_osx() {
 set_editor() {
     if command -v nvim 2>&1 >/dev/null; then
         EDITOR="$(which nvim)"
+    elif command -v vim 2>&1 >/dev/null; then
+        EDITOR="$(which vim)"
     elif command -v vi 2>&1 >/dev/null; then
         echo "WARN: only vi is available. This is anarchy!"
         EDITOR="$(which vi)"
@@ -385,11 +368,11 @@ main() {
     # tmux window pane PWD hack
     setup_precmd
 
-    # write or read PYTHON_MAJOR_VERSION for bins
-    setup_os_specific_fixes
-
     # append_path foo bar baz
     setup_path_additions
+
+    # write or read PYTHON_MAJOR_VERSION for bins
+    setup_os_specific_fixes
 
     # source our dots, should be second to last function
     # as we inject additional items per function
