@@ -1,3 +1,0 @@
-#!/bin/sh
-xargs kill -USR1 < "${XDG_RUNTIME_DIR}/lemonbar/bar.py"
-xdo lower -a lemonybar

@@ -1,7 +1,0 @@
-#!/bin/sh
-
-export PATH="/home/seth/bin/:$PATH"
-PANEL_WM_NAME="lemonybar"
-
-sh -c "sleep 1 && xdo lower -a $PANEL_WM_NAME" &
-bar.py | sh &
