@@ -208,8 +208,8 @@ setup_path_additions() {
 
 
 auto_start_tmux() {
-    # always start tmux in remote sessions, except if we ssh into localhost
-    if [ -n "${SSH_CLIENT}" ] && [ "$(hostname)" != "localhost" ]; then
+    # always start tmux in remote sessions
+    if [ -n "${SSH_CLIENT}" ]; then
         # user@host if we're remote
         export PS1="%* %n@%m ${PS1}"
         start_tmux

@@ -3,7 +3,6 @@
 
 ### utility aliasees ###
 alias cidr="cat ${ZDOTDIR}/.cidr"
-alias env="env | sort"
 alias reload="source ${HOME}/.zshrc"
 
 ### Editing Aliases ###
