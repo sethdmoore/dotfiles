@@ -35,16 +35,6 @@ function gocoverage() {
         && rm coverage.out
 }
 
-# convenience
-function reload() {
-    if [ -e "${HOME}/.zshrc" ]; then
-        source "${HOME}/.zshrc"
-    else
-        printf "No .zshrc in \"${HOME}\". Bootstrap or check your env.\n"
-    fi
-}
-
-
 function check_ssl_expiry() {
     local site
     site="$1"
@@ -80,21 +70,68 @@ function nvm() {
     nvm $*
 }
 
-function rdp() {
-    local host user
-    host="$1"
-    user="$2"
+tcptunnel() {
+    bastionhost="$1"
+    targethost="$2"
+    port="$3"
+
+    if [ -z "$port" ]; then
+        port="3389"
+    fi
+
+    ssh-add -K "${bastionkey}"
+    ssh -f  \
+        -L "${port}:${targethost}:${port}" \
+        "$bastionhost" \
+        sleep 30
+
+    ssh_pid="$!"
+
+    /bin/echo "$ssh_pid" >/tmp/tcptunnel.pid
+}
+
+myrdp() {
+    bastionhost="$1"
+    targethost="$2"
+    user="$3"
+    port="$4"
+
+    if [ -z "$port" ]; then
+        port="3389"
+    fi
 
     if [ -z "$user" ]; then
         user="Administrator"
     fi
 
+    if [ -z "$RDP_PASSWORD" ]; then
+        printf "Set RDP_PASSWORD (no echo): "
+        # disable echo tty
+        stty -echo \
+            && read -r RDP_PASSWORD \
+        # enable echo tty
+        stty echo; printf '\n'
+
+        if [ -z "$RDP_PASSWORD" ]; then
+            printf "ERR: No RDP_PASSWORD suppliced"
+            return
+        fi
+    fi
+
+    # -f backgrounds properly
+    # if no connection attempts are  made in 10s, ssh exits
+    ssh -f  \
+        -L "${port}:${targethost}:${port}" \
+        "$bastionhost" \
+        sleep 22
+
     xfreerdp \
-        --plugin cliprdr \
-        --composition \
-        -g 1920x1080 \
-        -u "${user}" \
-        "${host}"
+        /u:"${user}" \
+        /v:localhost \
+        /cert:ignore \
+        /p:"$RDP_PASSWORD" \
+        /dynamic-resolution \
+        +drives
 }
 
 if [ "$KERNEL" = "darwin" ]; then
@@ -119,10 +156,4 @@ elif [ "$KERNEL" = "linux" ] || [ "$KERNEL" = "microsoft" ]; then
     function pacman-clean() {
         sudo pacman -Rsn $(pacman -Qdtq)
     }
-fi
-
-
-### org-specific aliases ###
-if [ -e "${HOME}/.private_aliases" ]; then
-    source "${HOME}/.private_aliases"
 fi

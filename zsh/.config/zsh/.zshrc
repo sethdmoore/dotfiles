@@ -48,7 +48,6 @@ MY_DOT_FILES=(
     "${HOME}/.config/zsh/aliases"
     "${HOME}/.config/zsh/ENV"
     "${HOME}/.private_environment"
-    "${HOME}/.local/share/cargo/env"
 )
 
 set_ps1() {

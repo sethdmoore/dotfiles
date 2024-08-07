@@ -1,6 +1,7 @@
 *.sw?
 .DS_Store
 .netrwhist
+zsh/.config/zsh/.zcompdump
 bookmarks
 gtk/.config/gtk-3.0/bookmarks
 nvim/.config/gocode
