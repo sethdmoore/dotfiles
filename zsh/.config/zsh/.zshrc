@@ -16,6 +16,9 @@ zmodload zsh/complist
 
 export EDITOR
 
+export GOPATH="${HOME}/dev/go"
+export GOBIN="${HOME}/.local/bin"
+
 export HISTSIZE=1000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
@@ -49,13 +52,22 @@ MY_DOT_FILES=(
 )
 
 set_ps1() {
-  # only display PWD when outside of tmux
-  if [ -z "$TMUX" ]; then
-      export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
-  else
-      export PS1="%(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
-  fi
+    # only display PWD when outside of tmux
+    if [ -z "$TMUX" ]; then
+        export PS1="%~ %(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
+    else
+        export PS1="%(?.%{$fg[blue]%}►.%{$fg[red]%}►) %{$reset_color%}"
+    fi
 }
+
+
+set_ls_colors() {
+    # LS_COLORS
+    if [ -e "$HOME/.config/ls/lesscolors" ]; then
+        eval $(dircolors -b "$HOME/.config/ls/lesscolors")
+    fi
+}
+
 
 determine_kernel() {
     local kernel="${HOME}/.config/local_environment/kernel"
@@ -77,6 +89,7 @@ determine_kernel() {
     fi
     echo export KERNEL="${KERNEL}" > "${kernel}"
 }
+
 
 append_path() {
     # Build PATH and disallow duplicate entries
@@ -123,11 +136,7 @@ start_tmux() {
     fi
 
     # determine if we have any tmux sessions
-    tmux list-sessions > /dev/null
-    HAS_SESSION=$?
-
-    # determine if any clients are attached
-    if [ "$HAS_SESSION" -eq 0 ]; then
+    if tmux list-sessions >/dev/null 2>&1; then
         tmux attach -d
     else
         tmux new-session
@@ -135,13 +144,12 @@ start_tmux() {
 }
 
 setup_workspace() {
-    mkdir -p "${LOCAL_ENV_DIR}"
-    mkdir -p "${HOME}/dev/go/src"
+    if ! [ -e "${LOCAL_ENV_DIR}" ]; then
+        mkdir -p "${LOCAL_ENV_DIR}"
+    fi
 
-    export GOPATH="${HOME}/dev/go"
-
-    if [ -d "${GOPATH}/bin" ]; then
-         append_path "${GOPATH}/bin"
+    if ! [ -e "${HOME}/dev/go/src" ]; then
+        mkdir -p "${HOME}/dev/go/src"
     fi
 }
 
@@ -191,21 +199,11 @@ auto_start_tmux() {
         # user@host if we're remote
         export PS1="%* %n@%m ${PS1}"
         start_tmux
-    # do not start tmux if we have no X11 session
-    elif [ "$KERNEL" = "Linux" ] && [ -z "$DISPLAY" ]; then
-        # insert timestamp
-        export PS1="%* %n ${PS1}"
     else
+        # insert timestamp
         export PS1="%* %n ${PS1}"
     fi
 }
-
-# less colors
-if [ -e "$HOME/.config/ls/lesscolors" ]; then
-    eval $(dircolors -b "$HOME/.config/ls/lesscolors")
-fi
-
-
 
 setup_ssh_agent() {
     if [ "$KERNEL" != "microsoft" ]; then
@@ -333,8 +331,10 @@ set_editor() {
 main() {
     # decide whether to bother people
     # prereq
-
     set_ps1
+
+    # involves icky eval
+    set_ls_colors
 
     # create directories
     setup_workspace
