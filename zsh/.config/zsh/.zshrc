@@ -14,10 +14,8 @@ setopt hist_ignore_space
 zstyle ':completion:*' menu select
 zmodload zsh/complist
 
-
 export EDITOR
 
-# export RPROMPT="$(date +%H:%M)"
 export HISTSIZE=1000
 export SAVEHIST=10000
 export HISTFILE=~/.zsh_history
@@ -61,22 +59,23 @@ set_ps1() {
 
 determine_kernel() {
     local kernel="${HOME}/.config/local_environment/kernel"
-    if [ ! -e "$kernel" ]; then
-        # use grep like a sane person,
-        # instead of awk substring splitting to determine ms kernel
-        parsed_kernel="$(uname -s)"
-        if echo "$parsed_kernel" | grep -qi "microsoft"; then
-            KERNEL='microsoft'
-        elif echo "$parsed_kernel" | grep -qi "ming"; then
-            KERNEL='mingw'
-        else
-            KERNEL="$(uname -s | \
-                      awk '{print tolower($0)}')"
-        fi
-        echo export KERNEL="${KERNEL}" > "${kernel}"
-    else
+    if [ -e "$kernel" ]; then
         . "$kernel"
+        return
     fi
+
+    # use grep like a sane person,
+    # instead of awk substring splitting to determine ms kernel
+    parsed_kernel="$(uname -s)"
+    if echo "$parsed_kernel" | grep -qi "microsoft"; then
+        KERNEL='microsoft'
+    elif echo "$parsed_kernel" | grep -qi "ming"; then
+        KERNEL='mingw'
+    else
+        KERNEL="$(uname -s \
+                  | awk '{print tolower($0)}')"
+    fi
+    echo export KERNEL="${KERNEL}" > "${kernel}"
 }
 
 append_path() {
@@ -136,25 +135,8 @@ start_tmux() {
 }
 
 setup_workspace() {
-    if [ ! -d "${HOME}/.config/local_environment" ]; then
-        printf "Creating local_environment folder: ${LOCAL_ENV_DIR}\n"
-        mkdir -p "${LOCAL_ENV_DIR}"
-    fi
-
-    if [ ! -d "${HOME}/dev/go" ]; then
-        printf "Creating GOPATH: ${HOME}/go\n"
-        mkdir -p "${HOME}/dev/go/src"
-    fi
-
-    if [ ! -d "${HOME}/bin" ]; then
-        printf "Creating local bin: ${HOME}/bin\n"
-        mkdir -p "${HOME}/bin"
-    fi
-
-    if [ ! -d "${HOME}/.vim" ]; then
-        printf "Creating .vim: ${HOME}/.vim\n"
-        mkdir -p "${HOME}/.vim"
-    fi
+    mkdir -p "${LOCAL_ENV_DIR}"
+    mkdir -p "${HOME}/dev/go/src"
 
     export GOPATH="${HOME}/dev/go"
 
@@ -162,6 +144,7 @@ setup_workspace() {
          append_path "${GOPATH}/bin"
     fi
 }
+
 
 source_fzf() {
     # fzf
@@ -175,22 +158,21 @@ source_fzf() {
     fi
 }
 
+
 setup_path_additions() {
     # on macs, we have /usr/libexec/path_helper to create some system
     # level PATHS. Only add the go path if this directory does not exist
-    if [ "$KERNEL" = "darwin" ]; then
-        if [ ! -e "/etc/paths.d/go" ]; then
-            # if golang is installed, add go bins to PATH
-            if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
-                append_path "/usr/local/go/bin"
-            fi
+    if [ "$KERNEL" = "darwin" ] && [ ! -e "/etc/paths.d/go" ]; then
+        # if golang is installed, add go bins to PATH
+        if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
+            append_path "/usr/local/go/bin"
         fi
     fi
 
     # python3 -m pip install <module>
     # python3 -m pip install --user <module>
     if [ -d "${HOME}/.local/bin" ]; then
-        append_path "${HOME}/.local/bin"
+        append_path "${HOME}/.local/bin" "prepend"
     fi
 
     # macports disgustingly writes / creates ~/.zprofile -
@@ -199,10 +181,6 @@ setup_path_additions() {
     if [ -d "/opt/local/bin" ] || [ -d "/opt/local/sbin" ]; then
         append_path "/opt/local/sbin" "prepend"
         append_path "/opt/local/bin" "prepend"
-    fi
-
-    if [ -d "${HOME}/bin" ]; then
-        append_path "${HOME}/bin" "prepend"
     fi
 }
 
@@ -258,7 +236,6 @@ setup_precmd() {
 setup_os_specific_fixes() {
     if [ "$KERNEL" = "darwin" ]; then
         # append to zsh array 9_9
-        # MY_DOT_FILES+=(".rbenv_env" ".travis/travis.sh" ".dockerenv")
         if [ -e "${HOME}/.fzf.zsh" ]; then
             MY_DOT_FILES+=("${HOME}/.fzf.zsh")
         else
@@ -349,7 +326,7 @@ set_editor() {
         echo "WARN: only vi is available. This is anarchy!"
         EDITOR="$(which vi)"
     else
-        echo "ERROR: no sane EDITOR available therefore unset. Abandon all hope."
+        echo "WARN: no vi or vim variants detected."
     fi
 }
 
