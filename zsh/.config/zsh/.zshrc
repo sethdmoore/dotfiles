@@ -93,13 +93,14 @@ determine_kernel() {
 append_path() {
     # Build PATH and disallow duplicate entries
     if [ -n "$TMUX" ]; then
+        # don't re-run this function in a tmux session
+        # inherit PATH from parent shell
         return
     fi
 
-    local IFS path_iterator array_path appender match mode
+    local IFS path_iterator array_path appender mode
     appender="${1}"
     mode="${2}"
-    match="false"
 
     IFS=':'
 
@@ -167,15 +168,6 @@ source_fzf() {
 
 
 setup_path_additions() {
-    # on macs, we have /usr/libexec/path_helper to create some system
-    # level PATHS. Only add the go path if this directory does not exist
-    if [ "$KERNEL" = "darwin" ] && [ ! -e "/etc/paths.d/go" ]; then
-        # if golang is installed, add go bins to PATH
-        if [ -d "/usr/local/go" ] && [ -d "/usr/local/go/bin" ]; then
-            append_path "/usr/local/go/bin"
-        fi
-    fi
-
     # python3 -m pip install <module>
     # python3 -m pip install --user <module>
     if [ -d "${HOME}/.local/bin" ]; then
@@ -232,11 +224,19 @@ setup_precmd() {
 
 setup_os_specific_fixes() {
     if [ "$KERNEL" = "darwin" ]; then
+
+        # write OSX version to tmp
+        if ! [ -e "/tmp/osx_ver" ]; then
+          sw_vers -productVersion  > /tmp/osx_ver
+          cat /tmp/osx_ver | cut -d '.' -f1 > /tmp/osx_major_ver
+        fi
+
+        osx_ver="$(cat /tmp/osx_ver)"
+        osx_major_ver="$(cat /tmp/osx_major_ver)"
+
         # append to zsh array 9_9
-        if [ -e "${HOME}/.fzf.zsh" ]; then
-            MY_DOT_FILES+=("${HOME}/.fzf.zsh")
-        else
-            printf -- "NOTE: fzf is missing, please install with your pkg manager\n"
+        if [ -d "/opt/local/share/fzf/shell" ]; then
+            MY_DOT_FILES+=("/opt/local/share/fzf/shell/key-bindings.zsh" "/opt/local/share/fzf/shell/completion.zsh")
         fi
 
         if ! [ -f "/tmp/zsh-ssh-agent" ]; then
@@ -246,17 +246,16 @@ setup_os_specific_fixes() {
             fi
         fi
 
-        # Apply tmux-256color
-        if [ -e "${XDG_DATA_HOME}/terminfo" ]; then
-            export TERMINFO_DIRS=$TERMINFO_DIRS:$HOME/.local/share/terminfo
-        else
-            echo "CRITICAL: tmux-256color is set by dotfiles"
-            echo "https://gpanders.com/blog/the-definitive-guide-to-using-tmux-256color-on-macos/"
-            echo "https://archive.ph/4daXH"
-        fi
-
-        if ! command -v gfind &>/dev/null ; then
-            echo 'Missing `gfind`, please run `brew install findutils`'
+        # sonoma (14+) fixes tmux-256color
+        # this is for older macbooks
+        if [ "$osx_major_ver" -lt "14" ]; then
+            if [ -e "${XDG_DATA_HOME}/terminfo" ]; then
+                export TERMINFO_DIRS=$TERMINFO_DIRS:$HOME/.local/share/terminfo
+            else
+                echo "CRITICAL: tmux-256color needs a manual patch"
+                echo "https://gpanders.com/blog/the-definitive-guide-to-using-tmux-256color-on-macos/"
+                echo "https://archive.ph/4daXH"
+            fi
         fi
 
         setup_pip_bins_osx
