@@ -91,33 +91,57 @@ determine_kernel() {
 
 
 append_path() {
-    # Build PATH and disallow duplicate entries
+    # Rebuild PATH and prevent duplicate entries
     if [ -n "$TMUX" ]; then
         # don't re-run this function in a tmux session
         # inherit PATH from parent shell
         return
     fi
 
-    local IFS path_iterator array_path appender mode
+    local IFS path_iterator array_path appender mode path_copy
     appender="${1}"
     mode="${2}"
 
+    # use this variable to store a temporary PATH
+    path_copy=""
+
     IFS=':'
 
+    # convert PATH to an array
     array_path=("${(@s/:/)PATH}")
     for path_iterator in $array_path; do
+        # if the iterated item is a duplicate of the appender argument
+        # skip this cycle of the loop. we will append it below
         if [ "${path_iterator}" = "${appender}" ]; then
-            printf "Duplicate PATH entry: ${path_iterator}\n"
-            return
+            continue
+        fi
+
+        # if path_copy is an empty string (no join function)
+        if [ -z "$path_copy" ]; then
+            path_copy="$path_iterator"
+        # otherwise continue reconstructing PATH
+        else
+            path_copy="${path_copy}:${path_iterator}"
         fi
     done
+
     unset IFS
 
+    # finally add the path to our copy
     if [ "${mode}" = "prepend" ]; then
-        PATH="${appender}:$PATH"
+        path_copy="${appender}:$path_copy"
     else
-        PATH="$PATH:${appender}"
+        path_copy="$path_copy:${appender}"
     fi
+
+    # protect against catastrophic failure
+    if [ -z "$path_copy" ]; then
+        echo "ERROR: path_copy is empty somehow"
+        return
+    fi
+
+    # set PATH to the copy
+    PATH="$path_copy"
 }
 
 source_dot_files() {
