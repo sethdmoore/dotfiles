@@ -2,6 +2,8 @@
 .DS_Store
 .netrwhist
 zsh/.config/zsh/.zcompdump
+zsh/.config/zsh/.private_aliases
+zsh/.config/zsh/.private_environment
 bookmarks
 gtk/.config/gtk-3.0/bookmarks
 nvim/.config/gocode
