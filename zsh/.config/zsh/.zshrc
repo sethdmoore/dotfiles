@@ -176,6 +176,10 @@ setup_workspace() {
     if ! [ -e "${HOME}/dev/go/src" ]; then
         mkdir -p "${HOME}/dev/go/src"
     fi
+
+    if ! [ -e "${HOME}/.local/state/zsh" ]; then
+        mkdir -p "${HOME}/.local/state/zsh"
+    fi
 }
 
 
