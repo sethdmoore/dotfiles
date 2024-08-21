@@ -47,8 +47,8 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 MY_DOT_FILES=(
     "${HOME}/.config/zsh/aliases"
     "${HOME}/.config/zsh/ENV"
-    "${HOME}/.private_environment"
-    "${HOME}/.private_aliases"
+    "${HOME}/.config/zsh/private_environment"
+    "${HOME}/.config/zsh/private_aliases"
 )
 
 set_ps1() {
