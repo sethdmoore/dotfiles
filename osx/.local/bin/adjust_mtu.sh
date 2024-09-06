@@ -8,11 +8,13 @@ VPN_DEV_PREFIX="utun"
 ROUTE_CHECK_HOST="8.8.8.8"
 
 get_interface() {
+  # prints the primary interface with route to 8.8.8.8
   route get "$ROUTE_CHECK_HOST" \
     | grep interface \
     | awk -F ':' '{print $2}' \
     | tr -d ' '
 }
+
 
 check_interface() {
   interface="$1"
