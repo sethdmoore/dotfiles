@@ -275,6 +275,11 @@ setup_os_specific_fixes() {
             fi
         fi
 
+        # add Rancher Desktop... no way to move this
+        if [ -d "${HOME}/.rd/bin" ]; then
+            append_path "${HOME}/.rd/bin"
+        fi
+
         # sonoma (14+) fixes tmux-256color
         # this is for older macbooks
         if [ "$osx_major_ver" -lt "14" ]; then
