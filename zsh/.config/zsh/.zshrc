@@ -265,7 +265,8 @@ setup_os_specific_fixes() {
 
         # append to zsh array 9_9
         if [ -d "/opt/local/share/fzf/shell" ]; then
-            MY_DOT_FILES+=("/opt/local/share/fzf/shell/key-bindings.zsh" "/opt/local/share/fzf/shell/completion.zsh")
+            source "/opt/local/share/fzf/shell/key-bindings.zsh"
+            source "/opt/local/share/fzf/shell/completion.zsh"
         fi
 
         if ! [ -f "/tmp/zsh-ssh-agent" ]; then
