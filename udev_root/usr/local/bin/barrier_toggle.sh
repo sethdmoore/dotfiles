@@ -10,11 +10,11 @@ main() {
   mode="$1"
 
   if [ "$mode" = "client" ]; then
-    systemctl --user stop barrierd.service
-    systemctl --user start barrier.service
+    systemctl --user stop input-leapd.service
+    systemctl --user start input-leap.service
   elif [ "$mode" = "server" ]; then
-    systemctl --user stop barrier.service
-    systemctl --user start barrierd.service
+    systemctl --user stop input-leap.service
+    systemctl --user start input-leapd.service
   else
     echo "You must run the script with 'client' or 'server' as first argument!"
     exit 2
