@@ -1,5 +1,5 @@
 [Unit]
-Description=Barrier server service
+Description=input-leap server service
 # After=network-online.service
 # Requires=graphical-session.target
 # After=display-manager.service
@@ -8,7 +8,8 @@ PartOf=graphical-session.target
 
 [Service]
 # ExecStart=/usr/bin/barriers -c /home/seth/.config/Debauchee/screens.conf -f --enable-crypto --name seth.linklocal
-ExecStart=/usr/bin/barriers -c /home/seth/.config/Debauchee/screens.conf -f --name seth.linklocal
+# ExecStart=/usr/bin/input-leaps -c /home/seth/.config/Debauchee/screens.conf -f --name seth.linklocal
+ExecStart=/usr/bin/input-leaps -c /home/seth/.config/Debauchee/screens.conf -f --name seth.linklocal
 Restart=on-failure
 
 # [Install]
