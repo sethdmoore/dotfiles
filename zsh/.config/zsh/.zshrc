@@ -25,10 +25,14 @@ export HISTFILE=~/.zsh_history
 export HISTIGNORESPACE=1
 export LOCAL_ENV_DIR="${HOME}/.config/local_environment"
 export KERNEL
+export CPU_ARCHITECTURE
 
 export CURLOPT_TIMEOUT=60
 export GPGKEY='4096R/1CF9C381'
 export GPG_TTY=$(tty)
+
+export TFENV_ARCH
+export TFENV_CONFIG_DIR
 
 #
 # bindings
@@ -71,6 +75,7 @@ set_ls_colors() {
 
 determine_kernel() {
     local kernel="${HOME}/.config/local_environment/kernel"
+    local arch="${HOME}/.config/local_environment/arch"
     if [ -e "$kernel" ]; then
         . "$kernel"
         return
@@ -90,6 +95,16 @@ determine_kernel() {
     echo export KERNEL="${KERNEL}" > "${kernel}"
 }
 
+determine_arch() {
+    local arch="${HOME}/.config/local_environment/arch"
+    if [ -e "$arch" ]; then
+        . "$arch"
+        return
+    fi
+
+    # this appears to be portable
+    echo "CPU_ARCHITECTURE=$(uname -m)" > "$arch"
+}
 
 append_path() {
     # Rebuild PATH and prevent duplicate entries
@@ -253,7 +268,6 @@ setup_precmd() {
 
 setup_os_specific_fixes() {
     if [ "$KERNEL" = "darwin" ]; then
-
         # write OSX version to tmp
         if ! [ -e "/tmp/osx_ver" ]; then
           sw_vers -productVersion  > /tmp/osx_ver
@@ -263,7 +277,6 @@ setup_os_specific_fixes() {
         osx_ver="$(cat /tmp/osx_ver)"
         osx_major_ver="$(cat /tmp/osx_major_ver)"
 
-        # append to zsh array 9_9
         if [ -d "/opt/local/share/fzf/shell" ]; then
             source "/opt/local/share/fzf/shell/key-bindings.zsh"
             source "/opt/local/share/fzf/shell/completion.zsh"
@@ -274,6 +287,12 @@ setup_os_specific_fixes() {
                 ssh-add --apple-load-keychain > /dev/null 2>&1
                 touch "/tmp/zsh-ssh-agent"
             fi
+        fi
+
+        # for terraform + tfenv
+        if [ "$CPU_ARCHITECTURE" = "arm64" ]; then
+            # TFENV_ARCH="$CPU_ARCHITECTURE"
+            TFENV_CONFIG_DIR="${HOME}/.config/tfenv"
         fi
 
         # add Rancher Desktop... no way to move this
@@ -374,6 +393,9 @@ main() {
 
     # write or read $LOCAL_ENV_DIR/kernel
     determine_kernel
+
+    # write or read $LOCAL_ENV_DIR/arch
+    determine_arch
 
     # tmux window pane PWD hack
     setup_precmd
