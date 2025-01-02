@@ -17,5 +17,11 @@
 vim.filetype.add {
   extension = {
     jenkinsfile = "groovy"
+  },
+}
+-- 2025-01-02 workaround for terraformls not detecting bare terraform files
+vim.filetype.add {
+  extension = {
+    tf = "terraform"
   }
 }
