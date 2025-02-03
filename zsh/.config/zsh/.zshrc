@@ -368,7 +368,12 @@ setup_pip_bins_osx() {
 }
 
 set_editor() {
-    if command -v nvim 2>&1 >/dev/null; then
+    if command -v astronvim_editor 2>&1 >/dev/null; then
+        # keep nvim from leaking metadata and secrets all over the place
+        # honestly, if we're invoking $EDITOR directly, it's probably
+        # git commit or something that shouldn't be stored
+        EDITOR="$(which astronvim_editor)"
+    elif command -v nvim 2>&1 >/dev/null; then
         EDITOR="$(which nvim)"
     elif command -v vim 2>&1 >/dev/null; then
         EDITOR="$(which vim)"
