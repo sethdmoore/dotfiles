@@ -234,6 +234,13 @@ setup_path_additions() {
 }
 
 
+setup_conda() {
+    if [ -f "/usr/etc/profile.d/conda.sh" ]; then
+        . "/usr/etc/profile.d/conda.sh"
+    fi
+}
+
+
 auto_start_tmux() {
     # always start tmux in remote sessions
     if [ -n "${SSH_CLIENT}" ]; then
@@ -417,6 +424,9 @@ main() {
 
     # append_path foo bar baz
     setup_path_additions
+
+    # `conda init` hardcoded to modify ~/.bashrc 9_9
+    setup_conda
 
     # write or read PYTHON_MAJOR_VERSION for bins
     setup_os_specific_fixes
