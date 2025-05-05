@@ -218,13 +218,19 @@ setup_path_additions() {
         append_path "${HOME}/.local/bin" "prepend"
     fi
 
+    # we moved MACPORTS_HOME to "${XDG_STATE_HOME}/macports"
+    if [ -d "$MACPORTS_HOME" ]; then
+        append_path "${MACPORTS_HOME}/bin" prepend
+        append_path "${MACPORTS_HOME}/sbin" prepend
+    fi
+
     # macports disgustingly writes / creates ~/.zprofile -
     # ignoring the value of ZDOTDIR
     # this fixes macports
-    if [ -d "/opt/local/bin" ] || [ -d "/opt/local/sbin" ]; then
-        append_path "/opt/local/sbin" "prepend"
-        append_path "/opt/local/bin" "prepend"
-    fi
+    # if [ -d "/opt/local/bin" ] || [ -d "/opt/local/sbin" ]; then
+    #     append_path "/opt/local/sbin" "prepend"
+    #     append_path "/opt/local/bin" "prepend"
+    # fi
 }
 
 
@@ -393,6 +399,10 @@ main() {
     # involves icky eval
     set_ls_colors
 
+    # source our dots first
+    # inject vars later
+    source_dot_files
+
     # create directories
     setup_workspace
 
@@ -410,10 +420,6 @@ main() {
 
     # write or read PYTHON_MAJOR_VERSION for bins
     setup_os_specific_fixes
-
-    # source our dots, should be second to last function
-    # as we inject additional items per function
-    source_dot_files
 
     # set EDITOR based on availability
     set_editor

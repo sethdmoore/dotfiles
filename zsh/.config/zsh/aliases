@@ -96,6 +96,12 @@ myrdp() {
     user="$3"
     port="$4"
 
+    if [ -z "bastionhost" ] || [ -z "$targethost" ]; then
+        echo 'myrdp <jumpbox> <target rdp host or ip>'
+        echo 'EG: myrdp access.example.com 10.10.10.10'
+        return
+    fi
+
     if [ -z "$port" ]; then
         port="3389"
     fi
