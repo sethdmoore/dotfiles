@@ -1,8 +1,8 @@
 # Profiling for when zshrc gets slow again
 # zmodload zsh/zprof
-autoload -U colors && colors
+# autoload -U colors && colors
 # add git autocomplete
-autoload -Uz compinit && compinit
+autoload -Uz compinit colors && compinit && colors
 
 setopt inc_append_history
 setopt share_history
@@ -197,21 +197,13 @@ setup_workspace() {
     fi
 }
 
-
-source_fzf() {
-    # fzf
-    if [ -f "$FZF_ZSH_COMPLETION" ] && [ -f "$FZF_ZSH_BINDINGS" ]; then
-        source "$FZF_ZSH_BINDINGS"
-        source "$FZF_ZSH_COMPLETION"
-    else
-        if ! command -v fzf &>/dev/null ; then
-          NO_FZF=true
-        fi
-    fi
-}
-
-
 setup_path_additions() {
+    # Don't modify PATH inside of tmux
+    # it is inherited from the parent shell
+    if [ -n "$TMUX" ]; then
+        return
+    fi
+
     # python3 -m pip install <module>
     # python3 -m pip install --user <module>
     if [ -d "${HOME}/.local/bin" ]; then
@@ -219,10 +211,9 @@ setup_path_additions() {
     fi
 }
 
-
 setup_conda() {
     if [ -f "/usr/etc/profile.d/conda.sh" ]; then
-        . "/usr/etc/profile.d/conda.sh"
+        source "/usr/etc/profile.d/conda.sh"
     fi
 }
 
@@ -231,6 +222,11 @@ setup_conda() {
 setup_nvm_node() {
     local node_versions
     local latest_node_version
+    local node_path_cache
+
+    if [ -n "$TMUX" ]; then
+        return
+    fi
 
     # NVM_DIR not set or doesn't exist
     if [ -z "$NVM_DIR" ] || ! [ -d "$NVM_DIR" ]; then
@@ -297,6 +293,13 @@ setup_precmd() {
 }
 
 setup_os_specific_fixes() {
+    local fzf_zsh_bindings
+    local fzf_zsh_completion
+
+    if [ -n "$TMUX" ]; then
+        return
+    fi
+
     if [ "$KERNEL" = "darwin" ]; then
         # write OSX version to tmp
         if ! [ -e "/tmp/osx_ver" ]; then
@@ -314,10 +317,9 @@ setup_os_specific_fixes() {
             append_path "${MACPORTS_HOME}/bin" prepend
             append_path "${MACPORTS_HOME}/sbin" prepend
 
-            # FZF
             if [ -d "${MACPORTS_HOME}/share/fzf/shell" ]; then
-                source "${MACPORTS_HOME}/share/fzf/shell/key-bindings.zsh"
-                source "${MACPORTS_HOME}/share/fzf/shell/completion.zsh"
+                fzf_zsh_bindings="${MACPORTS_HOME}/share/fzf/shell/key-bindings.zsh"
+                fzf_zsh_completion="${MACPORTS_HOME}/share/fzf/shell/completion.zsh"
             fi
         # still support global installation
         elif [ -d "/opt/local/bin" ] || [ -d "/opt/local/sbin" ]; then
@@ -325,8 +327,8 @@ setup_os_specific_fixes() {
             append_path "/opt/local/bin" "prepend"
 
             if [ -d "/opt/local/share/fzf/shell" ]; then
-                source "/opt/local/share/fzf/shell/key-bindings.zsh"
-                source "/opt/local/share/fzf/shell/completion.zsh"
+                fzf_zsh_bindings="/opt/local/share/fzf/shell/key-bindings.zsh"
+                fzf_zsh_completion="/opt/local/share/fzf/shell/completion.zsh"
             fi
         fi
 
@@ -369,20 +371,17 @@ setup_os_specific_fixes() {
         fi
 
     elif [ "$KERNEL" = "linux" ]; then
-        FZF_ZSH_COMPLETION="/usr/share/fzf/completion.zsh"
-        FZF_ZSH_BINDINGS="/usr/share/fzf/key-bindings.zsh"
+        fzf_zsh_completion="/usr/share/fzf/completion.zsh"
+        fzf_zsh_bindings="/usr/share/fzf/key-bindings.zsh"
 
-        MY_DOT_FILES+=("$FZF_ZSH_COMPLETION" "$FZF_ZSH_BINDINGS")
-        # connect to the ssh-agent sock
         export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
     elif [ "$KERNEL" = "mingw" ]; then
         export DISPLAY=":0"
         implement_xclip
     elif [ "$KERNEL" = "microsoft" ]; then
-        FZF_ZSH_BINDINGS="${HOME}/.fzf/shell/key-bindings.zsh"
-        FZF_ZSH_COMPLETION="${HOME}/.fzf/shell/key-bindings.zsh"
+        fzf_zsh_bindings="${HOME}/.fzf/shell/key-bindings.zsh"
+        fzf_zsh_completion="${HOME}/.fzf/shell/key-bindings.zsh"
 
-        MY_DOT_FILES+=("$FZF_ZSH_COMPLETION" "$FZF_ZSH_BINDINGS")
         # fix bad umask on WSL
         # https://www.turek.dev/post/fix-wsl-file-permissions/
         # https://github.com/Microsoft/WSL/issues/352
@@ -391,6 +390,10 @@ setup_os_specific_fixes() {
         fi
         setup_ssh_agent
     fi
+
+    # source FZF if set
+    test -n "$fzf_zsh_bindings" && source "$fzf_zsh_bindings"
+    test -n "$fzf_zsh_completion" && source "$fzf_zsh_completion"
 }
 
 implement_xclip() {
@@ -407,6 +410,10 @@ EOF
 }
 
 setup_pip_bins_osx() {
+    if [ -n "$TMUX" ]; then
+        return
+    fi
+
     # set up pip path
     local awk_script="${HOME}/.config/zsh/get_python3_version.awk"
     local python_version_file="${LOCAL_ENV_DIR}/python3_version"
@@ -417,7 +424,7 @@ setup_pip_bins_osx() {
             printf "ERROR: Couldn't write to %s!\n" $python_version_file
         fi
     fi
-    . "$python_version_file"
+    source "$python_version_file"
 
     append_path "${HOME}/Library/Python/${PYTHON_MAJOR_VERSION}/bin"
 }
@@ -449,7 +456,6 @@ main() {
     set_ls_colors
 
     # source our dots first
-    # inject vars later
     source_dot_files
 
     # create directories
