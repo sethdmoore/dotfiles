@@ -217,20 +217,6 @@ setup_path_additions() {
     if [ -d "${HOME}/.local/bin" ]; then
         append_path "${HOME}/.local/bin" "prepend"
     fi
-
-    # we moved MACPORTS_HOME to "${XDG_STATE_HOME}/macports"
-    if [ -d "$MACPORTS_HOME" ]; then
-        append_path "${MACPORTS_HOME}/bin" prepend
-        append_path "${MACPORTS_HOME}/sbin" prepend
-    fi
-
-    # macports disgustingly writes / creates ~/.zprofile -
-    # ignoring the value of ZDOTDIR
-    # this fixes macports
-    # if [ -d "/opt/local/bin" ] || [ -d "/opt/local/sbin" ]; then
-    #     append_path "/opt/local/sbin" "prepend"
-    #     append_path "/opt/local/bin" "prepend"
-    # fi
 }
 
 
@@ -238,6 +224,37 @@ setup_conda() {
     if [ -f "/usr/etc/profile.d/conda.sh" ]; then
         . "/usr/etc/profile.d/conda.sh"
     fi
+}
+
+# this function will check to see if nvm has installed node versions
+# if so, it will prepend the latest node version to the PATH
+setup_nvm_node() {
+    local node_versions
+    local latest_node_version
+
+    # NVM_DIR not set or doesn't exist
+    if [ -z "$NVM_DIR" ] || ! [ -d "$NVM_DIR" ]; then
+        return
+    # NVM never used
+    elif ! [ -d "$NVM_DIR/versions/node" ]; then
+        return
+    fi
+
+    node_versions=$(ls -1 "$NVM_DIR/versions/node")
+
+    # no installed node versions
+    if [ -z "$node_versions" ]; then
+        return
+    fi
+
+    latest_node_version=$(echo $node_versions \
+        | sort -t "." -k1,1n -k2,2n -k3,3n \
+        | head -n1 \
+    )
+
+    append_path \
+        "${NVM_DIR}/versions/node/${latest_node_version}/bin" \
+        "prepend"
 }
 
 
@@ -290,18 +307,39 @@ setup_os_specific_fixes() {
         osx_ver="$(cat /tmp/osx_ver)"
         osx_major_ver="$(cat /tmp/osx_major_ver)"
 
-        if [ -d "/opt/local/share/fzf/shell" ]; then
-            source "/opt/local/share/fzf/shell/key-bindings.zsh"
-            source "/opt/local/share/fzf/shell/completion.zsh"
-        fi
+        setup_pip_bins_osx
 
-        if ! [ -f "/tmp/zsh-ssh-agent" ]; then
-            if ! ssh-add -l > /dev/null 2>&1; then
-                ssh-add --apple-load-keychain > /dev/null 2>&1
-                touch "/tmp/zsh-ssh-agent"
+        # we moved MACPORTS_HOME to "${XDG_STATE_HOME}/macports"
+        if [ -n "$MACPORTS_HOME" ] && [ -d "$MACPORTS_HOME" ]; then
+            append_path "${MACPORTS_HOME}/bin" prepend
+            append_path "${MACPORTS_HOME}/sbin" prepend
+
+            # FZF
+            if [ -d "${MACPORTS_HOME}/share/fzf/shell" ]; then
+                source "${MACPORTS_HOME}/share/fzf/shell/key-bindings.zsh"
+                source "${MACPORTS_HOME}/share/fzf/shell/completion.zsh"
+            fi
+        # still support global installation
+        elif [ -d "/opt/local/bin" ] || [ -d "/opt/local/sbin" ]; then
+            append_path "/opt/local/sbin" "prepend"
+            append_path "/opt/local/bin" "prepend"
+
+            if [ -d "/opt/local/share/fzf/shell" ]; then
+                source "/opt/local/share/fzf/shell/key-bindings.zsh"
+                source "/opt/local/share/fzf/shell/completion.zsh"
             fi
         fi
 
+        # if no agent file and no ssh identities
+        if ! [ -f "/tmp/zsh-ssh-agent" ] && ! ssh-add -l > /dev/null 2>&1; then
+            # add our keychain identities
+            # and signal that we have an "agent"
+            ssh-add -q  \
+                --apple-load-keychain \
+                && touch "/tmp/zsh-ssh-agent"
+        fi
+
+        # stupid rancher / docker CLI fix
         # for terraform + tfenv
         if [ "$CPU_ARCHITECTURE" = "arm64" ]; then
             # TFENV_ARCH="$CPU_ARCHITECTURE"
@@ -311,6 +349,11 @@ setup_os_specific_fixes() {
         # add Rancher Desktop... no way to move this
         if [ -d "${HOME}/.rd/bin" ]; then
             append_path "${HOME}/.rd/bin"
+            # docker expects a socket in /var/run/docker.sock
+            # which is a protected dir on modern OSX (14+)
+            if [ -e "${HOME}/.rd/docker.sock" ]; then
+                export DOCKER_HOST="unix://${HOME}/.rd/docker.sock"
+            fi
         fi
 
         # sonoma (14+) fixes tmux-256color
@@ -325,7 +368,6 @@ setup_os_specific_fixes() {
             fi
         fi
 
-        setup_pip_bins_osx
     elif [ "$KERNEL" = "linux" ]; then
         FZF_ZSH_COMPLETION="/usr/share/fzf/completion.zsh"
         FZF_ZSH_BINDINGS="/usr/share/fzf/key-bindings.zsh"
@@ -427,6 +469,9 @@ main() {
 
     # `conda init` hardcoded to modify ~/.bashrc 9_9
     setup_conda
+
+    # always use the latest node version
+    setup_nvm_node
 
     # write or read PYTHON_MAJOR_VERSION for bins
     setup_os_specific_fixes

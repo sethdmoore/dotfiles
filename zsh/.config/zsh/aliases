@@ -56,17 +56,72 @@ function git-clean-all() {
 
 # shim / lazy load nvm because it's incredibly slow
 function nvm() {
-    local nvm_sh="$HOME/.nvm/nvm.sh"
-    if ! [ -e "$nvm_sh" ]; then
-        echo "INFO: Install nvm to $HOME/.nvm/nvm.sh first"
+    local nvm_sh
+    local nvm_source_dir
+
+    # if NVM_DIR is not defined, use the gross default directory
+    if ! [ -n "$NVM_DIR" ]; then
+        export NVM_DIR="${HOME}/.nvm"
+        nvm_sh="${NVM_DIR}/nvm.sh"
+    fi
+
+    nvm_sh="${NVM_DIR}/nvm.sh"
+
+    # nvm shim core functionality
+    if [ -e "$nvm_sh" ]; then
+        # undefine this function
+        unset -f nvm
+        # read the actual nvm file on demand
+        source "$nvm_sh"
+        # shim our arguments back to actual nvm
+        nvm $*
         return
     fi
 
-    # undefine this function
-    unset -f nvm
-    # read the actual nvm file on demand
-    source "$HOME/.nvm/nvm.sh"
-    # shim our arguments back to actual nvm
+    # Macports
+    if [ -d "$MACPORTS_HOME" ]; then
+        if [ -d "${MACPORTS_HOME}/share/nvm"  ]; then
+            nvm_source_dir="${MACPORTS_HOME}/share/nvm"
+        else
+           echo "shim NVM (aliases): Install nvm first"
+           echo "  port install nvm"
+           return
+       fi
+    # Arch
+    elif [ "$KERNEL" = "linux" ]; then
+        if [ -d "/usr/share/nvm" ]; then
+            nvm_source_dir="/usr/share/nvm"
+        else
+            echo "shim NVM (aliases): Install nvm first"
+            echo "  pacman -S nvm"
+            return
+        fi
+    fi
+
+    if [ -z "$nvm_source_dir" ]; then
+        echo "shim NVM (aliases): Unsupported system configuration"
+        echo "  nvm_source_dir is an empty string"
+        echo "  add support for this os in XDG_CONFIG_HOME/zsh/aliases"
+        return
+    fi
+
+    echo "shim NVM (aliases): first time setup"
+
+    mkdir -p "$NVM_DIR"
+
+    # reimplement ${nvm_source_dir}/init-nvim.sh
+    if ! [ -e "${NVM_DIR}/nvm.sh" ]; then
+        ln -s \
+            "${nvm_source_dir}/nvm.sh" \
+            "${NVM_DIR}/nvm.sh"
+        fi
+    if ! [ -e "$NVM_DIR/nvm-exec" ]; then
+        ln -s \
+            "${nvm_source_dir}/nvm-exec" \
+            "$NVM_DIR/nvm-exec"
+    fi
+    echo "Success! Re-running nvm"
+    sleep 2
     nvm $*
 }
 
