@@ -7,10 +7,21 @@
 LOOKUP_INTERVAL=1200
 
 # IPv4 cachefile
-IPV4_CACHEFILE="/tmp/tmux_ipv4_cache"
+export IPV4_CACHEFILE
 
+set_env() {
+  prefix="/tmp"
+
+  if [ -n "$TMUX_TMPDIR" ]; then
+    prefix="$TMUX_TMPDIR"
+  fi
+
+  IPV4_CACHEFILE="${prefix}/tmux_ipv4_cache"
+}
 
 init() {
+  set_env
+
   if ! [ -e "$IPV4_CACHEFILE" ]; then
     touch "$IPV4_CACHEFILE"
     lookup_ipv4 &>/dev/null
