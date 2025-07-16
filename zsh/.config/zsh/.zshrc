@@ -49,10 +49,10 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 # zshrc executed without POSIX compat
 # use array type (http://zsh.sourceforge.net/FAQ/zshfaq03.html)
 MY_DOT_FILES=(
-    "${HOME}/.config/zsh/aliases"
-    "${HOME}/.config/zsh/ENV"
-    "${HOME}/.config/zsh/private_environment"
-    "${HOME}/.config/zsh/private_aliases"
+    "${ZDOTDIR}/aliases"
+    "${ZDOTDIR}/ENV"
+    "${ZDOTDIR}/private_environment"
+    "${ZDOTDIR}/private_aliases"
 )
 
 set_ps1() {
@@ -71,7 +71,6 @@ set_ls_colors() {
         eval $(dircolors -b "$HOME/.config/ls/lesscolors")
     fi
 }
-
 
 determine_kernel() {
     local kernel="${HOME}/.config/local_environment/kernel"
@@ -266,21 +265,6 @@ auto_start_tmux() {
     fi
 }
 
-setup_ssh_agent() {
-    if [ "$KERNEL" != "microsoft" ]; then
-        return
-    fi
-
-    local windows_path="${HOME}/.config/zsh/windows.sh"
-
-    if [ -e "$windows_path" ]; then
-        . "$windows_path"
-    else
-        printf -- "ERROR: %s is missing. Stow zsh again\n" $windows_path
-    fi
-
-    source_ssh_agent
-}
 
 setup_precmd() {
     # tmux pane title display
@@ -295,138 +279,14 @@ setup_precmd() {
 setup_os_specific_fixes() {
     local fzf_zsh_bindings
     local fzf_zsh_completion
+    local os_fix_script
+    os_fix_script="${ZDOTDIR}/os.d/${KERNEL}.sh"
 
     if [ -n "$TMUX" ]; then
         return
+    elif [ -e "$os_fix_script" ]; then
+        . "$os_fix_script"
     fi
-
-    if [ "$KERNEL" = "darwin" ]; then
-        # write OSX version to tmp
-        if ! [ -e "/tmp/osx_ver" ]; then
-          sw_vers -productVersion  > /tmp/osx_ver
-          cat /tmp/osx_ver | cut -d '.' -f1 > /tmp/osx_major_ver
-        fi
-
-        osx_ver="$(cat /tmp/osx_ver)"
-        osx_major_ver="$(cat /tmp/osx_major_ver)"
-
-        setup_pip_bins_osx
-
-        # we moved MACPORTS_HOME to "${XDG_STATE_HOME}/macports"
-        if [ -n "$MACPORTS_HOME" ] && [ -d "$MACPORTS_HOME" ]; then
-            append_path "${MACPORTS_HOME}/bin" prepend
-            append_path "${MACPORTS_HOME}/sbin" prepend
-
-            if [ -d "${MACPORTS_HOME}/share/fzf/shell" ]; then
-                fzf_zsh_bindings="${MACPORTS_HOME}/share/fzf/shell/key-bindings.zsh"
-                fzf_zsh_completion="${MACPORTS_HOME}/share/fzf/shell/completion.zsh"
-            fi
-        # still support global installation
-        elif [ -d "/opt/local/bin" ] || [ -d "/opt/local/sbin" ]; then
-            append_path "/opt/local/sbin" "prepend"
-            append_path "/opt/local/bin" "prepend"
-
-            if [ -d "/opt/local/share/fzf/shell" ]; then
-                fzf_zsh_bindings="/opt/local/share/fzf/shell/key-bindings.zsh"
-                fzf_zsh_completion="/opt/local/share/fzf/shell/completion.zsh"
-            fi
-        fi
-
-        # if no agent file and no ssh identities
-        if ! [ -f "/tmp/zsh-ssh-agent" ] && ! ssh-add -l > /dev/null 2>&1; then
-            # add our keychain identities
-            # and signal that we have an "agent"
-            ssh-add -q  \
-                --apple-load-keychain \
-                && touch "/tmp/zsh-ssh-agent"
-        fi
-
-        # stupid rancher / docker CLI fix
-        # for terraform + tfenv
-        if [ "$CPU_ARCHITECTURE" = "arm64" ]; then
-            # TFENV_ARCH="$CPU_ARCHITECTURE"
-            TFENV_CONFIG_DIR="${HOME}/.config/tfenv"
-        fi
-
-        # add Rancher Desktop... no way to move this
-        if [ -d "${HOME}/.rd/bin" ]; then
-            append_path "${HOME}/.rd/bin"
-            # docker expects a socket in /var/run/docker.sock
-            # which is a protected dir on modern OSX (14+)
-            if [ -e "${HOME}/.rd/docker.sock" ]; then
-                export DOCKER_HOST="unix://${HOME}/.rd/docker.sock"
-            fi
-        fi
-
-        # sonoma (14+) fixes tmux-256color
-        # this is for older macbooks
-        if [ "$osx_major_ver" -lt "14" ]; then
-            if [ -e "${XDG_DATA_HOME}/terminfo" ]; then
-                export TERMINFO_DIRS=$TERMINFO_DIRS:$HOME/.local/share/terminfo
-            else
-                echo "CRITICAL: tmux-256color needs a manual patch"
-                echo "https://gpanders.com/blog/the-definitive-guide-to-using-tmux-256color-on-macos/"
-                echo "https://archive.ph/4daXH"
-            fi
-        fi
-
-    elif [ "$KERNEL" = "linux" ]; then
-        fzf_zsh_completion="/usr/share/fzf/completion.zsh"
-        fzf_zsh_bindings="/usr/share/fzf/key-bindings.zsh"
-
-        export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
-    elif [ "$KERNEL" = "mingw" ]; then
-        export DISPLAY=":0"
-        implement_xclip
-    elif [ "$KERNEL" = "microsoft" ]; then
-        fzf_zsh_bindings="${HOME}/.fzf/shell/key-bindings.zsh"
-        fzf_zsh_completion="${HOME}/.fzf/shell/key-bindings.zsh"
-
-        # fix bad umask on WSL
-        # https://www.turek.dev/post/fix-wsl-file-permissions/
-        # https://github.com/Microsoft/WSL/issues/352
-        if [ "$(umask)" = "000" ]; then
-            umask 0022
-        fi
-        setup_ssh_agent
-    fi
-
-    # source FZF if set
-    test -n "$fzf_zsh_bindings" && source "$fzf_zsh_bindings"
-    test -n "$fzf_zsh_completion" && source "$fzf_zsh_completion"
-}
-
-implement_xclip() {
-    if [ -e "${HOME}/.local/bin/xclip" ]; then
-        return
-    fi
-    echo "Creating fake xclip in ~/.local/bin/xclip"
-    cat <<EOF > "${HOME}/.local/bin/xclip"
-#!/bin/sh
-if  [ -p /dev/stdin ]; then
-    cat - > /dev/clipboard
-fi
-EOF
-}
-
-setup_pip_bins_osx() {
-    if [ -n "$TMUX" ]; then
-        return
-    fi
-
-    # set up pip path
-    local awk_script="${HOME}/.config/zsh/get_python3_version.awk"
-    local python_version_file="${LOCAL_ENV_DIR}/python3_version"
-    # check if the python_version_file exists
-    if [ ! -e "$python_version_file" ]; then
-        # spit out "3.9" instead of "Python 3.9.x"
-        if ! awk -f "$awk_script" > "$python_version_file"; then
-            printf "ERROR: Couldn't write to %s!\n" $python_version_file
-        fi
-    fi
-    source "$python_version_file"
-
-    append_path "${HOME}/Library/Python/${PYTHON_MAJOR_VERSION}/bin"
 }
 
 set_editor() {
