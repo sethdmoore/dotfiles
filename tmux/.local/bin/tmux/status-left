@@ -3,7 +3,12 @@
 . tmux-lib
 
 # seriously condense all the logic here
-prefix_button="[#{?client_prefix,${a}${i}, }$d]"
+prefix_button_syncpanes="#{?pane_synchronized,${oj}${i}, }$d"
+prefix_button_highlight="#{?client_prefix,${a}${i},${prefix_button_syncpanes}}$d"
+prefix_button="[${prefix_button_highlight}]"
 user_section="${b}#{?client_prefix,${hl}${USER},${USER}}${d}"
 session_section="${a}#{session_name}${d}"
+
+# et-option -ag status-right '#{?pane_synchronized, #[bg=blue]SYNC!!!#[default],}'
+_
 printf -- "${prefix_button} ${user_section} | ${session_section} |  "
