@@ -5,10 +5,12 @@
 ## Include defaults
 .include /etc/pulse/default.pa
 
+load-module module-device-manager
+
 ## Rename devices
 # update-sink-proplist alsa_output.PCM2704C_3.analog-stereo device.description="PCM2704C Mixer #3"
-update-sink-proplist alsa_output.PCM2704C_3.iec958-stereo device.description="PCM2704C Mixer #3"
-update-sink-proplist alsa_output.PCM2704C_4.iec958-stereo device.description="PCM2704C Mixer #4"
-
-update-source-proplist alsa_output.PCM2704C_3.iec958-stereo.monitor device.description="PCM2704C_3"
-update-source-proplist alsa_output.PCM2704C_4.iec958-stereo.monitor device.description="PCM2704C_4"
+# update-sink-proplist alsa_output.PCM2704C_3.iec958-stereo device.description="PCM2704C Mixer #3"
+# update-sink-proplist alsa_output.PCM2704C_4.iec958-stereo device.description="PCM2704C Mixer #4"
+#
+# update-source-proplist alsa_output.PCM2704C_3.iec958-stereo.monitor device.description="PCM2704C_3"
+# update-source-proplist alsa_output.PCM2704C_4.iec958-stereo.monitor device.description="PCM2704C_4"
