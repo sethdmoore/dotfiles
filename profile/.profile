@@ -5,8 +5,10 @@ export XDG_STATE_HOME="${HOME}/.local/state"
 export XDG_CACHE_HOME="${HOME}/.cache"
 
 export GNUPGHOME="${XDG_DATA_HOME}/gnupg"
-export PASSWORD_STORE_DIR="${XDG_DATA_HOME}/pass"
 export BROWSER=firefox
+
+export MACPORTS_HOME="${XDG_STATE_HOME}/macports"
+export PASSWORD_STORE_DIR="${XDG_DATA_HOME}/pass"
 
 # export GTK2_RC_FILES="/usr/share/themes/Arc-Dark/gtk-2.0/gtkrc"
 # export GTK_MODULES="canberra-gtk-module"
