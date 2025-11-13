@@ -80,6 +80,10 @@ main() {
         if [ -e "${HOME}/.rd/docker.sock" ]; then
             export DOCKER_HOST="unix://${HOME}/.rd/docker.sock"
         fi
+
+        # we also do not want this environment variable as it points
+        # docker to the default socket
+        unset DOCKER_CONFIG
     fi
 
     # sonoma (14+) fixes tmux-256color

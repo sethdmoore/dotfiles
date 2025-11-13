@@ -282,11 +282,7 @@ setup_os_specific_fixes() {
     local os_fix_script
     os_fix_script="${ZDOTDIR}/os.d/${KERNEL}.sh"
 
-    if [ -n "$TMUX" ]; then
-        return
-    elif [ -e "$os_fix_script" ]; then
-        . "$os_fix_script"
-    fi
+    . "$os_fix_script"
 }
 
 set_editor() {
