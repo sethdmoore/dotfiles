@@ -2,6 +2,7 @@
 .DS_Store
 .netrwhist
 *.log
+.zcompdump
 zsh/.config/zsh/.zcompdump
 zsh/.config/zsh/.private_aliases
 zsh/.config/zsh/.private_environment
