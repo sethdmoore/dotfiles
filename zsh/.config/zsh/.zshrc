@@ -304,8 +304,6 @@ set_editor() {
 }
 
 main() {
-    # decide whether to bother people
-    # prereq
     set_ps1
 
     # involves icky eval

@@ -1,3 +1,42 @@
+osx_ssh_agent() {
+    # if no agent file and no ssh identities
+    if ! [ -f "/tmp/zsh-ssh-agent" ] && ! ssh-add -l > /dev/null 2>&1; then
+        # add our keychain identities
+        # and signal that we have an "agent"
+        ssh-add -q  \
+            --apple-load-keychain \
+            && touch "/tmp/zsh-ssh-agent"
+    fi
+}
+
+setup_local_macports() {
+    local macports_man_path="${MACPORTS_HOME}/share/man"
+
+    # OSX /usr/local/bin/patch (conflicts with gnu patch)
+    # sometimes takes precedence over /usr/bin/patch
+    # instead, explicitly install gpatch and add to our PATH
+    if [ -d "${MACPORTS_HOME}/libexec/gnubin" ]; then
+        append_path "${MACPORTS_HOME}/libexec/gnubin" prepend
+    fi
+
+    append_path "${MACPORTS_HOME}/bin" prepend
+    append_path "${MACPORTS_HOME}/sbin" prepend
+
+    if [ -d "${MACPORTS_HOME}/share/fzf/shell" ]; then
+        fzf_zsh_bindings="${MACPORTS_HOME}/share/fzf/shell/key-bindings.zsh"
+        fzf_zsh_completion="${MACPORTS_HOME}/share/fzf/shell/completion.zsh"
+    fi
+
+    # macports_additional_manpages
+    if ! [ -d "$macports_man_path" ]; then
+        echo "WARN: no manpages in $macports_man_path"
+        return
+    else
+        MANPATH="${MACPORTS_HOME}/share/man:${MANPATH}"
+    fi
+}
+
+
 setup_pip_bins_osx() {
     if [ -n "$TMUX" ]; then
         return
@@ -18,33 +57,34 @@ setup_pip_bins_osx() {
     append_path "${HOME}/Library/Python/${PYTHON_MAJOR_VERSION}/bin"
 }
 
-main() {
-    # write OSX version to tmp
-    if ! [ -e "/tmp/osx_ver" ]; then
-        sw_vers -productVersion  > /tmp/osx_ver
-        cat /tmp/osx_ver | cut -d '.' -f1 > /tmp/osx_major_ver
+
+check_osx_version_string() {
+    # apple silicon macbook won't be old (EG: < Sonoma / 14)
+    if [ "$CPU_ARCHITECTURE" = "arm64" ]; then
+        return
     fi
 
-    osx_ver="$(cat /tmp/osx_ver)"
-    osx_major_ver="$(cat /tmp/osx_major_ver)"
+    local major minor patch
 
+    IFS='.' read -r major minor patch <<< "$(sw_vers --productVersion)"
+
+    if [ -e "${XDG_DATA_HOME}/terminfo" ]; then
+        export TERMINFO_DIRS=$TERMINFO_DIRS:$HOME/.local/share/terminfo
+    else
+        echo "CRITICAL: tmux-256color needs a manual patch"
+        echo "https://gpanders.com/blog/the-definitive-guide-to-using-tmux-256color-on-macos/"
+        echo "https://archive.ph/4daXH"
+    fi
+}
+
+
+osxmain() {
+    check_osx_version_string
     setup_pip_bins_osx
 
     # we moved MACPORTS_HOME to "${XDG_STATE_HOME}/macports"
     if [ -n "$MACPORTS_HOME" ] && [ -d "$MACPORTS_HOME" ]; then
-        # OSX /usr/local/bin/patch (conflicts with gnu patch)
-        # sometimes takes precedence over /usr/bin/patch
-        # instead, explicitly install gpatch and add to our PATH
-        if [ -d "${MACPORTS_HOME}/libexec/gnubin" ]; then
-            append_path "${MACPORTS_HOME}/libexec/gnubin" prepend
-        fi
-        append_path "${MACPORTS_HOME}/bin" prepend
-        append_path "${MACPORTS_HOME}/sbin" prepend
-
-        if [ -d "${MACPORTS_HOME}/share/fzf/shell" ]; then
-            fzf_zsh_bindings="${MACPORTS_HOME}/share/fzf/shell/key-bindings.zsh"
-            fzf_zsh_completion="${MACPORTS_HOME}/share/fzf/shell/completion.zsh"
-        fi
+        setup_local_macports
     # still support global installation
     elif [ -d "/opt/local/bin" ] || [ -d "/opt/local/sbin" ]; then
         append_path "/opt/local/sbin" "prepend"
@@ -56,22 +96,15 @@ main() {
         fi
     fi
 
-    # if no agent file and no ssh identities
-    if ! [ -f "/tmp/zsh-ssh-agent" ] && ! ssh-add -l > /dev/null 2>&1; then
-        # add our keychain identities
-        # and signal that we have an "agent"
-        ssh-add -q  \
-            --apple-load-keychain \
-            && touch "/tmp/zsh-ssh-agent"
-    fi
+    osx_ssh_agent
 
-    # stupid rancher / docker CLI fix
     # for terraform + tfenv
     if [ "$CPU_ARCHITECTURE" = "arm64" ]; then
         # TFENV_ARCH="$CPU_ARCHITECTURE"
         TFENV_CONFIG_DIR="${HOME}/.config/tfenv"
     fi
 
+    # stupid rancher / docker CLI fix
     # add Rancher Desktop... no way to move this
     if [ -d "${HOME}/.rd/bin" ]; then
         append_path "${HOME}/.rd/bin"
@@ -86,17 +119,6 @@ main() {
         unset DOCKER_CONFIG
     fi
 
-    # sonoma (14+) fixes tmux-256color
-    # this is for older macbooks
-    if [ "$osx_major_ver" -lt "14" ]; then
-        if [ -e "${XDG_DATA_HOME}/terminfo" ]; then
-            export TERMINFO_DIRS=$TERMINFO_DIRS:$HOME/.local/share/terminfo
-        else
-            echo "CRITICAL: tmux-256color needs a manual patch"
-            echo "https://gpanders.com/blog/the-definitive-guide-to-using-tmux-256color-on-macos/"
-            echo "https://archive.ph/4daXH"
-        fi
-    fi
 }
 
-main
+osxmain
