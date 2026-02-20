@@ -25,3 +25,8 @@ vim.filetype.add {
     tf = "terraform"
   }
 }
+
+require("lspconfig").terraformls.setup {
+    filetypes = { "terraform", },
+    cmd = { 'terraform-ls', 'serve', '-log-file', vim.fs.dirname(require('vim.lsp.log').get_filename()) .. "/terraform-ls.log" },
+}
