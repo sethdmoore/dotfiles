@@ -103,22 +103,6 @@ osxmain() {
         # TFENV_ARCH="$CPU_ARCHITECTURE"
         TFENV_CONFIG_DIR="${HOME}/.config/tfenv"
     fi
-
-    # stupid rancher / docker CLI fix
-    # add Rancher Desktop... no way to move this
-    if [ -d "${HOME}/.rd/bin" ]; then
-        append_path "${HOME}/.rd/bin"
-        # docker expects a socket in /var/run/docker.sock
-        # which is a protected dir on modern OSX (14+)
-        if [ -e "${HOME}/.rd/docker.sock" ]; then
-            export DOCKER_HOST="unix://${HOME}/.rd/docker.sock"
-        fi
-
-        # we also do not want this environment variable as it points
-        # docker to the default socket
-        unset DOCKER_CONFIG
-    fi
-
 }
 
 osxmain
