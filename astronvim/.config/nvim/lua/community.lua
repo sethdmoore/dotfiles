@@ -8,6 +8,7 @@
 return {
   "AstroNvim/astrocommunity",
   -- { import = "astrocommunity.pack.lua" },
-  { import = "astrocommunity.game.leetcode-nvim"}
+  -- { import = "astrocommunity.game.leetcode-nvim"}
+  { import = "astrocommunity.recipes.ai" },
   -- import/override with your plugins folder
 }
