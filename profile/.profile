@@ -10,9 +10,13 @@ export BROWSER=firefox
 export MACPORTS_HOME="${XDG_STATE_HOME}/macports"
 export PASSWORD_STORE_DIR="${XDG_DATA_HOME}/pass"
 
-# force discord to run in wayland
-# solves a lot of annoying bugs (crashing games and such)
-export ELECTRON_OZONE_PLATFORM_HINT=auto
 # export GTK2_RC_FILES="/usr/share/themes/Arc-Dark/gtk-2.0/gtkrc"
 # export GTK_MODULES="canberra-gtk-module"
 # export GTK_THEME="Arc-Dark"
+
+# force proton to run in wayland
+export PROTON_ENABLE_WAYLAND=1
+
+# force electron / discord to run in wayland
+# solves a lot of annoying bugs (crashing games and such)
+export ELECTRON_OZONE_PLATFORM_HINT=auto
