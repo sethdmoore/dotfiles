@@ -1,0 +1,13 @@
+for file; do
+  echo "$file"
+  diff -u --color./nvim{,.old}/lua/$file
+  sleep 3
+done
+lazy_setup.lua
+plugins/astrocore.lua
+plugins/astrolsp.lua
+plugins/mason.lua
+plugins/none-ls.lua
+plugins/treesitter.lua
+plugins/user.lua
+polish.lua
