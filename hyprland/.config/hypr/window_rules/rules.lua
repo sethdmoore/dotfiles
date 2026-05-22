@@ -29,7 +29,8 @@ hl.window_rule({
     },
     tag = "+game",
     content = "game",
-    workspace = "5 silent",
+    -- workspace = "5 silent",
+    workspace = "5",
 })
 
 -- disable VRR on apps that get flickery

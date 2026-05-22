@@ -34,7 +34,7 @@ function set_resolution(t)
         m.vrr = 3
         m.supports_wide_color = 0
         m.min_luminance = 0.002
-        m.max_luminance = 1000
+        m.max_luminance = 3000
         m.sdr_max_luminance = 300
         m.sdr_min_luminance = 0.05
         m.sdrbrightness = 1.5
@@ -56,35 +56,6 @@ function set_resolution(t)
 end
 
 set_resolution()
-
--- hl.monitor(monitor_settings)
-
--- hl.monitor({
---     output = mainMonitor,
---     mode = fourk,
---     position = "0x0",
---     scale = 1,
--- 
---     bitdepth = 10,
---     cm = "hdredid",
---     supports_hdr = 0,
---     -- flag | mode 
---     -- 0    | off
---     -- 1    | on
---     -- 2    | fullscreen
---     -- 3    | tag +video/+game
---     -- vrr = 3
---     vrr = 3,
--- 
---     supports_wide_color = 0,
---     min_luminance = 0.002,
---     max_luminance = 1000,
--- 
---     sdr_max_luminance = 200,
---     sdr_min_luminance = 0.05,
---     sdrbrightness = 1.0,
---     sdrsaturation = 1.0,
--- })
 
 hl.config({ render = {
     keep_unmodified_copy = 1,

@@ -16,11 +16,11 @@ hl.workspace_rule({
     layout = "scrolling",
 })
 
--- workspace 3 is a grid
--- hl.workspace_rule({
---     workspace = 3,
---     layout = "master",
--- })
+-- workspace 3 is dwindle
+hl.workspace_rule({
+    workspace = 3,
+    layout = "dwindle",
+})
 
 -- workspace 4 is floating
 -- hl.window_rule({
