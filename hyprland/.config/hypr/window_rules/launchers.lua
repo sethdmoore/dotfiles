@@ -1,8 +1,3 @@
--- AUTO-GENERATED from a hyprlang .conf by hypr2lua.py
--- Review carefully. Unverified dispatchers were converted to
--- hl.dsp.exec_raw("...") fallbacks; lines flagged with TODO
--- need a manual check against https://wiki.hypr.land/Configuring/Basics/
-
 -- netmarble / mongil launcher
 hl.window_rule({
     name = "mongil-launcher",
@@ -24,8 +19,6 @@ hl.window_rule({
     float = true,
     center = true,
 })
-
-
 
 hl.window_rule({
     name = "untag-installer",

@@ -1,3 +1,3 @@
 #!/bin/sh
 
-hyprctl keyword 'monitorv2[HDMI-A-1]:mode' '2560x1440@120'
+hyprctl eval 'set_resolution({resolution="2560x1440@120", depth="hdr"})'

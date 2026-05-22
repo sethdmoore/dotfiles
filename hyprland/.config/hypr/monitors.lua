@@ -1,26 +1,90 @@
-hl.monitor({
-    output = mainMonitor,
-    mode = fourk,
-    position = "0x0",
-    scale = 1,
-    bitdepth = 10,
-    cm = "hdredid",
-    supports_hdr = 0,
-    vrr = 3,
-        -- flag | mode 
-        -- 0    | off
-        -- 1    | on
-        -- 2    | fullscreen
-        -- 3    | tag +video/+game
-        -- vrr = 3
-    supports_wide_color = 0,
-    min_luminance = 0.002,
-    max_luminance = 1000,
-    sdr_max_luminance = 200,
-    sdr_min_luminance = 0.05,
-    sdrbrightness = 1.0,
-    sdrsaturation = 1.0,
-})
+function set_resolution(t)
+    local t = t or {}
+
+    -- state file for persisting session resolution changes
+    -- essentially don't change our resolution every time our colors change
+    local path = os.getenv("XDG_RUNTIME_DIR") .. "/hypr/"
+        .. os.getenv("HYPRLAND_INSTANCE_SIGNATURE") .. "/resolution_state"
+
+    -- read state if there are no arguments
+    if not t.resolution and not t.depth then
+        local f = io.open(path, "r")
+        if f then
+            t.resolution, t.depth = f:read("*l"), f:read("*l")
+            f:close()
+        end
+    end
+
+    -- function default arguments
+    setmetatable(t, {__index={resolution=default_resolution, depth="hdr"}})
+    local resolution, depth = 
+        t.resolution, t.depth
+
+    local m = {
+        output = mainMonitor,
+        mode = resolution,
+        position = "0x0",
+        scale = 1,
+    }
+
+    if depth == "hdr" then
+        m.bitdepth = 10
+        m.cm = "hdredid"
+        m.supports_hdr = 0
+        m.vrr = 3
+        m.supports_wide_color = 0
+        m.min_luminance = 0.002
+        m.max_luminance = 1000
+        m.sdr_max_luminance = 300
+        m.sdr_min_luminance = 0.05
+        m.sdrbrightness = 1.5
+        m.sdrsaturation = 1.0
+    else
+        m.bitdepth = 8
+        m.cm = "auto"
+        m.vrr = 0
+    end
+
+    -- write our state file for this session
+    local f = io.open(path, "w")
+    if f then
+        f:write(resolution, "\n", depth)
+        f:close()
+    end
+
+    hl.monitor(m)
+end
+
+set_resolution()
+
+-- hl.monitor(monitor_settings)
+
+-- hl.monitor({
+--     output = mainMonitor,
+--     mode = fourk,
+--     position = "0x0",
+--     scale = 1,
+-- 
+--     bitdepth = 10,
+--     cm = "hdredid",
+--     supports_hdr = 0,
+--     -- flag | mode 
+--     -- 0    | off
+--     -- 1    | on
+--     -- 2    | fullscreen
+--     -- 3    | tag +video/+game
+--     -- vrr = 3
+--     vrr = 3,
+-- 
+--     supports_wide_color = 0,
+--     min_luminance = 0.002,
+--     max_luminance = 1000,
+-- 
+--     sdr_max_luminance = 200,
+--     sdr_min_luminance = 0.05,
+--     sdrbrightness = 1.0,
+--     sdrsaturation = 1.0,
+-- })
 
 hl.config({ render = {
     keep_unmodified_copy = 1,

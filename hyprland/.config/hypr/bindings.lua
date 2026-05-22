@@ -31,9 +31,10 @@ end
 
 
 -- close app
-hl.bind(mainMod .. " + w", hl.dsp.window.close())
+-- hl.bind(mainMod .. " + q", hl.dsp.window.close(), { release = true })
+hl.bind(mainMod .. " + q", hl.dsp.window.close())
 -- kill -9 app, hold win+q
-hl.bind(mainMod .. " + q", hl.dsp.exec_raw("forcekillactive"), { long_press = true })
+hl.bind(mainMod .. " + q", hl.dsp.window.kill(), { long_press = true, transparent = true })
 
 hl.config({ binds = {
     -- swapping workspaces hides special / overlay / scratch workspaces
@@ -54,7 +55,7 @@ hl.bind(mainMod .. " + e", hl.dsp.exec_cmd(fileManager))
 hl.bind("SHIFT + CTRL + escape", hl.dsp.exec_cmd(taskManager))
 
 -- bind = , f13, pass, class:^(electron)$  # Pass MOUSE5 to TeamSpeak3.
---hl.bind("j", hl.dsp.send_shortcut({ mods = "", key = "KEY_F13", window = "class:^(discord)$" }))  -- Send SUPER + F4 to OBS when SUPER + F10 is pressed.
+-- hl.bind("F13", hl.dsp.send_shortcut({ mods = "", key = "F13", window = "class:^(vesktop)$" }))  -- Send SUPER + F4 to OBS when SUPER + F10 is pressed.
 -- bind = , j, sendshortcut, ,F13, class:^(electron)$  # Pass MOUSE5 to TeamSpeak3.
 
 -- lock / logout
@@ -94,7 +95,9 @@ end
 -- bind = $mainMod, S, togglespecialworkspace, magic
 
 -- super-shift-s, like windows snipping tool
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("grim -g \"$(slurp -d)\" - | wl-copy"))
+-- hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("grim -g \"$(slurp -d)\" - | wl-copy"))
+
+hl.bind("Print", hl.dsp.exec_cmd('grim -g "$(slurp)" - | swappy -f -'))
 
 -- windows like binding for toggling hdr on / off
 hl.bind(mainMod .. " + ALT + b", hl.dsp.exec_cmd("~/.local/bin/hypr/toggle_hdr.sh"))
@@ -117,6 +120,9 @@ hl.bind(mainMod .. "+ mouse_down",
 hl.bind(mainMod .. "+ mouse_up",
     onWorkspace(2, hl.dsp.layout("move +col")),
     { bypass_inhibit = true })
+
+hl.bind(mainMod .. "+ SHIFT + mouse:273", 
+    onWorkspace(2, hl.dsp.layout("move"), { mouse = true }))
 
 -- Move/resize windows with mainMod + LMB/RMB and dragging
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })
