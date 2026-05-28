@@ -3,6 +3,7 @@
 Dotfiles are managed GNU stow.  
 Clone this repository directory into $HOME  
 When you want to use an application configuration, simply:  
+
 ```sh
 $ cd $HOME/dotfiles
 $ stow $PROGRAM
@@ -34,4 +35,3 @@ therefore stow(1) will not work (as stow does not support hard links).
 ```sh
 $ ln $(pwd)/face_hard_link/.face "$HOME/.face"
 ```
-

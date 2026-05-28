@@ -1,2 +1,0 @@
-#!/bin/sh
-env -i -- $SHELL --login -c env | grep -vE '^(_|SHLVL|PWD|OLDPWD)='

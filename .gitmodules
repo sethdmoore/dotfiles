@@ -1,6 +1,0 @@
-[submodule ".resources/sourcerer"]
-	path = .resources/sourcerer
-	url = https://github.com/xero/sourcerer
-[submodule "plug.vim"]
-	path = vim/.vim/autoload/vim-plug
-	url = https://github.com/junegunn/vim-plug.git
