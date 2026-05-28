@@ -1,5 +1,15 @@
 -- See https://wiki.hypr.land/Configuring/Window-Rules/ for more
 -- See https://wiki.hypr.land/Configuring/Workspace-Rules/ for workspace rules
+
+-- disable VRR on apps that get flickery
+hl.window_rule({
+    name = "no-vrr",
+    match = {
+        tag = "novrr",
+    },
+    no_vrr = true,
+})
+
 hl.window_rule({
     name = "fullscreen-game-tags",
     match = {
@@ -7,40 +17,6 @@ hl.window_rule({
     },
     fullscreen = true,
     workspace = 5,
-})
-
--- tag system tools
--- match:title = negative:|^(?i)(.*(Launcher|NetEase Game Security).*)$
-hl.window_rule({
-    name = "tag-system-tools",
-    match = {
-        initial_class = "^com.nokyan.Resources$",
-    },
-    tag = "+system",
-})
-
--- tag steam games
-hl.window_rule({
-    name = "tag-steam-games",
-    match = {
-        initial_class = "^(steam_app_\\d+)|(cyberpunk2077.exe)$",
-        title = "negative:|^(?i)(.*(Launcher|NetEase Game Security).*)$",
-        tag = "negative:|novrr",
-    },
-    tag = "+game",
-    content = "game",
-    -- workspace = "5 silent",
-    workspace = "5",
-})
-
--- disable VRR on apps that get flickery
-
-hl.window_rule({
-    name = "no-vrr",
-    match = {
-        tag = "novrr",
-    },
-    no_vrr = true,
 })
 
 hl.window_rule({
@@ -52,24 +28,6 @@ hl.window_rule({
 })
 
 -- discord goes to SUPER + SHIFT ~
-hl.window_rule({
-    name = "discord-tagged",
-    match = {
-        class = "^discord$",
-        initial_title = "^Discord$",
-    },
-    tag = "+discord",
-})
-
-hl.window_rule({
-    name = "discord-updater-tagged",
-    match = {
-        class = "^discord$",
-        initial_title = "^Discord Updater$",
-    },
-    tag = "+discord",
-})
-
 hl.window_rule({
     name = "move-discord-windows-to-overlay",
     match = {

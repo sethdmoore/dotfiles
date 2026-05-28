@@ -2,12 +2,12 @@ local no_opacity = "1.0 override 1.0 override 1.0 override"
 
 -- class = initial_title
 local no_opacity_windows = {
-    firefox = "^(?i)Picture-in-Picture$",
-    zoom = "^(?i)meeting$",
+    ["firefox"] = "^(?i)Picture-in-Picture$",
+    ["zoom"] = "^(?i)meeting$",
+    ["org.kde.krita"] = "Krita",
 }
 
 for class, title in pairs(no_opacity_windows) do
-    hl.dsp.exec_cmd("notify-send " .. class .. " " .. title)
     hl.window_rule({
         name = "no-opacity-" .. class,
         match = {
@@ -19,9 +19,11 @@ for class, title in pairs(no_opacity_windows) do
 end
 
 -- hl.window_rule({
---     name = "nte-vrr-flicker",
+--     name = "no-opacity-krita",
 --     match = {
---         title = "^NTE.*$",
+--         class = "org.kde.krita",
+--         initial_title = "Krita",
 --     },
---     tag = "+novrr",
+--     opacity = no_opacity,
 -- })
+

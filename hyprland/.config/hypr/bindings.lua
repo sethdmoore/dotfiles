@@ -54,8 +54,8 @@ hl.bind(mainMod .. " + e", hl.dsp.exec_cmd(fileManager))
 
 hl.bind("SHIFT + CTRL + escape", hl.dsp.exec_cmd(taskManager))
 
--- bind = , f13, pass, class:^(electron)$  # Pass MOUSE5 to TeamSpeak3.
--- hl.bind("F13", hl.dsp.send_shortcut({ mods = "", key = "F13", window = "class:^(vesktop)$" }))  -- Send SUPER + F4 to OBS when SUPER + F10 is pressed.
+-- hl.bind("f13", pass, class:^(electron)$  --  Pass MOUSE5 to TeamSpeak3.
+hl.bind("f13", hl.dsp.send_shortcut({ mods = "", key = "F13", window = "class:vesktop" }))  -- Send SUPER + F4 to OBS when SUPER + F10 is pressed.
 -- bind = , j, sendshortcut, ,F13, class:^(electron)$  # Pass MOUSE5 to TeamSpeak3.
 
 -- lock / logout

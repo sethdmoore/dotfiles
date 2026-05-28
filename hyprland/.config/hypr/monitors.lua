@@ -2,7 +2,7 @@ function set_resolution(t)
     local t = t or {}
 
     -- state file for persisting session resolution changes
-    -- essentially don't change our resolution every time our colors change
+    -- essentially don't change our resolution every time our bg changes / hyprctl reload
     local path = os.getenv("XDG_RUNTIME_DIR") .. "/hypr/"
         .. os.getenv("HYPRLAND_INSTANCE_SIGNATURE") .. "/resolution_state"
 
@@ -30,13 +30,13 @@ function set_resolution(t)
     if depth == "hdr" then
         m.bitdepth = 10
         m.cm = "hdredid"
-        m.supports_hdr = 0
-        m.vrr = 3
+        m.supports_hdr = 1
+        m.vrr = 1
         m.supports_wide_color = 0
-        m.min_luminance = 0.002
+        m.min_luminance = 0
         m.max_luminance = 3000
         m.sdr_max_luminance = 300
-        m.sdr_min_luminance = 0.05
+        m.sdr_min_luminance = 0
         m.sdrbrightness = 1.5
         m.sdrsaturation = 1.0
     else

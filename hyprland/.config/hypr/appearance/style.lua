@@ -26,9 +26,9 @@ hl.config({
     },
 
     -- enabled due to 0.55+ not working with blur
-    render = {
-        use_shader_blur_blend = true,
-    },
+    -- render = {
+    --     use_shader_blur_blend = true,
+    -- },
 
     decoration = {
         rounding       = 10,
@@ -36,27 +36,31 @@ hl.config({
 
         -- Change transparency of focused and unfocused windows
         active_opacity   = 1.0,
-        inactive_opacity = 0.85,
+        inactive_opacity = 0.75,
 
         shadow = {
-            enabled      = true,
-            range        = 32,
-            render_power = 3,
-            color        = 0xee1a1a1a,
+            enabled      = false,
+            range        = 16,
+            render_power = 1,
+            color        = 0xff1a1a1a,
+        },
+
+        glow = {
+            enabled = true,
+            range = 100,
+            render_power = 10,
+            color = 0xcccc3322,
+            -- color_inactive = 0xff000000
         },
 
         blur = {
             enabled   = true,
-            size      = 4,
+            size      = 3,
             passes    = 3,
-            vibrancy  = 0.1696,
+            -- vibrancy  = 0.1696,
             special = false,
             --popups = true,
         },
-    },
-
-    animations = {
-        enabled = true,
     },
 })
 

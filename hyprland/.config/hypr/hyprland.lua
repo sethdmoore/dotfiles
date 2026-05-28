@@ -43,9 +43,10 @@ hl.gesture({
 
 require("workspaces")
 
+require("window_rules/add_tags")
 require("window_rules/launchers")
-require("window_rules/quirks")
 require("window_rules/rules")
+require("window_rules/quirks")
 
 -- For Noctalia Color templates
 require("noctalia")
