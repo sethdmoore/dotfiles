@@ -27,13 +27,6 @@ function site_fingerprint() {
         openssl x509 -fingerprint -noout -in /dev/stdin
 }
 
-function hyprfind() {
-  prefix="$1"
-  hyprctl clients -j \
-  | jq --arg p \
-    "$prefix" '.[] | select(.class? | strings | startswith($p))'
-}
-
 function gocoverage() {
     go test ./... \
         -coverprofile=coverage.out \
@@ -223,5 +216,16 @@ elif [ "$KERNEL" = "linux" ] || [ "$KERNEL" = "microsoft" ]; then
 
     function pacman-clean() {
         sudo pacman -Rsn $(pacman -Qdtq)
+    }
+
+    function hyprfind() {
+        prefix="$1"
+        hyprctl clients -j \
+            | jq --arg p \
+            "$prefix" '.[] | select(.class? | strings | startswith($p))'
+    }
+
+    function hyprconfig() {
+        nvim ~/.config/hypr/hyprland.lua -c 'cd %:h' -c 'Neotree show'
     }
 fi

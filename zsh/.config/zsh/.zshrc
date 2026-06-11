@@ -40,7 +40,7 @@ export TFENV_CONFIG_DIR
 
 bindkey -v
 bindkey '^R' history-incremental-search-backward
-bindkey -v '^?' backward-delete-char 
+bindkey -v '^?' backward-delete-char
 bindkey -M menuselect 'h' vi-backward-char
 bindkey -M menuselect 'k' vi-up-line-or-history
 bindkey -M menuselect 'l' vi-forward-char
@@ -91,6 +91,8 @@ determine_kernel() {
         KERNEL="$(uname -s \
                   | awk '{print tolower($0)}')"
     fi
+    echo $parsed_kernel
+    echo $KERNEL
     echo export KERNEL="${KERNEL}" > "${kernel}"
 }
 
@@ -309,17 +311,18 @@ main() {
     # involves icky eval
     set_ls_colors
 
-    # source our dots first
-    source_dot_files
-
     # create directories
     setup_workspace
 
     # write or read $LOCAL_ENV_DIR/kernel
+    # MUST run before source_dot_files: aliases reads $KERNEL at source time
     determine_kernel
 
     # write or read $LOCAL_ENV_DIR/arch
     determine_arch
+
+    # source our dots (now that $KERNEL/$CPU_ARCHITECTURE are set)
+    source_dot_files
 
     # tmux window pane PWD hack
     setup_precmd
