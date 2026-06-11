@@ -7,20 +7,20 @@ hl.config({
 
 hl.workspace_rule({
     workspace = 1,
-    layout = "master",
+    layout = "dwindle",
 })
 
 hl.workspace_rule({
     workspace = 2,
+    layout = "master",
+})
+
+hl.workspace_rule({
+    workspace = 3,
     layout_opts = { direction = "right" },
     layout = "scrolling",
 })
 
--- workspace 3 is dwindle
-hl.workspace_rule({
-    workspace = 3,
-    layout = "dwindle",
-})
 
 -- workspace 4 is floating
 -- hl.window_rule({

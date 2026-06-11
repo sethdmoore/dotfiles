@@ -31,13 +31,13 @@ function set_resolution(t)
         m.bitdepth = 10
         m.cm = "hdredid"
         m.supports_hdr = 1
-        m.vrr = 1
+        m.vrr = 0
         m.supports_wide_color = 0
         m.min_luminance = 0
         m.max_luminance = 3000
         m.sdr_max_luminance = 300
         m.sdr_min_luminance = 0
-        m.sdrbrightness = 1.5
+        m.sdrbrightness = 1.2
         m.sdrsaturation = 1.0
     else
         m.bitdepth = 8
@@ -55,7 +55,9 @@ function set_resolution(t)
     hl.monitor(m)
 end
 
-set_resolution()
+--set_resolution()
+-- set_resolution({resolution = '2560x1440@165', depth = "hdr"})
+set_resolution({resolution = '3840x2160@165', depth = "hdr"})
 
 hl.config({ render = {
     keep_unmodified_copy = 1,

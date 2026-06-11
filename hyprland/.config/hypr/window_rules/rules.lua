@@ -10,13 +10,26 @@ hl.window_rule({
     no_vrr = true,
 })
 
+-- move gamescope to 5
+hl.window_rule({
+    name = "gamescope-tagged",
+    match = {
+        initial_class = "^gamescope$",
+        tag = "negative:|novrr",
+    },
+    tag = "+game",
+    content = "game",
+    workspace = "5 silent",
+    -- workspace = "5",
+})
+
 hl.window_rule({
     name = "fullscreen-game-tags",
     match = {
         tag = "game",
     },
     fullscreen = true,
-    workspace = 5,
+    workspace = "5 silent",
 })
 
 hl.window_rule({
@@ -27,14 +40,28 @@ hl.window_rule({
     float = true,
 })
 
--- discord goes to SUPER + SHIFT ~
+-- steam/discord goes to SUPER + SHIFT ~
 hl.window_rule({
-    name = "move-discord-windows-to-overlay",
+    name = "move-tagged-windows-to-overlay",
     match = {
-        tag = "discord",
+        tag = "overlay",
     },
     no_initial_focus = true,
-    workspace = "special:discord silent",
+    workspace = "special:overlay silent",
+})
+
+-- hack for steam popups / context menus
+-- appearing in the workspace underneath
+hl.window_rule({
+    name = "steam-context-menus",
+    match = {
+        class = "^steam$",
+        title = "^$",
+    },
+    -- no_initial_focus = true,
+    pin = true,
+    -- float = true,
+    workspace = "special:overlay",
 })
 
 -- no_focus = true
@@ -82,3 +109,12 @@ hl.window_rule({
     float = true,
 })
 
+hl.window_rule({
+    -- Ignore maximize requests from all apps. You'll probably like this.
+    name  = "suppress-maximize-events",
+    match = { class = ".*" },
+
+    suppress_event = "maximize",
+})
+
+-- suppressMaximizeRule:set_enabled(true)

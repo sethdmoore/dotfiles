@@ -19,15 +19,3 @@ hl.window_rule({
     float = true,
     center = true,
 })
-
-hl.window_rule({
-    name = "untag-installer",
-    match = {
-        initial_class = "^(?i).*(steam_app_0|install).*$",
-    },
-    suppress_event = "fullscreen maximize fullscreenoutput",
-    keep_aspect_ratio = true,
-    size = {1920, 1080},
-    float = true,
-})
-

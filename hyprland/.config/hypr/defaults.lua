@@ -1,6 +1,7 @@
 terminal = 'alacritty'
 fileManager = 'thunar'
 browser = 'firefox'
+new_browser = 'flatpak run app.zen_browser.zen'
 menu = 'hyprlauncher'
 notify = 'swaync'
 bar = 'waybar'

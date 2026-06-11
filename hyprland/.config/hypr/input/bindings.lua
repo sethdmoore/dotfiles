@@ -20,12 +20,20 @@ hl.config({
     },
 })
 
--- helper function for per-workspace bindings 
--- EG: hl.bind(..., onWorkspace(2, hl.dsp.layout("move +col")))
-local function onWorkspace(id, action)
-    return function()
-        local ws = hl.get_active_workspace()
-        if ws and ws.id == id then hl.dispatch(action) end
+local function layout_bind(bind_table)
+    return function ()
+        local workspace = hl.get_active_special_workspace() or
+                          hl.get_active_workspace()
+
+        if not workspace then
+            return
+        end
+
+        local layout = workspace.tiled_layout
+                
+        if bind_table[layout] then
+            hl.dispatch(bind_table[layout])
+        end
     end
 end
 
@@ -49,6 +57,7 @@ hl.config({ binds = {
 hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + t", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + f", hl.dsp.exec_cmd(browser))
+hl.bind(mainMod .. " + z", hl.dsp.exec_cmd(new_browser))
 hl.bind(mainMod .. " + SHIFT + f", hl.dsp.exec_cmd(browser .." --private-window"))
 hl.bind(mainMod .. " + e", hl.dsp.exec_cmd(fileManager))
 
@@ -79,13 +88,13 @@ for key, dir in pairs(dirs) do
     hl.bind(mainMod .. " + " .. dir,  hl.dsp.focus({ direction = dir }))
 
     -- arrow swap window
-    hl.bind(mainMod .. " + CTRL + " .. key, hl.dsp.window.swap({direction = dir}))
+    hl.bind(mainMod .. " + CTRL + " .. dir, hl.dsp.window.swap({direction = dir}))
 
 end
 
 -- Switch workspaces with mainMod + [0-9]
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
-for i = 1, 10 do
+for i = 1, 6 do
     local key = i % 10 -- 10 maps to key 0
     hl.bind(mainMod .. " + " .. key,         hl.dsp.focus({ workspace = i}))
     hl.bind(mainMod .. " + SHIFT + " .. key, hl.dsp.window.move({ workspace = i, follow = false }))
@@ -104,25 +113,23 @@ hl.bind(mainMod .. " + ALT + b", hl.dsp.exec_cmd("~/.local/bin/hypr/toggle_hdr.s
 
 -- discord "overlay"
 -- bind = $mainMod SHIFT, grave, togglespecialworkspace, discord
-hl.bind(mainMod .. " + grave", hl.dsp.workspace.toggle_special("discord"))
+hl.bind(mainMod .. " + grave", hl.dsp.workspace.toggle_special("overlay"))
+hl.bind(mainMod .. " + 0", hl.dsp.workspace.toggle_special("overlay"))
 hl.bind(mainMod .. " + SHIFT + grave",
-        hl.dsp.window.move({ workspace = "special:discord", follow = false }))
+        hl.dsp.window.move({ workspace = "special:overlay", follow = false }))
 
 -- Scroll through existing workspaces with mainMod SHIFT + scroll
 hl.bind(mainMod .. " + SHIFT + mouse_down", hl.dsp.focus({ workspace = "e-1" }))
 hl.bind(mainMod .. " + SHIFT + mouse_up", hl.dsp.focus({ workspace = "e+1" }))
 
 -- layout #2 / scrolling
-hl.bind(mainMod .. "+ mouse_down",
-    onWorkspace(2, hl.dsp.layout("move -col")),
-    { bypass_inhibit = true })
+hl.bind(mainMod .. "+ mouse_down", layout_bind({
+    scrolling = hl.dsp.layout("move +col"),
+}), { bypass_inhibit = true })
 
-hl.bind(mainMod .. "+ mouse_up",
-    onWorkspace(2, hl.dsp.layout("move +col")),
-    { bypass_inhibit = true })
-
-hl.bind(mainMod .. "+ SHIFT + mouse:273", 
-    onWorkspace(2, hl.dsp.layout("move"), { mouse = true }))
+hl.bind(mainMod .. "+ mouse_up", layout_bind({
+    scrolling = hl.dsp.layout("move -col"),
+}), { bypass_inhibit = true })
 
 -- Move/resize windows with mainMod + LMB/RMB and dragging
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { mouse = true })

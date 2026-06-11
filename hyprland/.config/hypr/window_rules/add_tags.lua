@@ -26,21 +26,37 @@ hl.window_rule({
     },
     tag = "+game",
     content = "game",
-    -- workspace = "5 silent",
-    -- workspace = "5",
 })
 
 -- tag gamescope
 hl.window_rule({
-    name = "tag-gamescope",
+    name = "gamescope-tagged",
     match = {
         initial_class = "^gamescope$",
         tag = "negative:|novrr",
     },
     tag = "+game",
     content = "game",
-    -- workspace = "5 silent",
-    -- workspace = "5",
+})
+
+-- tag steam
+hl.window_rule({
+    name = "steam-tag",
+    match = {
+        initial_class = "^steam$",
+    },
+    tag = "+overlay",
+})
+
+-- tag steam updater
+hl.window_rule({
+    name = "steam-updater-tag",
+    match = {
+        initial_title = "^Steam$",
+        title = "^Steam$",
+        initial_class = "",
+    },
+    tag = "+overlay",
 })
 
 hl.window_rule({
@@ -49,7 +65,7 @@ hl.window_rule({
         class = "^discord$",
         initial_title = "^Discord$",
     },
-    tag = "+discord",
+    tag = "+overlay",
 })
 
 hl.window_rule({
@@ -58,5 +74,5 @@ hl.window_rule({
         class = "^discord$",
         initial_title = "^Discord Updater$",
     },
-    tag = "+discord",
+    tag = "+overlay",
 })
