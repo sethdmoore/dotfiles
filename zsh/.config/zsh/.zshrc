@@ -91,8 +91,6 @@ determine_kernel() {
         KERNEL="$(uname -s \
                   | awk '{print tolower($0)}')"
     fi
-    echo $parsed_kernel
-    echo $KERNEL
     echo export KERNEL="${KERNEL}" > "${kernel}"
 }
 
