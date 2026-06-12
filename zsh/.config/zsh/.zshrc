@@ -96,13 +96,12 @@ determine_kernel() {
 
 determine_arch() {
     local arch="${HOME}/.config/local_environment/arch"
-    if [ -e "$arch" ]; then
-        . "$arch"
-        return
+    if ! [ -e "$arch" ]; then
+        # this appears to be portable
+        echo "CPU_ARCHITECTURE=$(uname -m)" > "$arch"
     fi
 
-    # this appears to be portable
-    echo "CPU_ARCHITECTURE=$(uname -m)" > "$arch"
+    . "$arch"
 }
 
 append_path() {
