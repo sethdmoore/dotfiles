@@ -58,6 +58,7 @@ end
 --set_resolution()
 -- set_resolution({resolution = '2560x1440@165', depth = "hdr"})
 set_resolution({resolution = '3840x2160@165', depth = "hdr"})
+-- set_resolution({resolution = '3840x2160@165', depth = "foo"})
 
 hl.config({ render = {
     keep_unmodified_copy = 1,

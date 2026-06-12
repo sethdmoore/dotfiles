@@ -30,7 +30,7 @@ hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
 
 
-hl.env("BROWSER", "firefox")
+hl.env("BROWSER", browser_env_var)
 hl.env("GNUPGHOME", os.getenv("XDG_DATA_HOME") .. "/gnupg")
 hl.env("PASSWORD_STORE_DIR", os.getenv("XDG_DATA_HOME") .. "/pass")
 

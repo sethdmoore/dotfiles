@@ -3,10 +3,10 @@
 require("appearance/style")
 require("appearance/animations")
 
-require("environment")
-require("defaults")
-require("monitors")
-require("autostart")
+require("init/defaults")
+require("init/environment")
+require("init/monitors")
+require("init/autostart")
 
 require("input/keyboard")
 require("input/bindings")

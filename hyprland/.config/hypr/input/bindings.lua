@@ -56,9 +56,9 @@ hl.config({ binds = {
 -- launcher shortcuts
 hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + t", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + f", hl.dsp.exec_cmd(browser))
-hl.bind(mainMod .. " + z", hl.dsp.exec_cmd(new_browser))
-hl.bind(mainMod .. " + SHIFT + f", hl.dsp.exec_cmd(browser .." --private-window"))
+hl.bind(mainMod .. " + f", hl.dsp.exec_cmd(browser_binding))
+hl.bind(mainMod .. " + z", hl.dsp.exec_cmd(browser_binding))
+hl.bind(mainMod .. " + SHIFT + f", hl.dsp.exec_cmd(browser_binding .." --private-window"))
 hl.bind(mainMod .. " + e", hl.dsp.exec_cmd(fileManager))
 
 hl.bind("SHIFT + CTRL + escape", hl.dsp.exec_cmd(taskManager))
@@ -66,6 +66,9 @@ hl.bind("SHIFT + CTRL + escape", hl.dsp.exec_cmd(taskManager))
 -- hl.bind("f13", pass, class:^(electron)$  --  Pass MOUSE5 to TeamSpeak3.
 hl.bind("f13", hl.dsp.send_shortcut({ mods = "", key = "F13", window = "class:vesktop" }))  -- Send SUPER + F4 to OBS when SUPER + F10 is pressed.
 -- bind = , j, sendshortcut, ,F13, class:^(electron)$  # Pass MOUSE5 to TeamSpeak3.
+
+-- toggle unfocused opacity
+hl.bind(mainMod .. " + a", hl.dsp.window.tag({tag = "no_opacity"}))
 
 -- lock / logout
 hl.bind(mainMod .. " + SHIFT + q", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { long_press = true })
@@ -104,9 +107,9 @@ end
 -- bind = $mainMod, S, togglespecialworkspace, magic
 
 -- super-shift-s, like windows snipping tool
--- hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("grim -g \"$(slurp -d)\" - | wl-copy"))
 
 hl.bind("Print", hl.dsp.exec_cmd('grim -g "$(slurp)" - | swappy -f -'))
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd('grim -g "$(slurp -d)" - | wl-copy'))
 
 -- windows like binding for toggling hdr on / off
 hl.bind(mainMod .. " + ALT + b", hl.dsp.exec_cmd("~/.local/bin/hypr/toggle_hdr.sh"))
