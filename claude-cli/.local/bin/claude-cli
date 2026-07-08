@@ -1,0 +1,12 @@
+#!/bin/sh
+
+export CLAUDE_CLI_MOUNTS
+
+set_claude_mounts() {
+  mount_gh="type=bind,src=${HOME}/.config/gh,dst=/home/claude/.config/gh,ro"
+  mount_gitconfig="type=bind,src=${HOME}/.config/git,dst=/home/claude/.config/git,ro"
+  CLAUDE_CLI_MOUNTS="$mount_gh:$mount_gitconfig"
+}
+
+set_claude_mounts
+"$HOME/dev/git/claude-cli/claude-cli.sh" $@
