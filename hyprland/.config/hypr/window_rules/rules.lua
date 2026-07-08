@@ -10,6 +10,17 @@ hl.window_rule({
     no_vrr = true,
 })
 
+-- move games to 5
+hl.window_rule({
+    name = "steam-games",
+    match = {
+        tag = "game",
+    },
+    -- fullscreen = true,
+    content = "game",
+    workspace = "5 silent",
+})
+
 -- move gamescope to 5
 hl.window_rule({
     name = "gamescope-tagged",
@@ -21,15 +32,6 @@ hl.window_rule({
     content = "game",
     workspace = "5 silent",
     -- workspace = "5",
-})
-
-hl.window_rule({
-    name = "fullscreen-game-tags",
-    match = {
-        tag = "game",
-    },
-    fullscreen = true,
-    workspace = "5 silent",
 })
 
 hl.window_rule({

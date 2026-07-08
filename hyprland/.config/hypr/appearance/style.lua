@@ -1,10 +1,17 @@
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 -- https://wiki.hypr.land/Configuring/Variables/#decoration
+function get_gaps_out()
+    return 20
+end
+
+function get_gaps_in()
+    return 15
+end
 
 hl.config({
     general = {
-        gaps_in  = 15,
-        gaps_out = 20,
+        gaps_in  = get_gaps_in(),
+        gaps_out = get_gaps_out(),
 
         border_size = 2,
 
@@ -31,31 +38,31 @@ hl.config({
     -- },
 
     decoration = {
-        rounding       = 10,
+        rounding       = 18,
         rounding_power = 2,
 
         -- Change transparency of focused and unfocused windows
-        active_opacity   = 1.0,
-        inactive_opacity = 0.75,
+        active_opacity   = active_opacity,
+        inactive_opacity = inactive_opacity,
 
         shadow = {
             enabled      = false,
-            range        = 16,
-            render_power = 1,
+            range        = 32,
+            render_power = 3,
             color        = 0xff1a1a1a,
         },
 
         glow = {
-            enabled = true,
-            range = 100,
-            render_power = 10,
+            enabled = false,
+            range = 30,
+            render_power = 5,
             color = 0xcccc3322,
-            -- color_inactive = 0xff000000
+            color_inactive = 0xffffffff
         },
 
         blur = {
-            enabled   = true,
-            size      = 3,
+            enabled   = high_quality,
+            size      = 5,
             passes    = 3,
             -- vibrancy  = 0.1696,
             special = false,
@@ -65,7 +72,7 @@ hl.config({
 })
 
 hl.layer_rule({
-    blur = true,
+    blur = high_quality,
     match = { namespace = '(?i)^noctalia-(notification|dock|bar|panel).*' },
     ignore_alpha = 0.5,
 })

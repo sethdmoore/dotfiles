@@ -21,8 +21,8 @@ hl.window_rule({
     name = "tag-steam-games",
     match = {
         initial_class = "^(steam_app_\\d+)|(cyberpunk2077.exe)$",
-        title = "negative:|^(?i)(.*(Launcher|NetEase Game Security).*)$",
-        tag = "negative:|novrr",
+        -- title = "negative:|^(?i)(.*(Launcher|NetEase Game Security).*)$",
+        -- tag = "negative:|novrr",
     },
     tag = "+game",
     content = "game",

@@ -1,5 +1,5 @@
 hl.config({ animations = {
-    enabled = true,
+    enabled = high_quality,
 }})
 
 -- Default curves and animations, see https://wiki.hypr.land/Configuring/Advanced-and-Cool/Animations/

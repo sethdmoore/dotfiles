@@ -1,5 +1,11 @@
+high_quality = true
+
+active_opacity = 1.0
+inactive_opacity = 0.75
+
 terminal = 'alacritty'
 fileManager = 'thunar'
+
 -- browser = 'firefox'
 browser_env_var = '/var/lib/flatpak/exports/share/applications/app.zen_browser.zen.desktop'
 browser_binding = 'flatpak run app.zen_browser.zen'

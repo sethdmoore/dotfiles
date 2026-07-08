@@ -37,6 +37,11 @@ local function layout_bind(bind_table)
     end
 end
 
+hl.bind(mainMod .. " + f10", function() 
+    high_quality = not high_quality
+    hl.exec_cmd('notify-send ' .. tostring(high_quality) )
+    hl.exec_cmd('notify-send ' .. tostring(hl.config) )
+end)
 
 -- close app
 -- hl.bind(mainMod .. " + q", hl.dsp.window.close(), { release = true })
@@ -68,7 +73,7 @@ hl.bind("f13", hl.dsp.send_shortcut({ mods = "", key = "F13", window = "class:ve
 -- bind = , j, sendshortcut, ,F13, class:^(electron)$  # Pass MOUSE5 to TeamSpeak3.
 
 -- toggle unfocused opacity
-hl.bind(mainMod .. " + a", hl.dsp.window.tag({tag = "no_opacity"}))
+hl.bind(mainMod .. " + period", hl.dsp.window.tag({tag = "no_opacity"}))
 
 -- lock / logout
 hl.bind(mainMod .. " + SHIFT + q", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { long_press = true })
@@ -120,6 +125,11 @@ hl.bind(mainMod .. " + grave", hl.dsp.workspace.toggle_special("overlay"))
 hl.bind(mainMod .. " + 0", hl.dsp.workspace.toggle_special("overlay"))
 hl.bind(mainMod .. " + SHIFT + grave",
         hl.dsp.window.move({ workspace = "special:overlay", follow = false }))
+
+hl.bind(mainMod .. " + a", hl.dsp.workspace.toggle_special("scratch"))
+
+hl.bind(mainMod .. " + SHIFT + a",
+        hl.dsp.window.move({ workspace = "special:scratch", follow = false }))
 
 -- Scroll through existing workspaces with mainMod SHIFT + scroll
 hl.bind(mainMod .. " + SHIFT + mouse_down", hl.dsp.focus({ workspace = "e-1" }))

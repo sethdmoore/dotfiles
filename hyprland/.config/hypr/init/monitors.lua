@@ -35,10 +35,13 @@ function set_resolution(t)
         m.supports_wide_color = 0
         m.min_luminance = 0
         m.max_luminance = 3000
-        m.sdr_max_luminance = 300
         m.sdr_min_luminance = 0
-        m.sdrbrightness = 1.2
+        m.sdr_max_luminance = 300
         m.sdrsaturation = 1.0
+        m.sdrbrightness = 1.2
+        -- m.sdr_max_luminance = 3000
+        -- m.sdrbrightness = 1.0
+        -- m.sdrsaturation = 0.85
     else
         m.bitdepth = 8
         m.cm = "auto"
@@ -56,9 +59,8 @@ function set_resolution(t)
 end
 
 --set_resolution()
--- set_resolution({resolution = '2560x1440@165', depth = "hdr"})
+-- set_resolution({resolution = '2560x1440@120', depth = "hdr"})
 set_resolution({resolution = '3840x2160@165', depth = "hdr"})
--- set_resolution({resolution = '3840x2160@165', depth = "foo"})
 
 hl.config({ render = {
     keep_unmodified_copy = 1,
