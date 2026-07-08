@@ -79,7 +79,9 @@ function nvm() {
     fi
 
     # Macports
-    if [ -d "$MACPORTS_HOME" ]; then
+    if [ -e "/opt/homebrew/opt/nvm/" ]; then
+        nvm_source_dir="/opt/homebrew/opt/nvm/"
+    elif [ -d "$MACPORTS_HOME" ]; then
         if [ -d "${MACPORTS_HOME}/share/nvm"  ]; then
             nvm_source_dir="${MACPORTS_HOME}/share/nvm"
         else
@@ -87,7 +89,7 @@ function nvm() {
            echo "  port install nvm"
            return
        fi
-    # Arch
+    # A ch
     elif [ "$KERNEL" = "linux" ]; then
         if [ -d "/usr/share/nvm" ]; then
             nvm_source_dir="/usr/share/nvm"

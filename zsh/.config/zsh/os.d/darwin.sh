@@ -77,10 +77,25 @@ check_osx_version_string() {
     fi
 }
 
+setup_gcloud() {
+    local sdk_bin_dir="/opt/homebrew/share/google-cloud-sdk/bin"
+    if [ -d "${sdk_bin_dir}" ]; then
+        append_path "${sdk_bin_dir}"
+    fi
+}
+
 
 osxmain() {
     check_osx_version_string
     setup_pip_bins_osx
+    # brew install lima colima docker
+    # softwareupdate --install-rosetta --agree-to-license
+    # colima start --vm-type vz --vz-rosetta --mount-type virtiofs --cpu 4 --memory 8 --disk 60
+    # export DOCKER_DEFAULT_PLATFORM=linux/amd64
+    # # validate
+    # colima status
+    # docker run --rm archlinux:latest uname -m   # → x86_64
+    export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
     # we moved MACPORTS_HOME to "${XDG_STATE_HOME}/macports"
     if [ -n "$MACPORTS_HOME" ] && [ -d "$MACPORTS_HOME" ]; then
@@ -97,6 +112,8 @@ osxmain() {
     fi
 
     osx_ssh_agent
+
+    setup_gcloud
 
     # for terraform + tfenv
     if [ "$CPU_ARCHITECTURE" = "arm64" ]; then
