@@ -1,6 +1,7 @@
 #!/bin/sh
 
 export CLAUDE_CLI_MOUNTS
+export CLAUDE_CLI_FLAGS="--dangerously-skip-permissions"
 
 set_claude_mounts() {
   mount_gh="type=bind,src=${HOME}/.config/gh,dst=/home/claude/.config/gh,ro"
