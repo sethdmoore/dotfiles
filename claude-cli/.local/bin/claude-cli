@@ -1,14 +1,48 @@
 #!/bin/sh
 
 export CLAUDE_CLI_MOUNTS
-export CLAUDE_CLI_FLAGS="--dangerously-skip-permissions"
 
-set_claude_mounts() {
-  mount_gh="type=bind,src=${HOME}/.config/gh,dst=/home/claude/.config/gh,ro"
-  # mount_gitconfig="type=bind,src=${HOME}/.config/git,dst=/home/claude/.config/git,ro"
-  # CLAUDE_CLI_MOUNTS="$mount_gh:$mount_gitconfig"
-  CLAUDE_CLI_MOUNTS="$mount_gh"
+# ${parameter-word}
+#   defined but null == null
+#   unset == --dangerously-skip-permissions
+#   foo---bar: foo becomes --bar if foo unset. null if foo is null
+export CLAUDE_CLI_FLAGS="${CLAUDE_CLI_FLAGS---dangerously-skip-permissions}"
+export LOGSEQ_API_TOKEN
+
+append_mounts() {
+  mount="$1"
+
+  if [ -n "${mount}" ]; then
+    # if this is the first call, set CLAUDE_CLI_MOUNTS
+    if [ -z "${CLAUDE_CLI_MOUNTS}" ]; then
+      CLAUDE_CLI_MOUNTS="${mount}"
+    else
+      CLAUDE_CLI_MOUNTS="${CLAUDE_CLI_MOUNTS}:${mount}"
+    fi
+  else
+    echo "mount is unset, internal error ${mount}" 2>&1
+  fi
 }
 
+set_claude_mounts() {
+  # source this file if it exists
+  secret_file="${HOME}/.local/state/secrets"
+
+  if [ -f "${secret_file}" ]; then
+    source "${secret_file}"
+  fi
+
+  # Example config: 
+  #   define additional paths to mount here
+  #
+  # pfx="type=bind,src="
+  # mount_github="${pfx}${HOME}/.config/gh_claude,dst=/home/claude/.config/gh"
+  #
+  # append_mounts "$mount_github"
+}
+
+
 set_claude_mounts
+echo $CLAUDE_CLI_MOUNTS
+exit 0
 "$HOME/dev/git/claude-cli/claude-cli.sh" $@

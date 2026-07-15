@@ -1,23 +1,21 @@
 general.import = [
-  "~/.config/alacritty/option_as_alt.toml",
-  "~/.config/alacritty/themes/noctalia.toml"
+  "~/.config/alacritty/themes/noctalia.toml",
+  "~/.config/alacritty/appearance.toml",
+  "~/.config/alacritty/osx.toml"
 ]
 
-[window]
-opacity = 0.5
-
-[font.normal]
-family = "Hack Nerd Font Mono"
-style = "Regular"
-
-[font.bold]
-family = "Hack Nerd Font Mono"
-style = "Bold"
-
-[font.bold_italic]
-family = "Hack Nerd Font Mono"
-style = "Bold Italic"
-
-[font.italic]
-family = "Hack Nerd Font Mono"
-style = "Italic"
+font = {
+  normal = {
+    family = "Hack Nerd Font Mono",
+    style = "Regular",
+  },
+  bold = {
+    style = "Bold"
+  },
+  bold_italic = {
+    style = "Bold Italic"
+  },
+  italic = {
+    style = "Italic"
+  }
+}

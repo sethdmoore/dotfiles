@@ -3,4 +3,5 @@
 # skhd --install-service
 # skhd --start-service
 # ctrl + `  - use skhd --observe to get keycaps
+# ctrl - 0x32 : open /Applications/Ghostty.app
 ctrl - 0x32 : open /Applications/Alacritty.app

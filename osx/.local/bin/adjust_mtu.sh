@@ -18,6 +18,7 @@ get_interface() {
 
 check_interface() {
   interface="$1"
+  return
 
   if ! echo "$interface" | grep -q "$VPN_DEV_PREFIX"; then
     echo "Want: interface='${VPN_DEV_PREFIX}#'"
