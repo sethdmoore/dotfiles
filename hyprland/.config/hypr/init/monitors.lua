@@ -64,9 +64,12 @@ set_resolution({resolution = '3840x2160@165', depth = "hdr"})
 
 hl.config({ render = {
     keep_unmodified_copy = 1,
-    direct_scanout = 2,
-      -- 2 - low latency with content type 'game'
-      -- 1 - on if fullscreen
+    -- on 595.43, there's graphical corruption with direct_scanout = 2
+    -- combination of factors: gamescope, reverse tonemapping (fine),
+    --   but issuingsuper+enter, fullscreen / no fullscreen causes graphical glitches
+    -- direct_scanout = 2,
+    -- 2 - low latency with content type 'game'
+    -- 1 - on if fullscreen
     send_content_type = true,
     cm_sdr_eotf = "srgb",
     non_shader_cm = 0,
