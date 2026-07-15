@@ -43,6 +43,4 @@ set_claude_mounts() {
 
 
 set_claude_mounts
-echo $CLAUDE_CLI_MOUNTS
-exit 0
 "$HOME/dev/git/claude-cli/claude-cli.sh" $@
