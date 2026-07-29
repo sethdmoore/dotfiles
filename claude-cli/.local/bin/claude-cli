@@ -8,6 +8,7 @@ export CLAUDE_CLI_MOUNTS
 #   foo---bar: foo becomes --bar if foo unset. null if foo is null
 export CLAUDE_CLI_FLAGS="${CLAUDE_CLI_FLAGS---dangerously-skip-permissions}"
 export LOGSEQ_API_TOKEN
+export CLAUDE_CLI_PULL='1'
 
 append_mounts() {
   mount="$1"
@@ -35,10 +36,9 @@ set_claude_mounts() {
   # Example config: 
   #   define additional paths to mount here
   #
-  # pfx="type=bind,src="
-  # mount_github="${pfx}${HOME}/.config/gh_claude,dst=/home/claude/.config/gh"
-  #
-  # append_mounts "$mount_github"
+  pfx="type=bind,src="
+  mount_skills="${pfx}${HOME}/dotfiles/claude/.config/claude/skills,dst=/home/claude/.claude/skills"
+  append_mounts "$mount_skills"
 }
 
 
