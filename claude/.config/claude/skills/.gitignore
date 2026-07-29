@@ -1,0 +1,20 @@
+# ASD-STE100 Issue 9 is copyrighted by ASD, Brussels. ASD gives a free copy on
+# request, but it does not permit redistribution. Do not commit the source PDF,
+# the text that pdftotext makes from it, or the word index built from that text.
+#
+# To rebuild these files on a new device:
+#   1. Request a free copy at https://www.asd-ste100.org/STE_downloads.html
+#   2. Put the PDF in ste/references/ASD-STE100_ISSUE9.pdf
+#   3. Run: python3 ste/scripts/build-references.py
+#
+# See ste/references/README.md.
+
+# The source and everything derived from its full text.
+ASD-STE100*.pdf
+ASD-STE100*.txt
+**/references/word-index.tsv
+**/references/rules.md
+
+# Keep the manifest and the README. They contain no text of the standard.
+!**/references/MANIFEST.sha256
+!**/references/README.md
