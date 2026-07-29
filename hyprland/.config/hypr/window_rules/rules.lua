@@ -111,7 +111,7 @@ hl.window_rule({
     float = true,
 })
 
-hl.window_rule({
+local suppressMaximizeRule = hl.window_rule({
     -- Ignore maximize requests from all apps. You'll probably like this.
     name  = "suppress-maximize-events",
     match = { class = ".*" },
@@ -119,4 +119,4 @@ hl.window_rule({
     suppress_event = "maximize",
 })
 
--- suppressMaximizeRule:set_enabled(true)
+suppressMaximizeRule:set_enabled(false)

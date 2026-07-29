@@ -30,8 +30,10 @@ function set_resolution(t)
     if depth == "hdr" then
         m.bitdepth = 10
         m.cm = "hdredid"
-        m.supports_hdr = 1
+
+        -- 0: off, 1: on, 2: fullscreen only, 3: video/game content fullscreen
         m.vrr = 0
+        m.supports_hdr = 0
         m.supports_wide_color = 0
         m.min_luminance = 0
         m.max_luminance = 3000
@@ -58,19 +60,47 @@ function set_resolution(t)
     hl.monitor(m)
 end
 
---set_resolution()
+set_resolution()
 -- set_resolution({resolution = '2560x1440@120', depth = "hdr"})
-set_resolution({resolution = '3840x2160@165', depth = "hdr"})
+-- set_resolution({resolution = default_resolution, depth = "hdr"})
 
 hl.config({ render = {
-    keep_unmodified_copy = 1,
+    -- 0 - disabled
+    -- 1 - on
+    -- 2 - auto (enabled in HDR with SDR modifiers). Set to 1 if screenshots are transparent. (default)
+    keep_unmodified_copy = 0,
     -- on 595.43, there's graphical corruption with direct_scanout = 2
     -- combination of factors: gamescope, reverse tonemapping (fine),
-    --   but issuingsuper+enter, fullscreen / no fullscreen causes graphical glitches
-    -- direct_scanout = 2,
+    --   but issuing super+enter, fullscreen / no fullscreen causes graphical glitches
+    --   rubinite: black screen on fullscreen (alt+enter / super enter / settings)
+    --   wayfinder: black screen on fullscreen (alt+enter / super enter / settings)
+    --  0 disabled / 1 on / 2 auto (content type game)
+    direct_scanout = 0,
+
     -- 2 - low latency with content type 'game'
     -- 1 - on if fullscreen
     send_content_type = true,
+
+    -- Default transfer function for displaying SDR apps
+    -- "default" - Use default value (sRGB)
+    -- "gamma22" - Treat unspecified as Gamma 2.2
+    -- "gamma22force" - Treat unspecified and sRGB as Gamma 2.2
+    -- "srgb" - Treat unspecified as sRGB
     cm_sdr_eotf = "srgb",
-    non_shader_cm = 0,
+
+    -- Enable CM without shader
+    -- 0 - disable
+    -- 1 whenever possible,
+    -- 2 - DS and passthrough only
+    -- 3 - disable and ignore CM issues (default)
+    non_shader_cm = 3,
+
+    -- Auto-switch to HDR in fullscreen when needed.
+    -- 0 - off
+    -- 1 - switch to cm hdr (default)
+    -- 2 - switch to cm, hdredid
+    -- Currently borked, causes games to flip the monitor to SDR
+    --   fullscreen becomes a black screen momentarily
+    --   really annoying, leave off
+     cm_auto_hdr = 0
 }})
