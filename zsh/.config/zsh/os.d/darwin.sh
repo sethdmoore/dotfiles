@@ -9,8 +9,36 @@ osx_ssh_agent() {
     fi
 }
 
-setup_local_macports() {
+setup_homebrew() {
+    # \time test -e '/opt/homebrew' is faster than command -v
+    # and caches better
+    if ! [ -e "/opt/homebrew" ]; then
+        return
+    fi
+
+    fzf_zsh_bindings="/opt/homebrew/opt/fzf/shell/key-bindings.zsh"
+    fzf_zsh_completion="/opt/homebrew/opt/fzf/shell/completion.zsh"
+}
+
+# probably remove this
+setup_macports() {
+    if [ -z "$MACPORTS_HOME" ]; then
+        return
+    fi
+
     local macports_man_path="${MACPORTS_HOME}/share/man"
+
+    if [ -n "$MACPORTS_HOME" ] && [ -d "$MACPORTS_HOME" ]; then
+        if [ -d "/opt/local/bin" ] || [ -d "/opt/local/sbin" ]; then
+          append_path "/opt/local/sbin" "prepend"
+          append_path "/opt/local/bin" "prepend"
+        fi
+
+        if [ -d "/opt/local/share/fzf/shell" ]; then
+            fzf_zsh_bindings="/opt/local/share/fzf/shell/key-bindings.zsh"
+            fzf_zsh_completion="/opt/local/share/fzf/shell/completion.zsh"
+        fi
+    fi
 
     # OSX /usr/local/bin/patch (conflicts with gnu patch)
     # sometimes takes precedence over /usr/bin/patch
@@ -97,18 +125,14 @@ osxmain() {
     # docker run --rm archlinux:latest uname -m   # → x86_64
     export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-    # we moved MACPORTS_HOME to "${XDG_STATE_HOME}/macports"
-    if [ -n "$MACPORTS_HOME" ] && [ -d "$MACPORTS_HOME" ]; then
-        setup_local_macports
-    # still support global installation
-    elif [ -d "/opt/local/bin" ] || [ -d "/opt/local/sbin" ]; then
-        append_path "/opt/local/sbin" "prepend"
-        append_path "/opt/local/bin" "prepend"
+    # Probably gonna get rid of this
+    setup_macports
 
-        if [ -d "/opt/local/share/fzf/shell" ]; then
-            fzf_zsh_bindings="/opt/local/share/fzf/shell/key-bindings.zsh"
-            fzf_zsh_completion="/opt/local/share/fzf/shell/completion.zsh"
-        fi
+    setup_homebrew
+
+    # 1password integration
+    if [ -f "${HOME}/.config/op/plugins.sh" ] ; then
+        source "${HOME}/.config/op/plugins.sh"
     fi
 
     osx_ssh_agent

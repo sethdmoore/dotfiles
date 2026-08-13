@@ -279,9 +279,17 @@ setup_os_specific_fixes() {
     local fzf_zsh_bindings
     local fzf_zsh_completion
     local os_fix_script
+
     os_fix_script="${ZDOTDIR}/os.d/${KERNEL}.sh"
 
-    . "$os_fix_script"
+    if [ -e "$os_fix_script" ]; then
+      . "$os_fix_script"
+    fi
+
+    if [ -n "$fzf_zsh_completion" ] && [ -n "$fzf_zsh_completion" ]; then
+        . $fzf_zsh_bindings
+        . $fzf_zsh_completion
+    fi
 }
 
 set_editor() {

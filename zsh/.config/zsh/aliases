@@ -27,6 +27,27 @@ function site_fingerprint() {
         openssl x509 -fingerprint -noout -in /dev/stdin
 }
 
+function secrets() {
+    length="${1:=10}"
+    if ! [ "${length}" -ge "2" ]; then
+        echo "WARN: arg1 / length must be an integer > 0" >&2
+        return
+    elif [ "${length}" -le "7" ]; then
+        echo "WARN: length should be  >= 8" >&2
+    fi
+
+    python3 - "$length" <<'EOF'
+import secrets
+import sys
+
+# - makes it to sys.argv :|
+length = int(sys.argv[-1])
+print(
+    secrets.token_urlsafe(length)
+)
+EOF
+}
+
 function gocoverage() {
     go test ./... \
         -coverprofile=coverage.out \
