@@ -63,6 +63,7 @@ end
 set_resolution()
 -- set_resolution({resolution = '2560x1440@120', depth = "hdr"})
 -- set_resolution({resolution = default_resolution, depth = "hdr"})
+--set_resolution({resolution = default_resolution, depth = "sdr"})
 
 hl.config({ render = {
     -- 0 - disabled
