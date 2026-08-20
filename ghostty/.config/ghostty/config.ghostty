@@ -1,0 +1,9 @@
+font-family = "Hack Nerd Font Mono"
+# custom-shader = ./shaders/cursor_warp.glsl
+cursor-color = "#AAAAFF"
+cursor-opacity = 0.9
+cursor-text = "#FFFFFF"
+cursor-style = "block"
+
+custom-shader = ./ghostty-cursor-shaders/cursor_warp.glsl
+# custom-shader-animation = true
