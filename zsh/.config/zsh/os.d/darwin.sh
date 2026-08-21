@@ -16,6 +16,8 @@ setup_homebrew() {
         return
     fi
 
+    append_path "${HOMEBREW_PREFIX}/bin" "prepend"
+
     fzf_zsh_bindings="/opt/homebrew/opt/fzf/shell/key-bindings.zsh"
     fzf_zsh_completion="/opt/homebrew/opt/fzf/shell/completion.zsh"
 }
@@ -63,7 +65,6 @@ setup_macports() {
         MANPATH="${MACPORTS_HOME}/share/man:${MANPATH}"
     fi
 }
-
 
 setup_pip_bins_osx() {
     if [ -n "$TMUX" ]; then
@@ -115,7 +116,11 @@ setup_gcloud() {
 
 osxmain() {
     check_osx_version_string
-    setup_pip_bins_osx
+
+    # setup_python
+
+    # setup_pip_bins_osx
+
     # brew install lima colima docker
     # softwareupdate --install-rosetta --agree-to-license
     # colima start --vm-type vz --vz-rosetta --mount-type virtiofs --cpu 4 --memory 8 --disk 60
@@ -123,7 +128,7 @@ osxmain() {
     # # validate
     # colima status
     # docker run --rm archlinux:latest uname -m   # → x86_64
-    export DOCKER_DEFAULT_PLATFORM=linux/amd64
+    # export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
     # Probably gonna get rid of this
     setup_macports

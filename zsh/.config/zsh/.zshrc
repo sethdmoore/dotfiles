@@ -16,12 +16,9 @@ zmodload zsh/complist
 
 export EDITOR
 
-export GOPATH="${HOME}/dev/go"
-export GOBIN="${HOME}/.local/bin"
-
-export HISTSIZE=1000
-export SAVEHIST=10000
-export HISTFILE=~/.zsh_history
+export HISTSIZE=3000
+export SAVEHIST=20000
+export HISTFILE
 export HISTIGNORESPACE=1
 export LOCAL_ENV_DIR="${HOME}/.config/local_environment"
 export KERNEL
@@ -206,6 +203,10 @@ setup_path_additions() {
     # python3 -m pip install --user <module>
     if [ -d "${HOME}/.local/bin" ]; then
         append_path "${HOME}/.local/bin" "prepend"
+    fi
+
+    if [ -d "${CARGO_HOME}/bin" ]; then
+        append_path "${CARGO_HOME}/bin" "prepend"
     fi
 }
 
