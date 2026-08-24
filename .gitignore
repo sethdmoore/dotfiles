@@ -1,4 +1,5 @@
 *.sw?
+*.zwc
 .DS_Store
 .netrwhist
 *.log
@@ -8,7 +9,6 @@ zsh/.config/zsh/.private_aliases
 zsh/.config/zsh/.private_environment
 zsh/.config/zsh/private_aliases
 zsh/.config/zsh/private_environment
-zsh/.config/zsh/.zshrc.zwc
 bookmarks
 gtk/.config/gtk-3.0/bookmarks
 nvim/.config/gocode
