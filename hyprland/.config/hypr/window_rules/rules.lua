@@ -119,4 +119,14 @@ local suppressMaximizeRule = hl.window_rule({
     suppress_event = "maximize",
 })
 
+hl.window_rule({
+    name = "confine-pointer",
+    match = {
+        content = "game",
+        fullscreen = true,
+    },
+
+    confine_pointer = true,
+})
+
 suppressMaximizeRule:set_enabled(false)
