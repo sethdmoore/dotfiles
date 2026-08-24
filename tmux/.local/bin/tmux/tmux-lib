@@ -3,12 +3,13 @@
 b="#[bold]"
 
 # anchor
-a="#[fg=blue]"
+a="#[fg=colour12]"
 
 # bell
 bl="#[fg=colour141]"
 
 # brigher anchor link
+# #00AFFF
 aa="#[fg=colour39]"
 
 # unused

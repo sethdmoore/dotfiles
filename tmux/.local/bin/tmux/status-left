@@ -10,5 +10,5 @@ user_section="${b}#{?client_prefix,${hl}${USER},${USER}}${d}"
 session_section="${a}#{session_name}${d}"
 
 # et-option -ag status-right '#{?pane_synchronized, #[bg=blue]SYNC!!!#[default],}'
-_
+
 printf -- "${prefix_button} ${user_section} | ${session_section} |  "
