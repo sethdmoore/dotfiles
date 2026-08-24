@@ -8,4 +8,6 @@ export XDG_CACHE_HOME="${HOME}/.cache"
 export GNUPGHOME="${XDG_DATA_HOME}/gnupg"
 export PASSWORD_STORE_DIR="${XDG_DATA_HOME}/pass"
 
-export MACPORTS_HOME="${XDG_STATE_HOME}/macports"
+# disabled because zshrc -> os.d/darwin changes shell paths if enabled
+# we switched back to brew again, it's much faster than it used to be.
+# export MACPORTS_HOME="${XDG_STATE_HOME}/macports"

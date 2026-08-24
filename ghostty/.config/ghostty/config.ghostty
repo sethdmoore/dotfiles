@@ -6,4 +6,3 @@ cursor-text = "#FFFFFF"
 cursor-style = "block"
 
 custom-shader = ./ghostty-cursor-shaders/cursor_warp.glsl
-# custom-shader-animation = true
