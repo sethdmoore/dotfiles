@@ -1,0 +1,175 @@
+config_version = 12
+
+[bar.default]
+background_opacity = 0.55000001192092896
+capsule_groups = [ "start", "center", "end", "end tray" ]
+center = [ "workspaces" ]
+end = [ "media", "tray", "notifications", "clipboard", "network", "bluetooth", "volume", "brightness", "session" ]
+margin_ends = 500
+start = [ "launcher", "wallpaper", "clock" ]
+thickness = 40
+
+[[control_center.shortcuts]]
+type = "caffeine"
+
+[[control_center.shortcuts]]
+type = "notification"
+
+[[control_center.shortcuts]]
+type = "power_profile"
+
+[[control_center.shortcuts]]
+type = "audio"
+
+[desktop_widgets]
+schema_version = 1
+widget_order = []
+
+    [desktop_widgets.grid]
+    cell_size = 16
+    major_interval = 4
+    visible = true
+
+    [desktop_widgets.widget]
+
+[dock]
+auto_hide = true
+background_opacity = 0.55000001192092896
+enabled = true
+launcher_position = "start"
+magnification = false
+pinned = [ "md.obsidian.Obsidian" ]
+radius = 80
+reserve_space = false
+show_dots = true
+show_instance_count = false
+
+[idle]
+behavior_order = [ "screen-off", "lock", "lock-and-suspend" ]
+
+    [idle.behavior.lock]
+    action = "lock"
+    enabled = false
+    timeout = 600
+
+    [idle.behavior.lock-and-suspend]
+    action = "lock_and_suspend"
+    enabled = false
+    timeout = 900
+
+    [idle.behavior.screen-off]
+    action = "screen_off"
+    enabled = false
+    timeout = 660
+
+[lockscreen_widgets]
+enabled = false
+schema_version = 1
+widget_order = [ "lockscreen-login-box@HDMI-A-1" ]
+
+    [lockscreen_widgets.grid]
+    cell_size = 16
+    major_interval = 4
+    visible = true
+
+    [lockscreen_widgets.widget."lockscreen-login-box@HDMI-A-1"]
+    cx = 1920.0
+    cy = 2037.0
+    output = "HDMI-A-1"
+    rotation = 0.0
+    scale = 1.0
+    type = "login_box"
+
+[noctalia_state]
+setup_wizard_completed = true
+
+[notification]
+background_opacity = 0.55000001192092896
+
+[osd.kinds]
+lock_keys = false
+privacy = false
+
+[shell]
+clipboard_auto_paste = "off"
+settings_show_advanced = true
+
+    [shell.animation]
+    speed = 1.2000000476837158
+
+[theme]
+community_palette = "Cyberpunk"
+source = "wallpaper"
+wallpaper_scheme = "vibrant"
+
+    [theme.templates]
+    builtin_ids = [ "gtk4", "hyprland", "qt", "gtk3", "alacritty", "kcolorscheme" ]
+    community_ids = [ "zen-browser", "obsidian" ]
+
+[wallpaper]
+directory = "~/Documents/Wallpapers"
+
+    [wallpaper.automation]
+    interval_minutes = 3
+
+    [wallpaper.default]
+    path = "/home/seth/Documents/Wallpapers/wallhaven-5ymjz9.png"
+
+    [wallpaper.last]
+    path = "/home/seth/Documents/Wallpapers/wallhaven-5ymjz9.png"
+
+    [wallpaper.monitors.FALLBACK]
+    path = "/home/seth/Documents/Wallpapers/wallhaven-p8j29p.jpg"
+
+    [wallpaper.monitors.HDMI-A-1]
+    path = "/home/seth/Documents/Wallpapers/wallhaven-5ymjz9.png"
+
+    [[wallpaper.favorite]]
+    palette_source = "wallpaper"
+    path = "/home/seth/Documents/Wallpapers/wallhaven-429p9n.png"
+    theme_mode = "dark"
+    wallpaper_scheme = "vibrant"
+
+[weather]
+address = "Pittsburgh, USA"
+
+[widget.clipboard]
+capsule = true
+capsule_group = "end"
+
+[widget.clock]
+capsule = false
+capsule_group = "center"
+
+[widget.launcher]
+capsule = true
+capsule_group = "start"
+
+[widget.media]
+capsule = true
+capsule_group = "end"
+
+[widget.network]
+capsule = true
+capsule_group = "end"
+
+[widget.notifications]
+capsule = true
+capsule_group = "end"
+
+[widget.session]
+capsule = true
+
+[widget.tray]
+capsule = true
+capsule_group = "end tray"
+
+[widget.wallpaper]
+capsule = true
+capsule_group = "start"
+
+[widget.workspaces]
+capsule = true
+empty_color = "tertiary"
+label_source = "name"
+max_label_chars = 8
