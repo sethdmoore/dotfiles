@@ -1,3 +1,25 @@
+-- Ask Hyprland (via the built-in hl.get_monitors() query, no subprocess)
+-- which monitor is actually connected right now, and look it up in the
+-- `displays` table (init/constants.lua) for its tuned mode/depth. A
+-- monitor we don't have an entry for still works: we fall back to
+-- whatever native mode Hyprland reports for it, just without a specific
+-- depth preference.
+function detect_display()
+    local mons = hl.get_monitors()
+    if not mons or #mons == 0 then return nil end
+
+    local mon = mons[1]
+    local known = displays[mon.name]
+    if known then
+        return { name = mon.name, resolution = known.resolution, depth = known.depth }
+    end
+    return {
+        name = mon.name,
+        resolution = string.format("%dx%d@%g", mon.width, mon.height, mon.refresh_rate),
+        depth = "sdr",
+    }
+end
+
 function set_resolution(t)
     local t = t or {}
 
@@ -15,13 +37,22 @@ function set_resolution(t)
         end
     end
 
+    -- live-detect the connected monitor; if Hyprland reports none yet (e.g.
+    -- too early in startup), fall back to the first configured display
+    local active = detect_display()
+    if not active then
+        local name, cfg = next(displays)
+        active = name and { name = name, resolution = cfg.resolution, depth = cfg.depth }
+    end
+    assert(active, "monitors.lua: no connected monitor detected and `displays` is empty")
+
     -- function default arguments
-    setmetatable(t, {__index={resolution=default_resolution, depth="hdr"}})
-    local resolution, depth = 
+    setmetatable(t, {__index={resolution=active.resolution, depth=active.depth}})
+    local resolution, depth =
         t.resolution, t.depth
 
     local m = {
-        output = mainMonitor,
+        output = active.name,
         mode = resolution,
         position = "0x0",
         scale = 1,
@@ -62,8 +93,8 @@ end
 
 set_resolution()
 -- set_resolution({resolution = '2560x1440@120', depth = "hdr"})
--- set_resolution({resolution = default_resolution, depth = "hdr"})
---set_resolution({resolution = default_resolution, depth = "sdr"})
+-- set_resolution({resolution = displays["HDMI-A-1"].resolution, depth = "hdr"})
+-- set_resolution({resolution = displays["HDMI-A-1"].resolution, depth = "sdr"})
 
 hl.config({ render = {
     -- 0 - disabled

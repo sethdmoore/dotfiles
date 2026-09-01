@@ -16,29 +16,6 @@ hl.window_rule({
     tag = "+system",
 })
 
--- tag steam games
-hl.window_rule({
-    name = "tag-steam-games",
-    match = {
-        initial_class = "^(steam_app_\\d+)|(cyberpunk2077.exe)$",
-        -- title = "negative:|^(?i)(.*(Launcher|NetEase Game Security).*)$",
-        -- tag = "negative:|novrr",
-    },
-    tag = "+game",
-    content = "game",
-})
-
--- tag gamescope
-hl.window_rule({
-    name = "gamescope-tagged",
-    match = {
-        initial_class = "^gamescope$",
-        tag = "negative:|novrr",
-    },
-    tag = "+game",
-    content = "game",
-})
-
 -- tag steam
 hl.window_rule({
     name = "steam-tag",

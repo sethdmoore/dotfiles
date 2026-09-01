@@ -10,28 +10,30 @@ hl.window_rule({
     no_vrr = true,
 })
 
--- move games to 5
+-- tag steam games
+-- apparently we can't tag and move
 hl.window_rule({
-    name = "steam-games",
+    name = "tag-and-move-steam-games",
     match = {
-        tag = "game",
+        initial_class = "^steam_app_.*$",
+        -- title = "negative:|^(?i)(.*(Launcher|NetEase Game Security).*)$",
+        -- tag = "negative:|novrr",
     },
-    -- fullscreen = true,
+    tag = "+game",
     content = "game",
     workspace = "5 silent",
 })
 
 -- move gamescope to 5
 hl.window_rule({
-    name = "gamescope-tagged",
+    name = "tag-and-move-gamescope-games",
     match = {
         initial_class = "^gamescope$",
-        tag = "negative:|novrr",
+        -- tag = "negative:|novrr",
     },
     tag = "+game",
     content = "game",
     workspace = "5 silent",
-    -- workspace = "5",
 })
 
 hl.window_rule({
@@ -129,4 +131,4 @@ hl.window_rule({
     confine_pointer = true,
 })
 
-suppressMaximizeRule:set_enabled(false)
+suppressMaximizeRule:set_enabled(true)
