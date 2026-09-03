@@ -1,71 +1,51 @@
--- Lay out every connected output, sorted by `priority` (init/constants.lua).
--- The lowest `priority` number is the primary: it sits at 0x0 and every
--- other output stacks straight down beneath it, so the monitors can never
--- overlap (docked, DP-1 the TV ends up directly above eDP-2). Each output
--- runs at its tuned mode/depth/scale from `displays`; an output with no
--- entry runs at whatever native mode Hyprland reports, SDR. Returns
--- { primary = <display>, others = { <display>, ... } } where each
--- <display> is { name, resolution, depth, scale, position }.
+-- Choose exactly ONE output to drive and switch every other output off.
+-- Of the connected outputs we have a `displays` entry for
+-- (init/constants.lua), the one with the lowest `priority` number wins and
+-- gets its tuned mode/depth/scale; an output with no entry is driven at
+-- the native mode Hyprland reports, SDR.
+--
+-- Returns one of:
+--   { primary = { name, resolution, depth, scale }, off = { name, ... } }
+--   { reenable_all = true }   -- nothing is on; turn every known output
+--                                back on and let monitor.added re-select
 function detect_display()
-    local mons = hl.get_monitors()
-    if not mons or #mons == 0 then return nil end
+    local connected = hl.get_monitors() or {}
 
-    -- sort by priority (unknown outputs last), stable on Hyprland's order
-    local order = {}
-    for i, mon in ipairs(mons) do order[i] = { mon = mon, seq = i } end
-    table.sort(order, function(a, b)
+    -- rank: lowest `priority` number first, unknown outputs after every
+    -- known one, ties on Hyprland's own ordering
+    local ranked = {}
+    for i, mon in ipairs(connected) do ranked[i] = { mon = mon, seq = i } end
+    table.sort(ranked, function(a, b)
         local pa = (displays[a.mon.name] or {}).priority or math.huge
         local pb = (displays[b.mon.name] or {}).priority or math.huge
         if pa ~= pb then return pa < pb end
         return a.seq < b.seq
     end)
 
-    local function tune(mon)
-        local known = displays[mon.name]
-        if known then
-            return { name = mon.name, resolution = known.resolution,
-                     depth = known.depth, scale = known.scale or 1 }
-        end
-        return { name = mon.name, depth = "sdr", scale = 1,
-                 resolution = string.format("%dx%d@%g",
-                     mon.width, mon.height, mon.refresh_rate) }
+    if not ranked[1] then
+        -- Hyprland reports no active output: fresh startup, or we just
+        -- disabled the last one while undocking. Ask every configured
+        -- output back on; whichever physically exists lights up and
+        -- re-triggers selection via monitor.added.
+        return { reenable_all = true }
     end
 
-    -- logical (post-scale) height of a "WIDTHxHEIGHT@RATE" mode string
-    local function logical_height(d)
-        local h = tonumber(tostring(d.resolution):match("x(%d+)")) or 0
-        return math.floor(h / (d.scale or 1) + 0.5)
+    local top = ranked[1].mon
+    local known = displays[top.name]
+    local primary
+    if known then
+        primary = { name = top.name, resolution = known.resolution,
+                    depth = known.depth, scale = known.scale or 1 }
+    else
+        primary = { name = top.name, depth = "sdr", scale = 1,
+                    resolution = string.format("%dx%d@%g",
+                        top.width, top.height, top.refresh_rate) }
     end
 
-    local primary = tune(order[1].mon)
-    primary.position = "0x0"
+    local off = {}
+    for i = 2, #ranked do off[#off + 1] = ranked[i].mon.name end
 
-    local others, y = {}, logical_height(primary)
-    for i = 2, #order do
-        local d = tune(order[i].mon)
-        d.position = "0x" .. y
-        y = y + logical_height(d)
-        others[#others + 1] = d
-    end
-
-    return { primary = primary, others = others }
-end
-
--- Startup-only fallback for when hl.get_monitors() comes back empty
--- (queried too early during launch): the highest-priority configured display.
-local function preferred_configured_display()
-    local best_name, best
-    for dname, cfg in pairs(displays) do
-        if not best or (cfg.priority or math.huge) < (best.priority or math.huge) then
-            best_name, best = dname, cfg
-        end
-    end
-    if not best_name then return nil end
-    return {
-        primary = { name = best_name, resolution = best.resolution,
-                    depth = best.depth, scale = best.scale or 1, position = "0x0" },
-        others = {},
-    }
+    return { primary = primary, off = off }
 end
 
 function set_resolution(t)
@@ -88,35 +68,21 @@ function set_resolution(t)
         end
     end
 
-    -- live-detect the connected outputs; only fall back to a configured
-    -- display on the very first call (Hyprland may report none that early)
-    local layout = detect_display()
-    if not layout and t.initial then
-        layout = preferred_configured_display()
-    end
-    if not layout then
-        assert(not t.initial,
-            "monitors.lua: no connected monitor detected and `displays` is empty")
-        return  -- nothing connected; a later monitor.added event will retry
-    end
+    -- turn one output on (with its tuned mode/depth/scale) or, with
+    -- on == false, off. Everything lands at 0x0 -- only one output is ever
+    -- enabled, so there is nothing to lay out.
+    local function apply(name, resolution, depth, scale, on)
+        if on == false then
+            hl.monitor({ output = name, disabled = true })
+            return
+        end
 
-    local primary = layout.primary
-
-    -- restore the saved manual pick only if it was made for this same
-    -- primary; after a monitor change, use the detected tuned mode
-    if saved.name == primary.name then
-        t.resolution = t.resolution or saved.resolution
-        t.depth = t.depth or saved.depth
-    end
-    setmetatable(t, {__index = {resolution = primary.resolution, depth = primary.depth}})
-
-    -- push one monitor's config; `depth` is "hdr" or "sdr"
-    local function apply(name, resolution, depth, scale, position)
         local m = {
             output = name,
             mode = resolution,
-            position = position or "0x0",
+            position = "0x0",
             scale = scale or 1,
+            disabled = false,
         }
 
         if depth == "hdr" then
@@ -145,10 +111,33 @@ function set_resolution(t)
         hl.monitor(m)
     end
 
-    -- primary at 0x0 (honouring any manual override), the rest stacked below
-    apply(primary.name, t.resolution, t.depth, primary.scale, primary.position)
-    for _, d in ipairs(layout.others) do
-        apply(d.name, d.resolution, d.depth, d.scale, d.position)
+    local layout = detect_display()
+
+    if layout.reenable_all then
+        -- nothing is on. Light every configured output back up; the one
+        -- that physically exists fires monitor.added and re-runs selection.
+        assert(next(displays) or not t.initial,
+            "monitors.lua: no connected monitor detected and `displays` is empty")
+        for name, cfg in pairs(displays) do
+            apply(name, cfg.resolution, cfg.depth, cfg.scale, true)
+        end
+        return
+    end
+
+    local primary = layout.primary
+
+    -- restore the saved manual pick only if it was made for this same
+    -- primary; after a monitor change, use the detected tuned mode
+    if saved.name == primary.name then
+        t.resolution = t.resolution or saved.resolution
+        t.depth = t.depth or saved.depth
+    end
+    setmetatable(t, {__index = {resolution = primary.resolution, depth = primary.depth}})
+
+    -- chosen output on, every other connected output off
+    apply(primary.name, t.resolution, t.depth, primary.scale, true)
+    for _, name in ipairs(layout.off) do
+        apply(name, nil, nil, nil, false)
     end
 
     -- persist for this session, tagged with the primary it applies to
@@ -161,10 +150,15 @@ end
 
 set_resolution({ initial = true })
 
--- re-lay-out when the set of connected outputs changes (docking /
--- undocking) without a manual reload. The signature check swallows any
--- events Hyprland re-emits while we're applying the new layout, so this
--- can't spin in a loop.
+-- re-run selection whenever the set of connected outputs changes (docking,
+-- undocking, and the individual monitor.added events during login) without
+-- a manual reload.
+--
+-- Loop guard: selection settles on "one output enabled, the rest
+-- disabled". Our own disable calls fire more monitor events, but each
+-- re-run then sees a signature it has already acted on and stops. It is
+-- deliberately NOT seeded, so the first events after config parse -- when
+-- Hyprland brings the real monitors up -- always run once.
 local function connected_sig()
     local mons = hl.get_monitors() or {}
     local names = {}
@@ -173,16 +167,16 @@ local function connected_sig()
     return table.concat(names, ",")
 end
 
-local last_sig = connected_sig()
-local function relayout_on_change()
+local last_sig = nil
+local function reselect_on_change()
     local sig = connected_sig()
     if sig == last_sig then return end
     last_sig = sig
     set_resolution()
 end
 
-hl.on("monitor.added", relayout_on_change)
-hl.on("monitor.removed", relayout_on_change)
+hl.on("monitor.added", reselect_on_change)
+hl.on("monitor.removed", reselect_on_change)
 
 -- set_resolution({resolution = '2560x1440@120', depth = "hdr"})
 -- set_resolution({resolution = displays["HDMI-A-1"].resolution, depth = "hdr"})
