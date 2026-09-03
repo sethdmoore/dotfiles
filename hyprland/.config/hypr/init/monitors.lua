@@ -1,50 +1,107 @@
--- Ask Hyprland (via the built-in hl.get_monitors() query, no subprocess)
--- which monitor is actually connected right now, and look it up in the
--- `displays` table (init/constants.lua) for its tuned mode/depth. A
--- monitor we don't have an entry for still works: we fall back to
--- whatever native mode Hyprland reports for it, just without a specific
--- depth preference.
+-- Pick exactly one output to drive, from whatever is connected right now.
+--
+-- `hl.get_monitors()` is the built-in query (no subprocess). Among the
+-- connected outputs we have a `displays` entry for (init/constants.lua),
+-- the one with the lowest `priority` number wins and gets its tuned
+-- mode / depth / scale. Every other connected output is returned in
+-- `.disable` so set_resolution() can switch it off -- this is what lets
+-- the laptop dock/undock without hand-editing a "main monitor" constant.
+-- An output with no `displays` entry still works: it's driven at the
+-- native mode Hyprland reports, with no depth preference.
 function detect_display()
     local mons = hl.get_monitors()
     if not mons or #mons == 0 then return nil end
 
-    local mon = mons[1]
-    local known = displays[mon.name]
-    if known then
-        return { name = mon.name, resolution = known.resolution, depth = known.depth }
+    -- lowest priority number wins; unknown outputs sort last; ties break
+    -- on the order Hyprland lists them
+    local best
+    for _, mon in ipairs(mons) do
+        local prio = (displays[mon.name] or {}).priority or math.huge
+        if not best or prio < best.prio then
+            best = { mon = mon, prio = prio }
+        end
     end
+
+    local name = best.mon.name
+    local known = displays[name]
+    local chosen
+    if known then
+        chosen = { name = name, resolution = known.resolution,
+                   depth = known.depth, scale = known.scale or 1 }
+    else
+        chosen = {
+            name = name,
+            resolution = string.format("%dx%d@%g",
+                best.mon.width, best.mon.height, best.mon.refresh_rate),
+            depth = "sdr",
+            scale = 1,
+        }
+    end
+
+    -- anything else that's connected gets turned off
+    chosen.disable = {}
+    for _, mon in ipairs(mons) do
+        if mon.name ~= name then
+            chosen.disable[#chosen.disable + 1] = mon.name
+        end
+    end
+    return chosen
+end
+
+-- Highest-priority configured display; a startup-only fallback for when
+-- hl.get_monitors() comes back empty (queried too early during launch).
+local function preferred_configured_display()
+    local best_name, best
+    for dname, cfg in pairs(displays) do
+        if not best or (cfg.priority or math.huge) < (best.priority or math.huge) then
+            best_name, best = dname, cfg
+        end
+    end
+    if not best_name then return nil end
     return {
-        name = mon.name,
-        resolution = string.format("%dx%d@%g", mon.width, mon.height, mon.refresh_rate),
-        depth = "sdr",
+        name = best_name, resolution = best.resolution,
+        depth = best.depth, scale = best.scale or 1, disable = {},
     }
 end
 
 function set_resolution(t)
     local t = t or {}
 
-    -- state file for persisting session resolution changes
-    -- essentially don't change our resolution every time our bg changes / hyprctl reload
+    -- state file: persists a manual resolution/depth pick (the set_2k* /
+    -- set_4k helper scripts) across `hyprctl reload` and wallpaper swaps,
+    -- so we don't snap back to defaults on every reload. Line 3 records
+    -- which output the pick was made for.
     local path = os.getenv("XDG_RUNTIME_DIR") .. "/hypr/"
         .. os.getenv("HYPRLAND_INSTANCE_SIGNATURE") .. "/resolution_state"
 
-    -- read state if there are no arguments
+    local saved = {}
     if not t.resolution and not t.depth then
         local f = io.open(path, "r")
         if f then
-            t.resolution, t.depth = f:read("*l"), f:read("*l")
+            saved.resolution, saved.depth, saved.name =
+                f:read("*l"), f:read("*l"), f:read("*l")
             f:close()
         end
     end
 
-    -- live-detect the connected monitor; if Hyprland reports none yet (e.g.
-    -- too early in startup), fall back to the first configured display
+    -- live-detect the connected monitor; only fall back to a configured
+    -- display on the very first call (Hyprland may report none that early)
     local active = detect_display()
-    if not active then
-        local name, cfg = next(displays)
-        active = name and { name = name, resolution = cfg.resolution, depth = cfg.depth }
+    if not active and t.initial then
+        active = preferred_configured_display()
     end
-    assert(active, "monitors.lua: no connected monitor detected and `displays` is empty")
+    if not active then
+        assert(not t.initial,
+            "monitors.lua: no connected monitor detected and `displays` is empty")
+        return  -- nothing connected; a later monitor.added event will retry
+    end
+
+    -- restore the saved manual pick only if it was made for this same
+    -- output; after a monitor change, use the detected display's tuned mode
+    if saved.name == active.name then
+        t.resolution = t.resolution or saved.resolution
+        t.depth = t.depth or saved.depth
+    end
 
     -- function default arguments
     setmetatable(t, {__index={resolution=active.resolution, depth=active.depth}})
@@ -55,7 +112,7 @@ function set_resolution(t)
         output = active.name,
         mode = resolution,
         position = "0x0",
-        scale = 1,
+        scale = active.scale or 1,
     }
 
     if depth == "hdr" then
@@ -81,17 +138,36 @@ function set_resolution(t)
         m.vrr = 0
     end
 
-    -- write our state file for this session
+    -- persist for this session, tagged with the output it applies to
     local f = io.open(path, "w")
     if f then
-        f:write(resolution, "\n", depth)
+        f:write(resolution or "", "\n", depth or "", "\n", active.name)
         f:close()
     end
 
     hl.monitor(m)
+
+    -- switch off every other connected output (e.g. the laptop panel while
+    -- docked to the TV)
+    for _, name in ipairs(active.disable or {}) do
+        hl.monitor({ output = name, disabled = true })
+    end
 end
 
-set_resolution()
+set_resolution({ initial = true })
+
+-- re-pick when an output is plugged in or unplugged, so docking /
+-- undocking the laptop switches monitors without a manual reload
+hl.on("monitor.added", function() set_resolution() end)
+hl.on("monitor.removed", function()
+    -- undocking removes the TV; make sure the built-in panel (and any
+    -- other known output) is back on before re-picking
+    for name in pairs(displays) do
+        hl.monitor({ output = name, disabled = false })
+    end
+    set_resolution()
+end)
+
 -- set_resolution({resolution = '2560x1440@120', depth = "hdr"})
 -- set_resolution({resolution = displays["HDMI-A-1"].resolution, depth = "hdr"})
 -- set_resolution({resolution = displays["HDMI-A-1"].resolution, depth = "sdr"})
