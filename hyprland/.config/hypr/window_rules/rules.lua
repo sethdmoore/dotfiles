@@ -80,6 +80,16 @@ hl.window_rule({
 })
 
 hl.window_rule({
+    match = {
+	    class = "blender",
+	    title = "Preferences",
+    },
+    float = true,
+    size  = { 950, 600 },
+})
+
+
+hl.window_rule({
     name = "discord-stream-popout",
     match = {
         initial_title = "^(?i)Discord Popout$",
