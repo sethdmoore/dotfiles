@@ -1,55 +1,58 @@
--- Pick exactly one output to drive, from whatever is connected right now.
---
--- `hl.get_monitors()` is the built-in query (no subprocess). Among the
--- connected outputs we have a `displays` entry for (init/constants.lua),
--- the one with the lowest `priority` number wins and gets its tuned
--- mode / depth / scale. Every other connected output is returned in
--- `.disable` so set_resolution() can switch it off -- this is what lets
--- the laptop dock/undock without hand-editing a "main monitor" constant.
--- An output with no `displays` entry still works: it's driven at the
--- native mode Hyprland reports, with no depth preference.
+-- Lay out every connected output, sorted by `priority` (init/constants.lua).
+-- The lowest `priority` number is the primary: it sits at 0x0 and every
+-- other output stacks straight down beneath it, so the monitors can never
+-- overlap (docked, DP-1 the TV ends up directly above eDP-2). Each output
+-- runs at its tuned mode/depth/scale from `displays`; an output with no
+-- entry runs at whatever native mode Hyprland reports, SDR. Returns
+-- { primary = <display>, others = { <display>, ... } } where each
+-- <display> is { name, resolution, depth, scale, position }.
 function detect_display()
     local mons = hl.get_monitors()
     if not mons or #mons == 0 then return nil end
 
-    -- lowest priority number wins; unknown outputs sort last; ties break
-    -- on the order Hyprland lists them
-    local best
-    for _, mon in ipairs(mons) do
-        local prio = (displays[mon.name] or {}).priority or math.huge
-        if not best or prio < best.prio then
-            best = { mon = mon, prio = prio }
+    -- sort by priority (unknown outputs last), stable on Hyprland's order
+    local order = {}
+    for i, mon in ipairs(mons) do order[i] = { mon = mon, seq = i } end
+    table.sort(order, function(a, b)
+        local pa = (displays[a.mon.name] or {}).priority or math.huge
+        local pb = (displays[b.mon.name] or {}).priority or math.huge
+        if pa ~= pb then return pa < pb end
+        return a.seq < b.seq
+    end)
+
+    local function tune(mon)
+        local known = displays[mon.name]
+        if known then
+            return { name = mon.name, resolution = known.resolution,
+                     depth = known.depth, scale = known.scale or 1 }
         end
+        return { name = mon.name, depth = "sdr", scale = 1,
+                 resolution = string.format("%dx%d@%g",
+                     mon.width, mon.height, mon.refresh_rate) }
     end
 
-    local name = best.mon.name
-    local known = displays[name]
-    local chosen
-    if known then
-        chosen = { name = name, resolution = known.resolution,
-                   depth = known.depth, scale = known.scale or 1 }
-    else
-        chosen = {
-            name = name,
-            resolution = string.format("%dx%d@%g",
-                best.mon.width, best.mon.height, best.mon.refresh_rate),
-            depth = "sdr",
-            scale = 1,
-        }
+    -- logical (post-scale) height of a "WIDTHxHEIGHT@RATE" mode string
+    local function logical_height(d)
+        local h = tonumber(tostring(d.resolution):match("x(%d+)")) or 0
+        return math.floor(h / (d.scale or 1) + 0.5)
     end
 
-    -- anything else that's connected gets turned off
-    chosen.disable = {}
-    for _, mon in ipairs(mons) do
-        if mon.name ~= name then
-            chosen.disable[#chosen.disable + 1] = mon.name
-        end
+    local primary = tune(order[1].mon)
+    primary.position = "0x0"
+
+    local others, y = {}, logical_height(primary)
+    for i = 2, #order do
+        local d = tune(order[i].mon)
+        d.position = "0x" .. y
+        y = y + logical_height(d)
+        others[#others + 1] = d
     end
-    return chosen
+
+    return { primary = primary, others = others }
 end
 
--- Highest-priority configured display; a startup-only fallback for when
--- hl.get_monitors() comes back empty (queried too early during launch).
+-- Startup-only fallback for when hl.get_monitors() comes back empty
+-- (queried too early during launch): the highest-priority configured display.
 local function preferred_configured_display()
     local best_name, best
     for dname, cfg in pairs(displays) do
@@ -59,8 +62,9 @@ local function preferred_configured_display()
     end
     if not best_name then return nil end
     return {
-        name = best_name, resolution = best.resolution,
-        depth = best.depth, scale = best.scale or 1, disable = {},
+        primary = { name = best_name, resolution = best.resolution,
+                    depth = best.depth, scale = best.scale or 1, position = "0x0" },
+        others = {},
     }
 end
 
@@ -84,89 +88,101 @@ function set_resolution(t)
         end
     end
 
-    -- live-detect the connected monitor; only fall back to a configured
+    -- live-detect the connected outputs; only fall back to a configured
     -- display on the very first call (Hyprland may report none that early)
-    local active = detect_display()
-    if not active and t.initial then
-        active = preferred_configured_display()
+    local layout = detect_display()
+    if not layout and t.initial then
+        layout = preferred_configured_display()
     end
-    if not active then
+    if not layout then
         assert(not t.initial,
             "monitors.lua: no connected monitor detected and `displays` is empty")
         return  -- nothing connected; a later monitor.added event will retry
     end
 
+    local primary = layout.primary
+
     -- restore the saved manual pick only if it was made for this same
-    -- output; after a monitor change, use the detected display's tuned mode
-    if saved.name == active.name then
+    -- primary; after a monitor change, use the detected tuned mode
+    if saved.name == primary.name then
         t.resolution = t.resolution or saved.resolution
         t.depth = t.depth or saved.depth
     end
+    setmetatable(t, {__index = {resolution = primary.resolution, depth = primary.depth}})
 
-    -- function default arguments
-    setmetatable(t, {__index={resolution=active.resolution, depth=active.depth}})
-    local resolution, depth =
-        t.resolution, t.depth
+    -- push one monitor's config; `depth` is "hdr" or "sdr"
+    local function apply(name, resolution, depth, scale, position)
+        local m = {
+            output = name,
+            mode = resolution,
+            position = position or "0x0",
+            scale = scale or 1,
+        }
 
-    local m = {
-        output = active.name,
-        mode = resolution,
-        position = "0x0",
-        scale = active.scale or 1,
-    }
+        if depth == "hdr" then
+            m.bitdepth = 10
+            m.cm = "hdredid"
 
-    if depth == "hdr" then
-        m.bitdepth = 10
-        m.cm = "hdredid"
+            -- 0: off, 1: on, 2: fullscreen only, 3: video/game content fullscreen
+            m.vrr = 0
+            m.supports_hdr = 0
+            m.supports_wide_color = 0
+            m.min_luminance = 0
+            m.max_luminance = 3000
+            m.sdr_min_luminance = 0
+            m.sdr_max_luminance = 300
+            m.sdrsaturation = 1.0
+            m.sdrbrightness = 1.2
+            -- m.sdr_max_luminance = 3000
+            -- m.sdrbrightness = 1.0
+            -- m.sdrsaturation = 0.85
+        else
+            m.bitdepth = 8
+            m.cm = "auto"
+            m.vrr = 0
+        end
 
-        -- 0: off, 1: on, 2: fullscreen only, 3: video/game content fullscreen
-        m.vrr = 0
-        m.supports_hdr = 0
-        m.supports_wide_color = 0
-        m.min_luminance = 0
-        m.max_luminance = 3000
-        m.sdr_min_luminance = 0
-        m.sdr_max_luminance = 300
-        m.sdrsaturation = 1.0
-        m.sdrbrightness = 1.2
-        -- m.sdr_max_luminance = 3000
-        -- m.sdrbrightness = 1.0
-        -- m.sdrsaturation = 0.85
-    else
-        m.bitdepth = 8
-        m.cm = "auto"
-        m.vrr = 0
+        hl.monitor(m)
     end
 
-    -- persist for this session, tagged with the output it applies to
+    -- primary at 0x0 (honouring any manual override), the rest stacked below
+    apply(primary.name, t.resolution, t.depth, primary.scale, primary.position)
+    for _, d in ipairs(layout.others) do
+        apply(d.name, d.resolution, d.depth, d.scale, d.position)
+    end
+
+    -- persist for this session, tagged with the primary it applies to
     local f = io.open(path, "w")
     if f then
-        f:write(resolution or "", "\n", depth or "", "\n", active.name)
+        f:write((t.resolution or ""), "\n", (t.depth or ""), "\n", primary.name)
         f:close()
-    end
-
-    hl.monitor(m)
-
-    -- switch off every other connected output (e.g. the laptop panel while
-    -- docked to the TV)
-    for _, name in ipairs(active.disable or {}) do
-        hl.monitor({ output = name, disabled = true })
     end
 end
 
 set_resolution({ initial = true })
 
--- re-pick when an output is plugged in or unplugged, so docking /
--- undocking the laptop switches monitors without a manual reload
-hl.on("monitor.added", function() set_resolution() end)
-hl.on("monitor.removed", function()
-    -- undocking removes the TV; make sure the built-in panel (and any
-    -- other known output) is back on before re-picking
-    for name in pairs(displays) do
-        hl.monitor({ output = name, disabled = false })
-    end
+-- re-lay-out when the set of connected outputs changes (docking /
+-- undocking) without a manual reload. The signature check swallows any
+-- events Hyprland re-emits while we're applying the new layout, so this
+-- can't spin in a loop.
+local function connected_sig()
+    local mons = hl.get_monitors() or {}
+    local names = {}
+    for _, mon in ipairs(mons) do names[#names + 1] = mon.name end
+    table.sort(names)
+    return table.concat(names, ",")
+end
+
+local last_sig = connected_sig()
+local function relayout_on_change()
+    local sig = connected_sig()
+    if sig == last_sig then return end
+    last_sig = sig
     set_resolution()
-end)
+end
+
+hl.on("monitor.added", relayout_on_change)
+hl.on("monitor.removed", relayout_on_change)
 
 -- set_resolution({resolution = '2560x1440@120', depth = "hdr"})
 -- set_resolution({resolution = displays["HDMI-A-1"].resolution, depth = "hdr"})
