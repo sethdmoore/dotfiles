@@ -22,7 +22,7 @@ taskManager = 'resources'
 -- Output names don't collide across machines, so one table covers every host.
 -- `scale` is optional (default 1); `depth` is "hdr" or "sdr".
 displays = {
-    ["DP-1"]     = { resolution = '3840x2160@144', depth = "hdr" },
+    ["DP-1"]     = { resolution = '3840x2160@144', depth = "hdr", scale = 2.0 },
     ["HDMI-A-1"] = { resolution = '3840x2160@165', depth = "hdr" },
     ["eDP-2"]    = { resolution = '2560x1600@165', depth = "sdr", scale = 1.6 },
 }
