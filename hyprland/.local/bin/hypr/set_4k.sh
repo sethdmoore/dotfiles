@@ -1,3 +1,5 @@
 #!/bin/sh
 
-hyprctl eval 'set_resolution({resolution="3840x2160@165", depth="hdr"})'
+# Revert to the current screen's tuned default (Sunshine's stream-teardown
+# "undo" command). Clears any manual resolution override.
+hyprctl eval 'monitor_revert()'

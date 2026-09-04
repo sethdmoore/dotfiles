@@ -1,186 +1,159 @@
--- Choose exactly ONE output to drive and switch every other output off.
--- Of the connected outputs we have a `displays` entry for
--- (init/constants.lua), the one with the lowest `priority` number wins and
--- gets its tuned mode/depth/scale; an output with no entry is driven at
--- the native mode Hyprland reports, SDR.
+-- Drive exactly ONE output at a time, chosen by a fixed order:
+-- the first entry of `display_order` (init/constants.lua) that is actually
+-- connected wins and gets its tuned mode/depth/scale from `displays`; every
+-- other configured output is switched off.
 --
--- Returns one of:
---   { primary = { name, resolution, depth, scale }, off = { name, ... } }
---   { reenable_all = true }   -- nothing is on; turn every known output
---                                back on and let monitor.added re-select
-function detect_display()
-    local connected = hl.get_monitors() or {}
+--   DP-1      -> framework docked  (external only, outranks the panel)
+--   HDMI-A-1  -> seth.home desktop (sole display)
+--   eDP-2     -> framework laptop  (built-in only)
+--
+-- No ranking, no per-output priority numbers. To add a monitor, add it to
+-- `displays` and slot its name into `display_order`.
 
-    -- rank: lowest `priority` number first, unknown outputs after every
-    -- known one, ties on Hyprland's own ordering
-    local ranked = {}
-    for i, mon in ipairs(connected) do ranked[i] = { mon = mon, seq = i } end
-    table.sort(ranked, function(a, b)
-        local pa = (displays[a.mon.name] or {}).priority or math.huge
-        local pb = (displays[b.mon.name] or {}).priority or math.huge
-        if pa ~= pb then return pa < pb end
-        return a.seq < b.seq
-    end)
+-- A manual resolution/depth override (the set_2k* / set_4k helper scripts,
+-- or Sunshine's stream prep-cmd) is stashed here so it survives `hyprctl
+-- reload` and noctalia wallpaper swaps. Instance-scoped: a full Hyprland
+-- restart starts clean, and any real dock/undock clears it too.
+local override_path = os.getenv("XDG_RUNTIME_DIR") .. "/hypr/"
+    .. os.getenv("HYPRLAND_INSTANCE_SIGNATURE") .. "/monitor-override"
 
-    if not ranked[1] then
-        -- Hyprland reports no active output: fresh startup, or we just
-        -- disabled the last one while undocking. Ask every configured
-        -- output back on; whichever physically exists lights up and
-        -- re-triggers selection via monitor.added.
-        return { reenable_all = true }
-    end
-
-    local top = ranked[1].mon
-    local known = displays[top.name]
-    local primary
-    if known then
-        primary = { name = top.name, resolution = known.resolution,
-                    depth = known.depth, scale = known.scale or 1 }
-    else
-        primary = { name = top.name, depth = "sdr", scale = 1,
-                    resolution = string.format("%dx%d@%g",
-                        top.width, top.height, top.refresh_rate) }
-    end
-
-    local off = {}
-    for i = 2, #ranked do off[#off + 1] = ranked[i].mon.name end
-
-    return { primary = primary, off = off }
+local function read_override()
+    local f = io.open(override_path, "r")
+    if not f then return nil end
+    local mode, depth = f:read("*l"), f:read("*l")
+    f:close()
+    if not mode or mode == "" then return nil end
+    return { resolution = mode, depth = (depth and depth ~= "" and depth) or nil }
 end
 
-function set_resolution(t)
-    local t = t or {}
-
-    -- state file: persists a manual resolution/depth pick (the set_2k* /
-    -- set_4k helper scripts) across `hyprctl reload` and wallpaper swaps,
-    -- so we don't snap back to defaults on every reload. Line 3 records
-    -- which output the pick was made for.
-    local path = os.getenv("XDG_RUNTIME_DIR") .. "/hypr/"
-        .. os.getenv("HYPRLAND_INSTANCE_SIGNATURE") .. "/resolution_state"
-
-    local saved = {}
-    if not t.resolution and not t.depth then
-        local f = io.open(path, "r")
-        if f then
-            saved.resolution, saved.depth, saved.name =
-                f:read("*l"), f:read("*l"), f:read("*l")
-            f:close()
-        end
+-- turn one output on (with its tuned mode/depth/scale) or, with on == false,
+-- off. Everything lands at 0x0 -- only one output is ever enabled, so there
+-- is nothing to lay out.
+local function apply(name, resolution, depth, scale, on)
+    if on == false then
+        hl.monitor({ output = name, disabled = true })
+        return
     end
 
-    -- turn one output on (with its tuned mode/depth/scale) or, with
-    -- on == false, off. Everything lands at 0x0 -- only one output is ever
-    -- enabled, so there is nothing to lay out.
-    local function apply(name, resolution, depth, scale, on)
-        if on == false then
-            hl.monitor({ output = name, disabled = true })
-            return
-        end
+    local m = {
+        output = name,
+        mode = resolution,
+        position = "0x0",
+        scale = scale or 1,
+        disabled = false,
+    }
 
-        local m = {
-            output = name,
-            mode = resolution,
-            position = "0x0",
-            scale = scale or 1,
-            disabled = false,
-        }
+    if depth == "hdr" then
+        m.bitdepth = 10
+        m.cm = "hdredid"
 
-        if depth == "hdr" then
-            m.bitdepth = 10
-            m.cm = "hdredid"
-
-            -- 0: off, 1: on, 2: fullscreen only, 3: video/game content fullscreen
-            m.vrr = 0
-            m.supports_hdr = 0
-            m.supports_wide_color = 0
-            m.min_luminance = 0
-            m.max_luminance = 3000
-            m.sdr_min_luminance = 0
-            m.sdr_max_luminance = 300
-            m.sdrsaturation = 1.0
-            m.sdrbrightness = 1.2
-            -- m.sdr_max_luminance = 3000
-            -- m.sdrbrightness = 1.0
-            -- m.sdrsaturation = 0.85
-        else
-            m.bitdepth = 8
-            m.cm = "auto"
-            m.vrr = 0
-        end
-
-        hl.monitor(m)
+        -- 0: off, 1: on, 2: fullscreen only, 3: video/game content fullscreen
+        m.vrr = 0
+        m.supports_hdr = 0
+        m.supports_wide_color = 0
+        m.min_luminance = 0
+        m.max_luminance = 3000
+        m.sdr_min_luminance = 0
+        m.sdr_max_luminance = 300
+        m.sdrsaturation = 1.0
+        m.sdrbrightness = 1.2
+        -- m.sdr_max_luminance = 3000
+        -- m.sdrbrightness = 1.0
+        -- m.sdrsaturation = 0.85
+    else
+        m.bitdepth = 8
+        m.cm = "auto"
+        m.vrr = 0
     end
 
-    local layout = detect_display()
+    hl.monitor(m)
+end
 
-    if layout.reenable_all then
-        -- nothing is on. Light every configured output back up; the one
-        -- that physically exists fires monitor.added and re-runs selection.
-        assert(next(displays) or not t.initial,
-            "monitors.lua: no connected monitor detected and `displays` is empty")
-        for name, cfg in pairs(displays) do
-            apply(name, cfg.resolution, cfg.depth, cfg.scale, true)
+local function pick(connected)
+    for _, name in ipairs(display_order) do
+        if connected[name] then return name end
+    end
+end
+
+local function current_primary()
+    local connected = {}
+    for _, mon in ipairs(hl.get_monitors() or {}) do
+        connected[mon.name] = mon
+    end
+    return pick(connected)
+end
+
+-- chosen output on (override mode if one is stashed, otherwise the tuned
+-- default), every other configured output off
+local function apply_primary(primary)
+    local cfg = displays[primary]
+    local o = read_override()
+    apply(primary,
+        o and o.resolution or cfg.resolution,
+        o and o.depth or cfg.depth,
+        cfg.scale, true)
+    for name in pairs(displays) do
+        if name ~= primary then apply(name, nil, nil, nil, false) end
+    end
+end
+
+-- re-run selection whenever the set of connected outputs changes (docking,
+-- undocking, the individual monitor.added events during login) without a
+-- manual reload.
+--
+-- Guard: `last_primary` is the output we last enabled. Our own disable
+-- calls fire more monitor events, but those re-runs see the same primary
+-- and stop. It is deliberately NOT seeded, so the first run after config
+-- parse always applies.
+local last_primary = nil
+
+local function select()
+    local primary = current_primary()
+
+    if not primary then
+        -- Nothing we know about is on: fresh startup, or we just undocked
+        -- while the built-in panel was still disabled. Turn every configured
+        -- output back on; whichever physically exists lights up and
+        -- re-triggers selection via monitor.added.
+        for name in pairs(displays) do
+            hl.monitor({ output = name, disabled = false })
         end
         return
     end
 
-    local primary = layout.primary
-
-    -- restore the saved manual pick only if it was made for this same
-    -- primary; after a monitor change, use the detected tuned mode
-    if saved.name == primary.name then
-        t.resolution = t.resolution or saved.resolution
-        t.depth = t.depth or saved.depth
+    if primary == last_primary then return end
+    if last_primary ~= nil then
+        -- a genuine dock/undock -- the stashed override was for the old
+        -- screen, drop it so the new one comes up at its tuned default
+        os.remove(override_path)
     end
-    setmetatable(t, {__index = {resolution = primary.resolution, depth = primary.depth}})
+    last_primary = primary
+    apply_primary(primary)
+end
 
-    -- chosen output on, every other connected output off
-    apply(primary.name, t.resolution, t.depth, primary.scale, true)
-    for _, name in ipairs(layout.off) do
-        apply(name, nil, nil, nil, false)
-    end
-
-    -- persist for this session, tagged with the primary it applies to
-    local f = io.open(path, "w")
+-- Entry points for the helper scripts and Sunshine's prep-cmd, via
+-- `hyprctl eval 'monitor_override("2560x1440@120", "hdr")'` /
+-- `hyprctl eval 'monitor_revert()'`. Global on purpose: eval runs in this
+-- same Lua state and resolves them by name.
+function monitor_override(mode, depth)
+    local f = io.open(override_path, "w")
     if f then
-        f:write((t.resolution or ""), "\n", (t.depth or ""), "\n", primary.name)
+        f:write(mode or "", "\n", depth or "", "\n")
         f:close()
     end
+    local primary = current_primary()
+    if primary then apply_primary(primary) end
 end
 
-set_resolution({ initial = true })
-
--- re-run selection whenever the set of connected outputs changes (docking,
--- undocking, and the individual monitor.added events during login) without
--- a manual reload.
---
--- Loop guard: selection settles on "one output enabled, the rest
--- disabled". Our own disable calls fire more monitor events, but each
--- re-run then sees a signature it has already acted on and stops. It is
--- deliberately NOT seeded, so the first events after config parse -- when
--- Hyprland brings the real monitors up -- always run once.
-local function connected_sig()
-    local mons = hl.get_monitors() or {}
-    local names = {}
-    for _, mon in ipairs(mons) do names[#names + 1] = mon.name end
-    table.sort(names)
-    return table.concat(names, ",")
+function monitor_revert()
+    os.remove(override_path)
+    local primary = current_primary()
+    if primary then apply_primary(primary) end
 end
 
-local last_sig = nil
-local function reselect_on_change()
-    local sig = connected_sig()
-    if sig == last_sig then return end
-    last_sig = sig
-    set_resolution()
-end
-
-hl.on("monitor.added", reselect_on_change)
-hl.on("monitor.removed", reselect_on_change)
-
--- set_resolution({resolution = '2560x1440@120', depth = "hdr"})
--- set_resolution({resolution = displays["HDMI-A-1"].resolution, depth = "hdr"})
--- set_resolution({resolution = displays["HDMI-A-1"].resolution, depth = "sdr"})
+select()
+hl.on("monitor.added", select)
+hl.on("monitor.removed", select)
 
 hl.config({ render = {
     -- 0 - disabled

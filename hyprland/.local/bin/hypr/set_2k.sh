@@ -1,3 +1,3 @@
 #!/bin/sh
 
-hyprctl eval 'set_resolution({resolution="2560x1440@120", depth="hdr"})'
+hyprctl eval 'monitor_override("2560x1440@120", "hdr")'
