@@ -5,4 +5,7 @@ cursor-opacity = 0.9
 cursor-text = "#FFFFFF"
 cursor-style = "block"
 
+background-opacity = 0.7
+background-opacity-cells = true
+
 custom-shader = ./ghostty-cursor-shaders/cursor_warp.glsl
