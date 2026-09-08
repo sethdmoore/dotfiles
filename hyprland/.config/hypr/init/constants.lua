@@ -16,19 +16,43 @@ bar = 'waybar'
 
 taskManager = 'resources'
 
--- known displays, keyed by hyprctl output name (`hyprctl monitors -j`).
--- monitors.lua drives exactly ONE at a time: the first entry of
--- `display_order` that is actually connected wins, the rest are disabled.
--- Output names don't collide across machines, so one table covers every host.
--- `scale` is optional (default 1); `depth` is "hdr" or "sdr".
+-- Known displays, matched by EDID description PREFIX (see init/monitors.lua),
+-- NOT by output port -- port names shift between GPUs, docks and boots.
+-- Read descriptions with:  hyprctl monitors all -j | jq -r '.[].description'
+--
+--   match.description  prefix of the description string (Hyprland `desc:` rule)
+--   resolution         tuned mode
+--   depth              "hdr" or "sdr"
+--   scale              optional, default 1
+--   single_monitor     optional. When this display is primary it is the ONLY
+--                      output (every other configured output off). Without it,
+--                      the display shares the layout with other
+--                      non-single_monitor displays, laid out left-to-right in
+--                      display_order.
 displays = {
-    ["DP-1"]     = { resolution = '3840x2160@144', depth = "hdr", scale = 2.0 },
-    ["HDMI-A-1"] = { resolution = '3840x2160@165', depth = "hdr" },
-    ["eDP-2"]    = { resolution = '2560x1600@165', depth = "sdr", scale = 1.6 },
+    livingroom_tv = {
+        match          = { description = "Hisense Electric Co. Ltd. HISENSE" },
+        resolution     = "3840x2160@144",
+        depth          = "hdr",
+        scale          = 2.0,
+        single_monitor = true,
+    },
+    -- desktop = {
+    --     match          = { description = "CHANGEME seth.home display" },
+    --     resolution     = "3840x2160@165",
+    --     depth          = "hdr",
+    --     single_monitor = true,
+    -- },
+    laptop = {
+        match      = { description = "BOE NE160QDM-NZ6" },
+        resolution = "2560x1600@165",
+        depth      = "sdr",
+        -- scale      = 1.6,
+    },
 }
 
--- first one connected wins:
---   DP-1      -> framework docked  (external only, outranks the panel)
---   HDMI-A-1  -> seth.home desktop (sole display)
---   eDP-2     -> framework laptop  (built-in only)
-display_order = { "DP-1", "HDMI-A-1", "eDP-2" }
+-- priority: the first one connected becomes primary
+--   livingroom_tv -> Hisense TV, docked over the dGPU (external only)
+--   desktop       -> seth.home     (sole display)
+--   laptop        -> Framework built-in panel
+display_order = { "livingroom_tv", "desktop", "laptop" }

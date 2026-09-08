@@ -1,19 +1,36 @@
--- Drive exactly ONE output at a time, chosen by a fixed order:
--- the first entry of `display_order` (init/constants.lua) that is actually
--- connected wins and gets its tuned mode/depth/scale from `displays`; every
--- other configured output is switched off.
+-- Priority-ranked monitor selection, matched by EDID description (not output
+-- port -- port names shift between GPUs, docks and boots).
 --
---   DP-1      -> framework docked  (external only, outranks the panel)
---   HDMI-A-1  -> seth.home desktop (sole display)
---   eDP-2     -> framework laptop  (built-in only)
+-- `displays` / `display_order` live in init/constants.lua. Each time the set
+-- of outputs changes we pick a PRIMARY: the first entry of `display_order`
+-- whose `match.description` is a prefix of a connected output's description.
+-- Then:
 --
--- No ranking, no per-output priority numbers. To add a monitor, add it to
--- `displays` and slot its name into `display_order`.
+--   * primary has single_monitor    -> it is the ONLY output; every other
+--                                      configured output is switched off.
+--   * primary has no single_monitor -> primary at 0x0, plus every other
+--                                      connected non-single_monitor display
+--                                      laid out left-to-right in display_order;
+--                                      configured single_monitor displays that
+--                                      are not primary stay off.
+--
+-- Matching is DESCRIPTION PREFIX, the same rule Hyprland's `desc:` selector
+-- uses. Read descriptions with:
+--     hyprctl monitors all -j | jq -r '.[].description'
+--
+-- Note: hl.get_monitors() and the Lua monitor objects only expose .name,
+-- .description and .serial (no split .make / .model), and the config Lua
+-- state CANNOT shell out to `hyprctl` (it runs on the main thread and would
+-- deadlock its own IPC). So everything here works off live monitor objects
+-- plus the object handed to the monitor.added event.
 
--- A manual resolution/depth override (the set_2k* / set_4k helper scripts,
--- or Sunshine's stream prep-cmd) is stashed here so it survives `hyprctl
--- reload` and noctalia wallpaper swaps. Instance-scoped: a full Hyprland
--- restart starts clean, and any real dock/undock clears it too.
+-- ---------------------------------------------------------------------------
+-- manual override (helper scripts / Sunshine prep-cmd)
+-- ---------------------------------------------------------------------------
+-- set_2k* / set_4k and Sunshine stash a resolution/depth override for the
+-- PRIMARY here so it survives `hyprctl reload` and noctalia wallpaper swaps.
+-- Instance-scoped: a full Hyprland restart starts clean, and a genuine
+-- primary change (dock/undock) clears it.
 local override_path = os.getenv("XDG_RUNTIME_DIR") .. "/hypr/"
     .. os.getenv("HYPRLAND_INSTANCE_SIGNATURE") .. "/monitor-override"
 
@@ -26,134 +43,216 @@ local function read_override()
     return { resolution = mode, depth = (depth and depth ~= "" and depth) or nil }
 end
 
--- turn one output on (with its tuned mode/depth/scale) or, with on == false,
--- off. Everything lands at 0x0 -- only one output is ever enabled, so there
--- is nothing to lay out.
-local function apply(name, resolution, depth, scale, on)
-    if on == false then
-        hl.monitor({ output = name, disabled = true })
-        return
+-- ---------------------------------------------------------------------------
+-- matching
+-- ---------------------------------------------------------------------------
+
+-- description prefix test -- mirrors Hyprland's `desc:` selector
+local function desc_matches(description, prefix)
+    if not description or not prefix then return false end
+    return description:sub(1, #prefix) == prefix
+end
+
+-- friendly-name key of the `displays` entry this monitor object matches, or nil
+local function key_for(mon)
+    for name, cfg in pairs(displays) do
+        if cfg.match and desc_matches(mon.description, cfg.match.description) then
+            return name
+        end
     end
+end
+
+-- ---------------------------------------------------------------------------
+-- applying
+-- ---------------------------------------------------------------------------
+
+-- leading pixel count of a "3840x2160@144" mode string, as a number
+local function mode_width(resolution)
+    return tonumber((resolution or ""):match("^(%d+)")) or 0
+end
+
+-- logical (scaled) width this display occupies in the layout
+local function logical_width(cfg)
+    return math.floor(mode_width(cfg.resolution) / (cfg.scale or 1) + 0.5)
+end
+
+-- What we last told Hyprland for each output name: a signature string, or
+-- "off". Our own hl.monitor() calls fire fresh monitor.added / monitor.removed
+-- events; those re-runs recompute the SAME signatures and short-circuit here,
+-- so the cascade terminates. NOT seeded -- the first pass always applies.
+local applied = {}
+
+local function apply(name, cfg, x)
+    local depth = cfg.depth or "sdr"
+    local scale = cfg.scale or 1
+    local sig   = table.concat({ cfg.resolution, x, scale, depth }, "|")
+    if applied[name] == sig then return end
+    applied[name] = sig
 
     local m = {
-        output = name,
-        mode = resolution,
-        position = "0x0",
-        scale = scale or 1,
+        output   = name,
+        mode     = cfg.resolution,
+        position = x .. "x0",
+        scale    = scale,
         disabled = false,
+        vrr      = 0,
     }
 
     if depth == "hdr" then
-        m.bitdepth = 10
-        m.cm = "hdredid"
-
-        -- 0: off, 1: on, 2: fullscreen only, 3: video/game content fullscreen
-        m.vrr = 0
-        m.supports_hdr = 0
-        m.supports_wide_color = 0
-        m.min_luminance = 0
-        m.max_luminance = 3000
-        m.sdr_min_luminance = 0
-        m.sdr_max_luminance = 300
-        m.sdrsaturation = 1.0
-        m.sdrbrightness = 1.2
-        -- m.sdr_max_luminance = 3000
-        -- m.sdrbrightness = 1.0
-        -- m.sdrsaturation = 0.85
+        m.bitdepth            = 10
+        m.cm                  = "hdredid"
+        m.supports_hdr        = 1
+        m.supports_wide_color = 1
+        m.min_luminance       = 0
+        m.max_luminance       = 3000
+        m.sdr_min_luminance   = 0
+        m.sdr_max_luminance   = 300
+        m.sdrsaturation       = 1.0
+        m.sdrbrightness       = 1.2
     else
         m.bitdepth = 8
-        m.cm = "auto"
-        m.vrr = 0
+        m.cm       = "auto"
     end
 
     hl.monitor(m)
 end
 
-local function pick(connected)
-    for _, name in ipairs(display_order) do
-        if connected[name] then return name end
-    end
+local function disable(name)
+    if applied[name] == "off" then return end
+    applied[name] = "off"
+    hl.monitor({ output = name, disabled = true })
 end
 
-local function current_primary()
-    local connected = {}
+-- ---------------------------------------------------------------------------
+-- selection
+-- ---------------------------------------------------------------------------
+
+-- Every connected output we can name right now: the enabled set, plus the one
+-- that just announced itself (hl.get_monitors() only reports ENABLED outputs,
+-- so a monitor we are about to judge on monitor.added is not in it yet).
+local function candidates(added)
+    local list, seen = {}, {}
     for _, mon in ipairs(hl.get_monitors() or {}) do
-        connected[mon.name] = mon
+        seen[mon.name] = true
+        list[#list + 1] = mon
     end
-    return pick(connected)
+    if added and added.name and not seen[added.name] then
+        list[#list + 1] = added
+    end
+    return list
 end
 
--- chosen output on (override mode if one is stashed, otherwise the tuned
--- default), every other configured output off
-local function apply_primary(primary)
-    local cfg = displays[primary]
-    local o = read_override()
-    apply(primary,
-        o and o.resolution or cfg.resolution,
-        o and o.depth or cfg.depth,
-        cfg.scale, true)
-    for name in pairs(displays) do
-        if name ~= primary then apply(name, nil, nil, nil, false) end
+-- highest-priority display_order key that some candidate matches
+local function primary_key(cands)
+    local present = {}
+    for _, mon in ipairs(cands) do
+        local k = key_for(mon)
+        if k then present[k] = true end
+    end
+    for _, name in ipairs(display_order) do
+        if present[name] then return name end
     end
 end
 
--- re-run selection whenever the set of connected outputs changes (docking,
--- undocking, the individual monitor.added events during login) without a
--- manual reload.
---
--- Guard: `last_primary` is the output we last enabled. Our own disable
--- calls fire more monitor events, but those re-runs see the same primary
--- and stop. It is deliberately NOT seeded, so the first run after config
--- parse always applies.
+-- output name of the candidate matching `key`, or nil
+local function name_of(cands, key)
+    for _, mon in ipairs(cands) do
+        if key_for(mon) == key then return mon.name end
+    end
+end
+
 local last_primary = nil
 
-local function select()
-    local primary = current_primary()
+local function select(added)
+    local cands = candidates(added)
+    local pkey  = primary_key(cands)
 
-    if not primary then
-        -- Nothing we know about is on: fresh startup, or we just undocked
-        -- while the built-in panel was still disabled. Turn every configured
-        -- output back on; whichever physically exists lights up and
-        -- re-triggers selection via monitor.added.
-        for name in pairs(displays) do
-            hl.monitor({ output = name, disabled = false })
+    if not pkey then
+        -- Nothing we recognise is on. If some output is still lit, leave it
+        -- alone; if the screen is truly dark (just undocked a single_monitor
+        -- primary), poke every configured output back on and let whichever
+        -- physically exists re-drive selection via monitor.added.
+        if #cands == 0 then
+            for _, cfg in pairs(displays) do
+                if cfg.match and cfg.match.description then
+                    hl.monitor({ output = "desc:" .. cfg.match.description, disabled = false })
+                end
+            end
         end
         return
     end
 
-    if primary == last_primary then return end
-    if last_primary ~= nil then
-        -- a genuine dock/undock -- the stashed override was for the old
-        -- screen, drop it so the new one comes up at its tuned default
-        os.remove(override_path)
+    local pname = name_of(cands, pkey)
+    if not pname then return end
+
+    -- a genuine primary change invalidates the stashed override
+    if last_primary and last_primary ~= pkey then os.remove(override_path) end
+    last_primary = pkey
+
+    -- primary's effective config (override mode/depth folded in)
+    local pcfg = displays[pkey]
+    local o    = read_override()
+    local peff = {
+        resolution     = o and o.resolution or pcfg.resolution,
+        depth          = o and (o.depth or pcfg.depth) or pcfg.depth,
+        scale          = pcfg.scale,
+        single_monitor = pcfg.single_monitor,
+    }
+
+    -- desired layout: output name -> { cfg, x }
+    local want = { [pname] = { cfg = peff, x = 0 } }
+
+    if not pcfg.single_monitor then
+        local x = logical_width(peff)
+        for _, name in ipairs(display_order) do
+            local cfg = displays[name]
+            if name ~= pkey and cfg and not cfg.single_monitor then
+                local mname = name_of(cands, name)
+                if mname then
+                    want[mname] = { cfg = cfg, x = x }
+                    x = x + logical_width(cfg)
+                end
+            end
+        end
     end
-    last_primary = primary
-    apply_primary(primary)
+
+    -- enable everything wanted, disable every other candidate
+    for name, w in pairs(want) do
+        apply(name, w.cfg, w.x)
+    end
+    for _, mon in ipairs(cands) do
+        if not want[mon.name] then disable(mon.name) end
+    end
 end
 
--- Entry points for the helper scripts and Sunshine's prep-cmd, via
--- `hyprctl eval 'monitor_override("2560x1440@120", "hdr")'` /
--- `hyprctl eval 'monitor_revert()'`. Global on purpose: eval runs in this
--- same Lua state and resolves them by name.
+-- ---------------------------------------------------------------------------
+-- helper-script entry points, via
+--   hyprctl eval 'monitor_override("2560x1440@120", "hdr")'
+--   hyprctl eval 'monitor_revert()'
+-- Global on purpose: eval runs in this same Lua state and resolves them by name.
+-- ---------------------------------------------------------------------------
 function monitor_override(mode, depth)
     local f = io.open(override_path, "w")
     if f then
         f:write(mode or "", "\n", depth or "", "\n")
         f:close()
     end
-    local primary = current_primary()
-    if primary then apply_primary(primary) end
+    applied = {}   -- force re-apply with the new override mode
+    select(nil)
 end
 
 function monitor_revert()
     os.remove(override_path)
-    local primary = current_primary()
-    if primary then apply_primary(primary) end
+    applied = {}
+    select(nil)
 end
 
-select()
-hl.on("monitor.added", select)
-hl.on("monitor.removed", select)
+select(nil)
+hl.on("monitor.added", function(m) select(m) end)
+hl.on("monitor.removed", function(m)
+    if m and m.name then applied[m.name] = nil end
+    select(nil)
+end)
 
 hl.config({ render = {
     -- 0 - disabled
