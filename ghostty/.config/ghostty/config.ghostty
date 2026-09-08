@@ -9,3 +9,5 @@ background-opacity = 0.7
 background-opacity-cells = true
 
 custom-shader = ./ghostty-cursor-shaders/cursor_warp.glsl
+
+config-file = ?./include/macos.toml
