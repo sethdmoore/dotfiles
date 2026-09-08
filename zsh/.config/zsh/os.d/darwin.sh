@@ -113,6 +113,31 @@ setup_gcloud() {
     fi
 }
 
+set_runtime_dir() {
+    # we've already been set, immediately return
+    if [ -n "$XDG_RUNTIME_DIR" ]; then
+        return
+    fi
+
+    # yarn wants this set on osx for some reason
+    # I'm probably doing something wrong
+    export XDG_RUNTIME_DIR
+
+    if [ -n "$TMPDIR" ]; then
+        XDG_RUNTIME_DIR="$TMPDIR"
+        return
+    fi
+
+    echo "WARN: TMPDIR unset? Trying getconf"
+    echo '`getconf DARWIN_USER_TEMP_DIR`'
+
+    if ! XDG_RUNTIME_DIR="$(getconf DARWIN_USER_TEMP_DIR)"; then
+        echo "CRITICAL: getconf DARWIN_USER_TEMP_DIR failed"
+        echo "Did Apple change the spec?"
+        echo "XDG_RUNTIME_DIR unset. You may have issues with yarn."
+    fi
+}
+
 
 osxmain() {
     check_osx_version_string
@@ -121,6 +146,8 @@ osxmain() {
 
     # setup_pip_bins_osx
 
+    # colima x86 support is really slow on rosetta, so avoid it
+    # -- use openSUSE Zypper or any other arm-based distro
     # brew install lima colima docker
     # softwareupdate --install-rosetta --agree-to-license
     # colima start --vm-type vz --vz-rosetta --mount-type virtiofs --cpu 4 --memory 8 --disk 60
@@ -130,19 +157,20 @@ osxmain() {
     # docker run --rm archlinux:latest uname -m   # → x86_64
     # export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-    # Probably gonna get rid of this
-    setup_macports
+    # setup_macports
 
     setup_homebrew
+
+    osx_ssh_agent
+
+    setup_gcloud
+
+    set_runtime_dir
 
     # 1password integration
     if [ -f "${HOME}/.config/op/plugins.sh" ] ; then
         source "${HOME}/.config/op/plugins.sh"
     fi
-
-    osx_ssh_agent
-
-    setup_gcloud
 
     # for terraform + tfenv
     if [ "$CPU_ARCHITECTURE" = "arm64" ]; then
