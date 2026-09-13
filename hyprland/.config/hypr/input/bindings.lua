@@ -62,7 +62,8 @@ hl.config({ binds = {
 } })
 
 -- launcher shortcuts
-hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
+hl.bind(mainMod .. " + space", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
+hl.bind(mainMod .. " + SHIFT + space", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + t", hl.dsp.exec_cmd(terminal))
 hl.bind(mainMod .. " + f", hl.dsp.exec_cmd(browser_binding))
 hl.bind(mainMod .. " + z", hl.dsp.exec_cmd(browser_binding))

@@ -37,6 +37,15 @@ hl.window_rule({
 })
 
 hl.window_rule({
+    name = "move-swappy",
+    match = {
+        initial_class = "swappy",
+        initial_title = "swappy",
+    },
+    workspace = "special:scratch silent"
+})
+
+hl.window_rule({
     name = "floating-tag-floats",
     match = {
         tag = "floating",
