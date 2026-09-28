@@ -21,10 +21,12 @@ if [ "$colormode" = "hdr" ] || [ "$colormode" = "hdredid" ]; then
   hyprctl --batch "$batch_cmd"
   notify-send "HDR disabled"
 elif [ "$colormode" = "srgb" ]; then
-  # colormode should be srgb, reload
-  hyprctl reload
+  # colormode should be srgb; force a real re-apply (plain `hyprctl reload`
+  # is a no-op here since monitors.lua's `applied` cache skips re-issuing
+  # hl.monitor() when nothing has changed)
+  hyprctl eval 'monitor_reapply()'
   notify-send "HDR" "Enabled"
 else
-  notify-send "HDR" "${colormode} colormode is unsupported\nReloading config to reset"
-  hyprctl reload
+  notify-send "HDR" "${colormode} colormode is unsupported\nForcing re-apply to reset"
+  hyprctl eval 'monitor_reapply()'
 fi

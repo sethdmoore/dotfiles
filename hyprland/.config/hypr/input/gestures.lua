@@ -10,6 +10,7 @@ hl.config({
         touchpad = {
             clickfinger_behavior = true,
             tap_to_click = false,
+            disable_while_typing = false,
         }
     }
 })

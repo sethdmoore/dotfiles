@@ -247,6 +247,15 @@ function monitor_revert()
     select(nil)
 end
 
+-- Force a genuine re-application of the current config (bypassing the
+-- `applied` signature cache that makes plain `hyprctl reload` a no-op when
+-- nothing has changed). Works around HDR not sticking on the first commit
+-- at boot -- see autostart.lua.
+function monitor_reapply()
+    applied = {}
+    select(nil)
+end
+
 select(nil)
 hl.on("monitor.added", function(m) select(m) end)
 hl.on("monitor.removed", function(m)
