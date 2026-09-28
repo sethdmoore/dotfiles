@@ -40,12 +40,14 @@ displays = {
         scale          = 2.0,
         single_monitor = true,
     },
-    -- desktop = {
-    --     match          = { description = "CHANGEME seth.home display" },
-    --     resolution     = "3840x2160@165",
-    --     depth          = "hdr",
-    --     single_monitor = true,
-    -- },
+    desktop = {
+        match          = { description = "Hisense Electric Co. Ltd. HISENSE 0x616D0000" },
+        depth          = "hdr",
+        resolution     = "3840x2160@165",
+        depth          = "hdr",
+        scale          = 1.0,
+        single_monitor = true,
+    },
     laptop = {
         match      = { description = "BOE NE160QDM-NZ6" },
         resolution = "2560x1600@165",
