@@ -99,9 +99,20 @@ function nvm() {
         return
     fi
 
-    # Macports
-    if [ -e "/opt/homebrew/opt/nvm/" ]; then
+    # linux support, depends on
+    # `export KERNEL="$(uname -s | tr '[A-Z]' '[a-z]')"
+    if [ "$KERNEL" = "linux" ]; then
+        if [ -d "/usr/share/nvm" ]; then
+            nvm_source_dir="/usr/share/nvm"
+        else
+            echo "shim NVM (aliases): Install nvm first"
+            echo "  pacman -S nvm"
+            return
+        fi
+    # Homebrew support
+    elif [ -e "/opt/homebrew/opt/nvm/" ]; then
         nvm_source_dir="/opt/homebrew/opt/nvm/"
+    # Macports support
     elif [ -d "$MACPORTS_HOME" ]; then
         if [ -d "${MACPORTS_HOME}/share/nvm"  ]; then
             nvm_source_dir="${MACPORTS_HOME}/share/nvm"
@@ -110,15 +121,6 @@ function nvm() {
            echo "  port install nvm"
            return
        fi
-    # A ch
-    elif [ "$KERNEL" = "linux" ]; then
-        if [ -d "/usr/share/nvm" ]; then
-            nvm_source_dir="/usr/share/nvm"
-        else
-            echo "shim NVM (aliases): Install nvm first"
-            echo "  pacman -S nvm"
-            return
-        fi
     fi
 
     if [ -z "$nvm_source_dir" ]; then
