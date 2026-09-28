@@ -48,11 +48,12 @@ local function apply(name, resolution, depth, scale, on)
         m.cm = "hdredid"
 
         -- 0: off, 1: on, 2: fullscreen only, 3: video/game content fullscreen
-        m.vrr = 0
+        m.vrr = 3
         m.supports_hdr = 0
         m.supports_wide_color = 0
         m.min_luminance = 0
         m.max_luminance = 3000
+        -- m.max_luminance = 3000
         m.sdr_min_luminance = 0
         m.sdr_max_luminance = 300
         m.sdrsaturation = 1.0
@@ -166,7 +167,7 @@ hl.config({ render = {
     --   rubinite: black screen on fullscreen (alt+enter / super enter / settings)
     --   wayfinder: black screen on fullscreen (alt+enter / super enter / settings)
     --  0 disabled / 1 on / 2 auto (content type game)
-    direct_scanout = 0,
+    -- direct_scanout = 2,
 
     -- 2 - low latency with content type 'game'
     -- 1 - on if fullscreen

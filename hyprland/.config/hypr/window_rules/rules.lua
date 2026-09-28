@@ -15,13 +15,25 @@ hl.window_rule({
 hl.window_rule({
     name = "tag-and-move-steam-games",
     match = {
-        initial_class = "^steam_app_.*$",
+        -- aniimo runs as class "aniimo.exe", not steam_app_<id>
+        initial_class = "^(steam_app_.*|aniimo\\.exe)$",
         -- title = "negative:|^(?i)(.*(Launcher|NetEase Game Security).*)$",
         -- tag = "negative:|novrr",
     },
     tag = "+game",
     content = "game",
     workspace = "5 silent",
+})
+
+-- steam's own "Aniimo" popup (welcome overlay): keep it off the active workspace
+hl.window_rule({
+    name = "aniimo-steam-popup",
+    match = {
+        class = "^steam$",
+        initial_title = "^Aniimo$",
+    },
+    no_initial_focus = true,
+    workspace = "special:overlay silent",
 })
 
 -- move gamescope to 5
@@ -147,6 +159,7 @@ hl.window_rule({
         fullscreen = true,
     },
 
+    workspace = "5 silent",
     confine_pointer = true,
 })
 
