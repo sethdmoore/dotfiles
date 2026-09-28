@@ -1,0 +1,105 @@
+FROM --platform=linux/arm64 opensuse/tumbleweed:latest
+
+ARG claude_code_version=2.1.281
+
+# Tumbleweed ships a native aarch64 image, so unlike the Arch image there is
+# no emulated-sandbox workaround to carry over here.
+RUN zypper --non-interactive --gpg-auto-import-keys dup
+
+ARG uid=1000
+ARG gid=1000
+
+ENV NPM_CONFIG_PREFIX=/home/claude/.npm
+ENV LOGSEQ_API_URL="http://host.docker.internal:12315"
+
+# npm to PATH
+ENV PATH=/home/claude/.npm/bin:$PATH
+# go bins to PATH
+ENV PATH="/home/claude/go/bin:$PATH"
+
+# core utilities
+# devel_basis gives fakeroot, gcc, grep, make, pkgconf, and which
+RUN zypper --non-interactive install --no-recommends \
+  patterns-devel-base-devel_basis \
+  shadow coreutils \
+  ripgrep \
+  python313 python313-pip python313-uv
+
+# claude requested utilities
+RUN zypper --non-interactive install --no-recommends \
+  go \
+  fd \
+  jq yq python313-yamllint \
+  bat shfmt \
+  poppler-tools \
+  git-delta \
+  curl wget unzip xz
+
+# claude requested hadolint, so we will package and verify ourselves
+ARG HADOLINT_VERSION=2.12.0
+ARG HADOLINT_SHA256=5798551bf19f33951881f15eb238f90aef023f11e7ec7e9f4c37961cb87c5df6
+RUN curl -fsSL -o /usr/local/bin/hadolint \
+      "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-arm64" \
+  && echo "${HADOLINT_SHA256}  /usr/local/bin/hadolint" | sha256sum -c - \
+  && chmod +x /usr/local/bin/hadolint
+
+# dev tools
+RUN zypper --non-interactive install --no-recommends \
+  nodejs24 npm24 yarn \
+  gh
+
+# terraform's BSL license keeps it out of Tumbleweed's repos, so we fetch and
+# verify the upstream release directly
+ARG TERRAFORM_VERSION=1.15.8
+ARG TERRAFORM_SHA256=8891e9dcedc9e3b8950bc6af9d4d8af1f4cfade3062f53b9dc403a89f6ce8c9c
+RUN curl -fsSL -o /tmp/terraform.zip \
+      "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_arm64.zip" \
+  && echo "${TERRAFORM_SHA256}  /tmp/terraform.zip" | sha256sum -c - \
+  && unzip -o /tmp/terraform.zip -d /usr/local/bin \
+  && rm -f /tmp/terraform.zip
+
+# build tools
+RUN zypper --non-interactive install --no-recommends \
+  git meson just
+
+# shellcheck's GHC toolchain is not packaged for Tumbleweed, so we fetch and
+# verify the upstream release directly
+ARG SHELLCHECK_VERSION=0.11.0
+ARG SHELLCHECK_SHA256=12b331c1d2db6b9eb13cfca64306b1b157a86eb69db83023e261eaa7e7c14588
+RUN curl -fsSL -o /tmp/shellcheck.tar.xz \
+      "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.aarch64.tar.xz" \
+  && echo "${SHELLCHECK_SHA256}  /tmp/shellcheck.tar.xz" | sha256sum -c - \
+  && tar -xJf /tmp/shellcheck.tar.xz -C /tmp \
+  && install -m 0755 "/tmp/shellcheck-v${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck \
+  && rm -rf /tmp/shellcheck.tar.xz "/tmp/shellcheck-v${SHELLCHECK_VERSION}"
+
+# noctalia
+RUN zypper --non-interactive install --no-recommends \
+  wayland-devel wayland-protocols-devel \
+  libglvnd-devel freetype2-devel fontconfig-devel \
+  cairo-devel pango-devel harfbuzz-devel \
+  libxkbcommon-devel glib2-devel \
+  sdbus-cpp-devel pipewire-devel polkit-devel \
+  pam-devel libwebp-devel librsvg-devel \
+  libqalculate-devel libxml2-devel \
+  jemalloc-devel
+
+RUN groupadd -g $gid claude
+RUN useradd -g $gid -u $uid -l -d /home/claude -m claude
+
+USER claude
+ENV CLAUDE_CONFIG_DIR=/home/claude/.config/claude
+RUN mkdir -p "$CLAUDE_CONFIG_DIR"
+
+# user installs
+RUN go install github.com/rhysd/actionlint/cmd/actionlint@latest
+RUN npm install -g prettier@3
+RUN npm install -g corepack@0.35.0
+
+# allow post installation scripts for claude
+RUN npm config set allow-scripts=@anthropic-ai/claude-code --location=user
+RUN npm install -g @anthropic-ai/claude-code@"${claude_code_version}"
+
+RUN npm install -g @p0security/cli
+
+ENTRYPOINT ["claude"]
