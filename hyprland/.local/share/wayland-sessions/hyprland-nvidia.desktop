@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Hyprland (NVIDIA primary)
+Comment=Hyprland with the discrete GPU as the primary DRM device (external HDR)
+Exec=/home/seth/.local/bin/hypr/start-hyprland-nvidia
+Type=Application
+DesktopNames=Hyprland
+
+# NOTE: this machine's SDDM only scans /usr/share/wayland-sessions
+# (SessionDir in /usr/lib/sddm/sddm.conf.d/general.conf). Install with:
+#   sudo install -Dm644 ~/.local/share/wayland-sessions/hyprland-nvidia.desktop \
+#     /usr/share/wayland-sessions/hyprland-nvidia.desktop
+# Pacman will not touch a file the hyprland package does not own.

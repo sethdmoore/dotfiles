@@ -5,3 +5,12 @@ hl.gesture({
     action = "workspace",
 })
 
+hl.config({
+    input = {
+        touchpad = {
+            clickfinger_behavior = true,
+            tap_to_click = false,
+            disable_while_typing = false,
+        }
+    }
+})

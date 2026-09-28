@@ -1,0 +1,25 @@
+#!/bin/sh
+# NVIDIA-primary Hyprland session.
+#
+# Makes the discrete GPU the primary DRM device so outputs wired to it (the
+# living-room TV, on DP-* off the nvidia card) get a native scan-out path with
+# full HDR / 10-bit colour. In the default session the AMD iGPU is primary and
+# the TV is a secondary-GPU output -- frames are copied across as linear
+# multigpu buffers and HDR metadata never reaches the panel.
+#
+# AQ_DRM_DEVICES must be set BEFORE Hyprland starts (aquamarine reads it at
+# backend init; env set from hyprland.lua is applied too late).
+#
+# It is a ':'-separated list, primary first (aquamarine src/backend/drm/DRM.cpp:
+#   CVarList explicitDevices(explicitGpus, 0, ':', true)). Because ':' is the
+# separator, the /dev/dri/by-path/pci-0000:XX:XX.X-card nodes are UNUSABLE here
+# -- their own colons get split and every fragment fails to canonicalize, so
+# aquamarine finds zero GPUs and initServer() aborts. Plain /dev/dri/cardN work
+# but the numbers are not boot-stable, so we use colon-free udev symlinks from
+#   /etc/udev/rules.d/90-dri-gpu-aliases.rules
+#     KERNELS=="0000:c1:00.0" -> /dev/dri/nvidia-dgpu   (RTX 5070 Mobile)  primary
+#     KERNELS=="0000:c2:00.0" -> /dev/dri/amd-igpu      (Radeon 890M iGPU) secondary
+# After editing that rules file: sudo udevadm control --reload && sudo udevadm trigger
+export AQ_DRM_DEVICES=/dev/dri/nvidia-dgpu:/dev/dri/amd-igpu
+
+exec /usr/bin/start-hyprland "$@"

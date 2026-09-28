@@ -46,6 +46,14 @@ hl.bind(mainMod .. " + f10", function()
     hl.exec_cmd('notify-send ' .. tostring(hl.config) )
 end)
 
+hl.bind(mainMod .. " + f9", function()
+    enable_touchpad = not enable_touchpad
+
+    hl.device({name = touchpad_device, enabled = enable_touchpad,})
+
+    hl.exec_cmd('notify-send "touchpad enabled: ' .. tostring(enable_touchpad) .. '"' )
+end)
+
 -- close app
 -- hl.bind(mainMod .. " + q", hl.dsp.window.close(), { release = true })
 hl.bind(mainMod .. " + q", hl.dsp.window.close())

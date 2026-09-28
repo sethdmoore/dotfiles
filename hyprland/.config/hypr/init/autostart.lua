@@ -9,7 +9,11 @@ onstart_commands = {
   -- "awww-daemon &", --noctalia replaces
   "sleep 2; systemctl --user start sunshine &",
   "noctalia &",
-  "sleep 2; dex -a &" -- autostart stuff in ~/.config/autostart
+  "sleep 2; dex -a &", -- autostart stuff in ~/.config/autostart
+  -- HDR doesn't always stick on the very first monitor commit at boot
+  -- (the livingroom_tv connector isn't settled yet); force a real
+  -- re-apply a few seconds in. See monitor_reapply() in init/monitors.lua.
+  "sleep 5; hyprctl eval 'monitor_reapply()' &"
   -- hl.exec_cmd("ashell &") --noctalia replaces
 }
 
