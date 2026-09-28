@@ -1,14 +1,54 @@
 #!/bin/sh
 
-export CLAUDE_CLI_MOUNTS
+export \
+  CLAUDE_CLI_MOUNTS \
+  CLAUDE_CLI_DOCKERFILE \
+  CLAUDE_CONFIG_DIR \
+  LOGSEQ_API_TOKEN
 
 # ${parameter-word}
 #   defined but null == null
 #   unset == --dangerously-skip-permissions
 #   foo---bar: foo becomes --bar if foo unset. null if foo is null
 export CLAUDE_CLI_FLAGS="${CLAUDE_CLI_FLAGS---dangerously-skip-permissions}"
-export LOGSEQ_API_TOKEN
 export CLAUDE_CLI_PULL='1'
+
+check_prerequisites() {
+  if [ -z "$CLAUDE_CONFIG_DIR" ]; then
+    echo "ERROR: claude-cli: CLAUDE_CONFIG_DIR is unset."
+    echo '       Usually this is set in "${ZOTDIR}/ENV"'
+    echo '       setting to ~/.config/claude'
+    export CLAUDE_CONFIG_DIR="${HOME}/.config/claude"
+  fi
+
+  if [ -z "$KERNEL" ]; then
+    echo "WARN: claude-cli: KERNEL is unset"
+    echo "      setting with uname -s | tr '[A-Z]' '[a-z]'"
+    export KERNEL="$(uname -s | tr '[A-Z]' '[a-z]')"
+  fi
+}
+
+
+# stow links ~/.local/state/claude-cli to the dotfiles copy, so the
+# per-kernel Dockerfiles live there. An explicit CLAUDE_CLI_DOCKERFILE wins.
+# With no file for this kernel the variable stays unset, and claude-cli.py
+# falls back to its inline Dockerfile.
+set_dockerfile() {
+  if [ -n "$CLAUDE_CLI_DOCKERFILE" ]; then
+    return
+  fi
+
+  dockerfile="${XDG_STATE_HOME:-${HOME}/.local/state}/claude-cli"
+  dockerfile="${dockerfile}/claude-cli-dockerfile.${KERNEL}"
+  if ! [ -f "$dockerfile" ]; then
+    echo "WARN: claude-cli: no Dockerfile at ${dockerfile}"
+    echo "      claude-cli.py will use its inline Dockerfile"
+    return
+  fi
+
+  CLAUDE_CLI_DOCKERFILE="$dockerfile"
+}
+
 
 append_mounts() {
   mount="$1"
@@ -21,26 +61,31 @@ append_mounts() {
       CLAUDE_CLI_MOUNTS="${CLAUDE_CLI_MOUNTS}:${mount}"
     fi
   else
-    echo "mount is unset, internal error ${mount}" 2>&1
+    echo "mount is unset, internal error ${mount}" >&2
   fi
 }
+
 
 set_claude_mounts() {
-  # source this file if it exists
   secret_file="${HOME}/.local/state/secrets"
-
   if [ -f "${secret_file}" ]; then
-    source "${secret_file}"
+    . "${secret_file}"
   fi
 
-  # Example config: 
-  #   define additional paths to mount here
-  #
   pfx="type=bind,src="
-  mount_skills="${pfx}${HOME}/dotfiles/claude/.config/claude/skills,dst=/home/claude/.claude/skills"
+  mount_skills="${pfx}${HOME}/dotfiles/claude/.config/claude/skills"
+  mount_skills="${mount_skills},dst=${CLAUDE_CONFIG_DIR}/skills"
+
   append_mounts "$mount_skills"
+  # define additional paths to mount here
 }
 
 
-set_claude_mounts
-"$HOME/dev/git/claude-cli/claude-cli.sh" $@
+main() {
+  check_prerequisites
+  set_dockerfile
+  set_claude_mounts
+  claude-cli.py "$@"
+}
+
+main "$@"
