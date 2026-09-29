@@ -53,13 +53,19 @@ local function desc_matches(description, prefix)
     return description:sub(1, #prefix) == prefix
 end
 
--- friendly-name key of the `displays` entry this monitor object matches, or nil
+-- friendly-name key of the `displays` entry this monitor object matches, or nil.
+-- When several prefixes match (e.g. a generic "... HISENSE" and a specific
+-- "... HISENSE 0x616D0000"), the LONGEST prefix wins, so specific entries
+-- are never shadowed by generic ones regardless of pairs() order.
 local function key_for(mon)
+    local best, best_len = nil, -1
     for name, cfg in pairs(displays) do
-        if cfg.match and desc_matches(mon.description, cfg.match.description) then
-            return name
+        local prefix = cfg.match and cfg.match.description
+        if prefix and desc_matches(mon.description, prefix) and #prefix > best_len then
+            best, best_len = name, #prefix
         end
     end
+    return best
 end
 
 -- ---------------------------------------------------------------------------

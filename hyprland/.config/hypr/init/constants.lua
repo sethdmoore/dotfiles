@@ -34,15 +34,18 @@ taskManager = 'resources'
 --                      display_order.
 displays = {
     livingroom_tv = {
-        match          = { description = "Hisense Electric Co. Ltd. HISENSE" },
+        match          = {
+            description = "Hisense Electric Co. Ltd. HISENSE"
+        },
         resolution     = "3840x2160@144",
         depth          = "hdr",
         scale          = 2.0,
         single_monitor = true,
     },
     desktop = {
-        match          = { description = "Hisense Electric Co. Ltd. HISENSE 0x616D0000" },
-        depth          = "hdr",
+        match          = {
+            description = "Hisense Electric Co. Ltd. HISENSE 0x616D0000"
+        },
         resolution     = "3840x2160@165",
         depth          = "hdr",
         scale          = 1.0,
