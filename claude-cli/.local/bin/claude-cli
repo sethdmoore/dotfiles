@@ -39,11 +39,8 @@ def show_help() -> None:
 Run Claude Code ({CLAUDE_IMAGE}) inside a Docker container.
 
 A build installs the latest {CLAUDE_CODE_PACKAGE} on npm and records that
-version as a label on the image. Each start compares the label with npm and
-prints a note when a newer version exists. npm is asked at most once an
-hour. The answer is cached in $XDG_CACHE_HOME/claude-cli/claude_code_version,
-or ~/.cache/claude-cli, or the temporary directory, whichever accepts a
-write first.
+The answer is cached in $XDG_CACHE_HOME/claude-cli/claude_code_version,
+or ~/.cache/claude-cli.
 
 Options:
   -b    Build the Docker image (rebuilds if it already exists)
@@ -54,26 +51,21 @@ With no DIR argument, the script mounts the current directory as the working
 directory. One DIR argument mounts it as the working directory. Two or more
 DIR arguments mount all of them, with the first as the working directory.
 
-The container user is {CONTAINER_USER} with home {CONTAINER_HOME}, the same
-as the host, and every directory is mounted at its host path. Claude Code
-therefore keys a session under the same projects entry on both sides.
+The container uses the same user name / uid and primary gid of the invoker.
 
-The configuration directory is $CLAUDE_CONFIG_DIR, or $XDG_CONFIG_HOME/claude,
-or ~/.config/claude. It is mounted at the same path in the container.
+The configuration directory is one of (first match):
+- $CLAUDE_CONFIG_DIR || $XDG_CONFIG_HOME/claude || ~/.config/claude.
 
 The Dockerfile is CLAUDE_CLI_DOCKERFILE when set, otherwise
 {STATE_HOME}/claude-cli/claude-cli-dockerfile.{KERNEL}.
 
 A file at {STATE_HOME}/secrets, if present, is sourced with sh before the
-container starts. It can export LOGSEQ_API_TOKEN and append mount specs to
-CLAUDE_CLI_MOUNTS.
+container starts. It can set additional secrets and mounts.
 
 Environment:
   CLAUDE_CLI_FLAGS       Flags passed to claude in the container. Defaults
                          to --dangerously-skip-permissions when unset. An
                          explicitly empty value passes no flags.
-  CLAUDE_CLI_PULL        Pull the base image during -b. On by default. An
-                         explicitly empty value builds from the local cache.
   CLAUDE_CLI_UID         Numeric uid and gid of the container user. Default
   CLAUDE_CLI_GID         to the host user's values.
   KERNEL                 Selects the per-kernel Dockerfile. Defaults to the
@@ -157,11 +149,7 @@ def build_image() -> None:
     if not path.is_file():
         die(f"Dockerfile not found: {path}")
 
-    cmd = ["buildx", "build"]
-    # CLAUDE_CLI_PULL is on by default. Set it to an explicitly empty value
-    # to build from the local image cache instead.
-    if "CLAUDE_CLI_PULL" not in os.environ or os.environ["CLAUDE_CLI_PULL"]:
-        cmd.append("--pull")
+    cmd = ["buildx", "build", "--pull"]
     version = latest_claude_code_version()
     if not version:
         die(f"cannot determine the latest {CLAUDE_CODE_PACKAGE} version from npm")
