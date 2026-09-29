@@ -1,21 +1,23 @@
 FROM --platform=linux/arm64 opensuse/tumbleweed:latest
 
-ARG claude_code_version=2.1.281
+ARG claude_code_version
 
 # Tumbleweed ships a native aarch64 image, so unlike the Arch image there is
 # no emulated-sandbox workaround to carry over here.
 RUN zypper --non-interactive --gpg-auto-import-keys dup
 
-ARG uid=1000
-ARG gid=1000
+ARG uid
+ARG gid
+ARG user
+ARG home
 
-ENV NPM_CONFIG_PREFIX=/home/claude/.npm
+ENV NPM_CONFIG_PREFIX=${home}/.npm
 ENV LOGSEQ_API_URL="http://host.docker.internal:12315"
 
 # npm to PATH
-ENV PATH=/home/claude/.npm/bin:$PATH
+ENV PATH=${home}/.npm/bin:$PATH
 # go bins to PATH
-ENV PATH="/home/claude/go/bin:$PATH"
+ENV PATH="${home}/go/bin:$PATH"
 
 # core utilities
 # devel_basis gives fakeroot, gcc, grep, make, pkgconf, and which
@@ -84,11 +86,11 @@ RUN zypper --non-interactive install --no-recommends \
   libqalculate-devel libxml2-devel \
   jemalloc-devel
 
-RUN groupadd -g $gid claude
-RUN useradd -g $gid -u $uid -l -d /home/claude -m claude
+RUN groupadd -g $gid $user
+RUN useradd -g $gid -u $uid -l -d ${home} -m $user
 
-USER claude
-ENV CLAUDE_CONFIG_DIR=/home/claude/.config/claude
+USER $user
+ENV CLAUDE_CONFIG_DIR=${home}/.config/claude
 RUN mkdir -p "$CLAUDE_CONFIG_DIR"
 
 # user installs

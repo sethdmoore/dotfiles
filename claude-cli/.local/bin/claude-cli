@@ -1,91 +1,347 @@
-#!/bin/sh
+#!/usr/bin/env python3
+"""Run Claude Code inside a Docker container."""
 
-export \
-  CLAUDE_CLI_MOUNTS \
-  CLAUDE_CLI_DOCKERFILE \
-  CLAUDE_CONFIG_DIR \
-  LOGSEQ_API_TOKEN
+import argparse
+import getpass
+import json
+import os
+import shlex
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.error
+import urllib.request
+from datetime import datetime
+from pathlib import Path
 
-# ${parameter-word}
-#   defined but null == null
-#   unset == --dangerously-skip-permissions
-#   foo---bar: foo becomes --bar if foo unset. null if foo is null
-export CLAUDE_CLI_FLAGS="${CLAUDE_CLI_FLAGS---dangerously-skip-permissions}"
-export CLAUDE_CLI_PULL='1'
+CLAUDE_IMAGE = os.environ.get("CLAUDE_IMAGE", "claude-cli:latest")
+CLAUDE_CODE_PACKAGE = "@anthropic-ai/claude-code"
+NPM_REGISTRY = "https://registry.npmjs.org"
+VERSION_CACHE_MAX_AGE = 3600
 
-check_prerequisites() {
-  if [ -z "$CLAUDE_CONFIG_DIR" ]; then
-    echo "ERROR: claude-cli: CLAUDE_CONFIG_DIR is unset."
-    echo '       Usually this is set in "${ZOTDIR}/ENV"'
-    echo '       setting to ~/.config/claude'
-    export CLAUDE_CONFIG_DIR="${HOME}/.config/claude"
-  fi
-
-  if [ -z "$KERNEL" ]; then
-    echo "WARN: claude-cli: KERNEL is unset"
-    echo "      setting with uname -s | tr '[A-Z]' '[a-z]'"
-    export KERNEL="$(uname -s | tr '[A-Z]' '[a-z]')"
-  fi
-}
-
-
-# stow links ~/.local/state/claude-cli to the dotfiles copy, so the
-# per-kernel Dockerfiles live there. An explicit CLAUDE_CLI_DOCKERFILE wins.
-# With no file for this kernel the variable stays unset, and claude-cli.py
-# falls back to its inline Dockerfile.
-set_dockerfile() {
-  if [ -n "$CLAUDE_CLI_DOCKERFILE" ]; then
-    return
-  fi
-
-  dockerfile="${XDG_STATE_HOME:-${HOME}/.local/state}/claude-cli"
-  dockerfile="${dockerfile}/claude-cli-dockerfile.${KERNEL}"
-  if ! [ -f "$dockerfile" ]; then
-    echo "WARN: claude-cli: no Dockerfile at ${dockerfile}"
-    echo "      claude-cli.py will use its inline Dockerfile"
-    return
-  fi
-
-  CLAUDE_CLI_DOCKERFILE="$dockerfile"
-}
+# The container user and home match the host, so a cwd inside the container
+# equals the host cwd and Claude Code keys a session under the same projects
+# entry on both sides.
+CONTAINER_USER = getpass.getuser()
+CONTAINER_HOME = str(Path.home())
+KERNEL = os.environ.get("KERNEL") or os.uname().sysname.lower()
+STATE_HOME = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state")
+SKILLS_DIR = os.environ.get(
+    "CLAUDE_CLI_SKILLS_DIR", str(Path.home() / "dotfiles/claude/.config/claude/skills")
+)
 
 
-append_mounts() {
-  mount="$1"
+def show_help() -> None:
+    print(
+        f"""Usage: {Path(sys.argv[0]).name} [-b] [-c] [-h] [DIR ...]
 
-  if [ -n "${mount}" ]; then
-    # if this is the first call, set CLAUDE_CLI_MOUNTS
-    if [ -z "${CLAUDE_CLI_MOUNTS}" ]; then
-      CLAUDE_CLI_MOUNTS="${mount}"
-    else
-      CLAUDE_CLI_MOUNTS="${CLAUDE_CLI_MOUNTS}:${mount}"
-    fi
-  else
-    echo "mount is unset, internal error ${mount}" >&2
-  fi
-}
+Run Claude Code ({CLAUDE_IMAGE}) inside a Docker container.
+
+A build installs the latest {CLAUDE_CODE_PACKAGE} on npm and records that
+version as a label on the image. Each start compares the label with npm and
+prints a note when a newer version exists. npm is asked at most once an
+hour. The answer is cached in $XDG_CACHE_HOME/claude-cli/claude_code_version,
+or ~/.cache/claude-cli, or the temporary directory, whichever accepts a
+write first.
+
+Options:
+  -b    Build the Docker image (rebuilds if it already exists)
+  -c    Clean up: remove all claude-cli containers and optionally the image
+  -h    Show this help message
+
+With no DIR argument, the script mounts the current directory as the working
+directory. One DIR argument mounts it as the working directory. Two or more
+DIR arguments mount all of them, with the first as the working directory.
+
+The container user is {CONTAINER_USER} with home {CONTAINER_HOME}, the same
+as the host, and every directory is mounted at its host path. Claude Code
+therefore keys a session under the same projects entry on both sides.
+
+The configuration directory is $CLAUDE_CONFIG_DIR, or $XDG_CONFIG_HOME/claude,
+or ~/.config/claude. It is mounted at the same path in the container.
+
+The Dockerfile is CLAUDE_CLI_DOCKERFILE when set, otherwise
+{STATE_HOME}/claude-cli/claude-cli-dockerfile.{KERNEL}.
+
+A file at {STATE_HOME}/secrets, if present, is sourced with sh before the
+container starts. It can export LOGSEQ_API_TOKEN and append mount specs to
+CLAUDE_CLI_MOUNTS.
+
+Environment:
+  CLAUDE_CLI_FLAGS       Flags passed to claude in the container. Defaults
+                         to --dangerously-skip-permissions when unset. An
+                         explicitly empty value passes no flags.
+  CLAUDE_CLI_PULL        Pull the base image during -b. On by default. An
+                         explicitly empty value builds from the local cache.
+  CLAUDE_CLI_UID         Numeric uid and gid of the container user. Default
+  CLAUDE_CLI_GID         to the host user's values.
+  KERNEL                 Selects the per-kernel Dockerfile. Defaults to the
+                         host kernel name, lowercased.
+  CLAUDE_CLI_MOUNTS      Colon-separated Docker --mount specs.
+  CLAUDE_CLI_SKILLS_DIR  Host directory bind mounted onto skills/ inside the
+                         configuration directory. Defaults to
+                         ~/dotfiles/claude/.config/claude/skills. An
+                         explicitly empty value skips this mount.
+  LOGSEQ_API_TOKEN       Passed into the container when set, directly or
+                         through the secrets file."""
+    )
 
 
-set_claude_mounts() {
-  secret_file="${HOME}/.local/state/secrets"
-  if [ -f "${secret_file}" ]; then
-    . "${secret_file}"
-  fi
-
-  pfx="type=bind,src="
-  mount_skills="${pfx}${HOME}/dotfiles/claude/.config/claude/skills"
-  mount_skills="${mount_skills},dst=${CLAUDE_CONFIG_DIR}/skills"
-
-  append_mounts "$mount_skills"
-  # define additional paths to mount here
-}
+def die(message: str, code: int = 1):
+    print(f"Error: {message}", file=sys.stderr)
+    sys.exit(code)
 
 
-main() {
-  check_prerequisites
-  set_dockerfile
-  set_claude_mounts
-  claude-cli.py "$@"
-}
+def docker(*args: str, **kwargs) -> subprocess.CompletedProcess:
+    try:
+        return subprocess.run(["docker", *args], **kwargs)
+    except FileNotFoundError:
+        die("docker not found", 127)
 
-main "$@"
+
+def config_dir() -> Path:
+    custom = os.environ.get("CLAUDE_CONFIG_DIR")
+    if custom:
+        return Path(custom).expanduser()
+    xdg = os.environ.get("XDG_CONFIG_HOME")
+    return (Path(xdg) if xdg else Path.home() / ".config") / "claude"
+
+
+def image_version() -> str | None:
+    # None means no image. An image built before the label existed gives
+    # an empty string.
+    result = docker(
+        "image",
+        "inspect",
+        "--format",
+        '{{index .Config.Labels "claude_code_version"}}',
+        CLAUDE_IMAGE,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip()
+
+
+def image_exists() -> bool:
+    return image_version() is not None
+
+
+def cleanup() -> None:
+    result = docker(
+        "ps", "-aq", "--filter", "name=claude-cli-", capture_output=True, text=True
+    )
+    if result.stdout.split():
+        docker("rm", "-f", *result.stdout.split())
+
+    if image_exists():
+        answer = input(f"Remove {CLAUDE_IMAGE} image? [y/N] ")
+        if answer.strip().lower() == "y":
+            docker("image", "rm", CLAUDE_IMAGE)
+
+
+def dockerfile() -> Path:
+    custom = os.environ.get("CLAUDE_CLI_DOCKERFILE")
+    if custom:
+        return Path(custom)
+    return STATE_HOME / "claude-cli" / f"claude-cli-dockerfile.{KERNEL}"
+
+
+def build_image() -> None:
+    if image_exists():
+        docker("image", "rm", CLAUDE_IMAGE)
+
+    path = dockerfile()
+    if not path.is_file():
+        die(f"Dockerfile not found: {path}")
+
+    cmd = ["buildx", "build"]
+    # CLAUDE_CLI_PULL is on by default. Set it to an explicitly empty value
+    # to build from the local image cache instead.
+    if "CLAUDE_CLI_PULL" not in os.environ or os.environ["CLAUDE_CLI_PULL"]:
+        cmd.append("--pull")
+    version = latest_claude_code_version()
+    if not version:
+        die(f"cannot determine the latest {CLAUDE_CODE_PACKAGE} version from npm")
+    build_args = {
+        "uid": os.environ.get("CLAUDE_CLI_UID") or os.getuid(),
+        "gid": os.environ.get("CLAUDE_CLI_GID") or os.getgid(),
+        "user": CONTAINER_USER,
+        "home": CONTAINER_HOME,
+        "claude_code_version": version,
+    }
+    for key, value in build_args.items():
+        cmd += ["--build-arg", f"{key}={value}"]
+    cmd += ["--label", f"claude_code_version={version}"]
+    cmd += ["-t", CLAUDE_IMAGE, "-f", str(path), str(path.parent)]
+
+    if docker(*cmd).returncode != 0:
+        print("Error: image build failed", file=sys.stderr)
+        cleanup()
+        sys.exit(1)
+
+
+def version_key(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("-")[0].split("."))
+
+
+def version_cache_paths() -> list[Path]:
+    roots = [os.environ.get("XDG_CACHE_HOME"), Path.home() / ".cache", tempfile.gettempdir()]
+    return [Path(root) / "claude-cli" / "claude_code_version" for root in roots if root]
+
+
+def read_version_cache() -> str | None:
+    for path in version_cache_paths():
+        try:
+            if time.time() - path.stat().st_mtime <= VERSION_CACHE_MAX_AGE:
+                return path.read_text().strip() or None
+        except OSError:
+            continue
+    return None
+
+
+def write_version_cache(version: str) -> None:
+    for path in version_cache_paths():
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(version + "\n")
+            return
+        except OSError as exc:
+            print(f"Warning: cannot write {path}: {exc.strerror}", file=sys.stderr)
+    print("Warning: no cache directory is writable, npm is asked on every run", file=sys.stderr)
+
+
+def latest_claude_code_version() -> str | None:
+    cached = read_version_cache()
+    if cached:
+        return cached
+    url = f"{NPM_REGISTRY}/{CLAUDE_CODE_PACKAGE}/latest"
+    try:
+        with urllib.request.urlopen(url, timeout=3) as response:
+            version = json.load(response).get("version")
+    except (urllib.error.URLError, OSError, ValueError):
+        return None
+    if version:
+        write_version_cache(version)
+    return version
+
+
+def advise_claude_code_update(image: str) -> None:
+    latest = latest_claude_code_version()
+    try:
+        if not latest or not image or version_key(latest) <= version_key(image):
+            return
+    except ValueError:
+        return
+    print(
+        f"Note: {CLAUDE_CODE_PACKAGE} {latest} is on npm, the image has "
+        f"{image}. Rebuild with -b.",
+        file=sys.stderr,
+    )
+
+
+def load_secrets(mounts: str) -> tuple[str, str | None]:
+    # The secrets file is a shell script with its own append_mounts function,
+    # so it runs under sh with CLAUDE_CLI_MOUNTS seeded, and only the two
+    # variables of interest come back.
+    secrets = STATE_HOME / "secrets"
+    if not secrets.is_file():
+        return mounts, None
+
+    env = dict(os.environ, CLAUDE_CLI_MOUNTS=mounts)
+    result = subprocess.run(
+        ["sh", "-c", '. "$1" && env -0', "_", str(secrets)],
+        env=env,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        die(result.stderr.decode(errors="replace"))
+
+    token = None
+    for entry in result.stdout.split(b"\0"):
+        key, sep, value = entry.decode(errors="replace").partition("=")
+        if key == "CLAUDE_CLI_MOUNTS" and sep:
+            mounts = value
+        elif key == "LOGSEQ_API_TOKEN" and sep:
+            token = value
+    return mounts, token
+
+
+def resolve_mounts(base: Path) -> tuple[list[str], str | None]:
+    mounts, token = load_secrets(os.environ.get("CLAUDE_CLI_MOUNTS", ""))
+    token = token or os.environ.get("LOGSEQ_API_TOKEN")
+    if SKILLS_DIR:
+        spec = f"type=bind,src={SKILLS_DIR},dst={base}/skills"
+        mounts = f"{mounts}:{spec}" if mounts else spec
+
+    args: list[str] = []
+    for spec in mounts.split(":"):
+        if spec:
+            args += ["--mount", spec]
+    return args, token
+
+
+def run(dirs: list[str]) -> int:
+    base = config_dir()
+    base.mkdir(parents=True, exist_ok=True)
+    mounts, token = resolve_mounts(base)
+    if "CLAUDE_CLI_FLAGS" in os.environ:
+        flags = shlex.split(os.environ["CLAUDE_CLI_FLAGS"])
+    else:
+        flags = ["--dangerously-skip-permissions"]
+
+    cmd = ["run", "-it", "--rm", "-e", f"CLAUDE_CONFIG_DIR={base}", "-v", f"{base}:{base}"]
+    # A bare -e NAME makes docker read the value from its own environment,
+    # which keeps the token out of the argument list that ps shows.
+    if token:
+        os.environ["LOGSEQ_API_TOKEN"] = token
+        cmd += ["-e", "LOGSEQ_API_TOKEN"]
+    for directory in dirs:
+        cmd += ["-v", f"{directory}:{directory}"]
+    cmd += [
+        *mounts,
+        "-w",
+        dirs[0],
+        "--name",
+        f"claude-cli-{datetime.now():%Y%m%d-%H%M%S}",
+        CLAUDE_IMAGE,
+        *flags,
+    ]
+    return docker(*cmd).returncode
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("-b", action="store_true", dest="build")
+    parser.add_argument("-c", action="store_true", dest="clean")
+    parser.add_argument("-h", action="store_true", dest="help")
+    parser.add_argument("dirs", nargs="*")
+    args = parser.parse_args()
+
+    if args.help:
+        show_help()
+        return
+    if (args.build or args.clean) and args.dirs:
+        die("-b and -c take no directory arguments")
+    if args.clean:
+        cleanup()
+        return
+
+    if args.build:
+        build_image()
+        return
+
+    image = image_version()
+    if image is None:
+        print(f"{CLAUDE_IMAGE} does not exist, building it now", file=sys.stderr)
+        build_image()
+    else:
+        advise_claude_code_update(image)
+    dirs = [os.path.abspath(d) for d in args.dirs] or [os.getcwd()]
+    sys.exit(run(dirs))
+
+
+if __name__ == "__main__":
+    main()
