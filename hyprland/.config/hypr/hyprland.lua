@@ -10,6 +10,7 @@ require("appearance/animations")
 
 require("input/keyboard")
 require("input/bindings")
+require("input/pushtotalk")
 require("input/gestures")
 
 require("layouts/workspaces")

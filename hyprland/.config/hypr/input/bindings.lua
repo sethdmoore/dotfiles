@@ -2,27 +2,6 @@
 -- see https://github.com/xkbcommon/libxkbcommon/blob/master/include/xkbcommon/xkbcommon-keysyms.h
 mainMod = "SUPER"
 
-hl.config({
-    input = {
-        kb_layout  = "us",
-        kb_variant = "",
-        kb_model   = "",
-        kb_options = "",
-        kb_rules   = "",
-
-        follow_mouse = 1,
-        -- -1.0 - 1.0, 0 means no modification.
-        sensitivity = 0,
-
-        -- no mouse accel
-        accel_profile = "flat",
-
-        touchpad = {
-            natural_scroll = false,
-        },
-    },
-})
-
 local function layout_bind(bind_table)
     return function ()
         local workspace = hl.get_active_special_workspace() or
@@ -79,10 +58,6 @@ hl.bind(mainMod .. " + SHIFT + f", hl.dsp.exec_cmd(browser_binding .." --private
 hl.bind(mainMod .. " + e", hl.dsp.exec_cmd(fileManager))
 
 hl.bind("SHIFT + CTRL + escape", hl.dsp.exec_cmd(taskManager))
-
--- hl.bind("f13", pass, class:^(electron)$  --  Pass MOUSE5 to TeamSpeak3.
-hl.bind("f13", hl.dsp.send_shortcut({ mods = "", key = "F13", window = "class:vesktop" }))  -- Send SUPER + F4 to OBS when SUPER + F10 is pressed.
--- bind = , j, sendshortcut, ,F13, class:^(electron)$  # Pass MOUSE5 to TeamSpeak3.
 
 -- toggle unfocused opacity
 hl.bind(mainMod .. " + period", hl.dsp.window.tag({tag = "no_opacity"}))

@@ -144,6 +144,22 @@ hl.window_rule({
     float = true,
 })
 
+-- temp
+hl.window_rule({
+    name = "move-xev",
+    match = {
+        title = "^Event Tester$"
+    },
+    workspace = "1 silent"
+})
+
+--    "class": "com.moonlight_stream.Moonlight",
+--    "title": "Moonlight",
+--    "initialClass": "com.moonlight_stream.Moonlight",
+--    "initialTitle": "Moonlight",
+
+
+
 local suppressMaximizeRule = hl.window_rule({
     -- Ignore maximize requests from all apps. You'll probably like this.
     name  = "suppress-maximize-events",
@@ -163,4 +179,17 @@ hl.window_rule({
     confine_pointer = true,
 })
 
-suppressMaximizeRule:set_enabled(true)
+suppressMaximizeRule:set_enabled(false)
+
+-- Waydroid: keep the full-UI window floating at a fixed 1080p. Tiling reflows resize the
+-- window, which makes the composer reconnect the Android display; that once crashed the
+-- composer mid-game (buffer import abort in vulkan.virtio). Applies to newly opened windows.
+hl.window_rule({
+    name = "waydroid-fixed-1080p",
+    match = {
+        class = "^Waydroid$",
+    },
+    float = true,
+    size = { 1920, 1080 },
+    center = true,
+})

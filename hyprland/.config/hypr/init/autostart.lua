@@ -2,10 +2,8 @@ onstart_commands = {
   -- graphical session
   "systemctl --user start hyprland-session.target",
   -- TODO: systemd unit?
-  -- 7.2+ kernel
-  -- "push-to-talk -k KEY_F13 -n F13 /dev/input/by-id/usb-Logitech_USB_Receiver-if02-event-mouse &",
-  -- 6.18+ kernel
-  "sleep 3; push-to-talk -k KEY_F13 -n F13 /dev/input/by-id/usb-Logitech_USB_Receiver-if01-event-kbd &",
+  -- push to talk now handled by f13 binds in input/bindings.lua
+  -- "sleep 3; push-to-talk -k KEY_F13 -n F13 /dev/input/by-id/usb-Logitech_USB_Receiver-if01-event-kbd &",
   -- "awww-daemon &", --noctalia replaces
   "sleep 2; systemctl --user start sunshine &",
   "noctalia &",
