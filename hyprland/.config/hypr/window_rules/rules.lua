@@ -23,6 +23,8 @@ hl.window_rule({
     tag = "+game",
     content = "game",
     workspace = "5 silent",
+    -- for tearing
+    immediate = true,
 })
 
 -- steam's own "Aniimo" popup (welcome overlay): keep it off the active workspace
@@ -46,15 +48,6 @@ hl.window_rule({
     tag = "+game",
     content = "game",
     workspace = "5 silent",
-})
-
-hl.window_rule({
-    name = "move-swappy",
-    match = {
-        initial_class = "swappy",
-        initial_title = "swappy",
-    },
-    workspace = "special:scratch silent"
 })
 
 hl.window_rule({
@@ -144,21 +137,24 @@ hl.window_rule({
     float = true,
 })
 
--- temp
+
 hl.window_rule({
-    name = "move-xev",
+    name = "move-swappy",
     match = {
-        title = "^Event Tester$"
+        initial_class = "swappy",
+        initial_title = "swappy",
     },
-    workspace = "1 silent"
+    workspace = "special:scratch silent",
 })
 
---    "class": "com.moonlight_stream.Moonlight",
---    "title": "Moonlight",
---    "initialClass": "com.moonlight_stream.Moonlight",
---    "initialTitle": "Moonlight",
-
-
+hl.window_rule({
+    name = "move-moonlight",
+    match = {
+        class = "com.moonlight_stream.Moonlight",
+        title = "Moonlight",
+    },
+    workspace = "special:scratch silent",
+})
 
 local suppressMaximizeRule = hl.window_rule({
     -- Ignore maximize requests from all apps. You'll probably like this.

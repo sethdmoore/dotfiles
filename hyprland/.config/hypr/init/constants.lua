@@ -47,6 +47,7 @@ displays = {
             description = "Hisense Electric Co. Ltd. HISENSE 0x616D0000"
         },
         resolution     = "3840x2160@165",
+        -- resolution     = "2560x1440@288",
         depth          = "hdr",
         scale          = 1.0,
         single_monitor = true,
