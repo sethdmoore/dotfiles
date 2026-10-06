@@ -1,0 +1,13 @@
+#!/bin/sh
+# no user config / plugins (--clean)
+# novimrc (-u)
+# no SHADA (-i)
+$(which nvim) \
+  --clean \
+  -u NONE \
+  -i NONE \
+  "+set nobackup" \
+  "+set nowritebackup" \
+  "+set noswapfile" \
+  "+set clipboard=" \
+  "$@"
