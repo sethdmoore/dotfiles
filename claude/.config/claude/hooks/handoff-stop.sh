@@ -7,6 +7,12 @@
 # Once a fresh summary exists, the hook appends a one-line token usage
 # footer to it and logs the event to handoffs/usage.jsonl, so handoffs can
 # be compared against /compact (see handoff-usage-report.sh).
+#
+# When notes in the Obsidian vault list this directory in `paths` and the
+# turn changed none of them, the same block asks for a note update. When the
+# vault has uncommitted changes, from any session, it asks for a commit.
+# Two Stop hooks that both block may not both reach the model, so the vault
+# check lives here instead of in its own hook.
 set -u
 
 # 60s forces claude to write a summary
@@ -44,6 +50,22 @@ if [ -f "$handoff" ]; then
   [ "$mtime" -ge "$start_s" ] && fresh=true
 fi
 
+# note: the vault notes for this directory joined with " or ", left empty
+# when the turn already updated one of them.
+vault="${CLAUDE_VAULT:-$HOME/Documents/vaults/obsidian/claude}"
+note=""
+if [ -f "$vault/tools/notes.py" ]; then
+  while IFS= read -r n; do
+    if [ "$(date -r "$n" +%s)" -ge "$start_s" ]; then
+      note=""
+      break
+    fi
+    note="${note:+$note or }$n"
+  done < <(python3 "$vault/tools/notes.py" match "$cwd" 2>/dev/null)
+fi
+dirty=false
+[ -n "$(git -C "$vault" status --porcelain 2>/dev/null)" ] && dirty=true
+
 # finalize: append the usage footer and log the event, once per write.
 # The footer is an HTML comment so the next session reads it as data,
 # not as part of the summary. The token count for the handoff is bytes/4.
@@ -74,15 +96,24 @@ if [ "$active" = "true" ]; then
   exit 0
 fi
 
-if [ "$fresh" = true ]; then
-  finalize
-  exit 0
-fi
-
+[ "$fresh" = true ] && finalize
+[ "$fresh" = true ] && [ -z "$note" ] && [ "$dirty" = false ] && exit 0
 [ "$elapsed" -le "$THRESHOLD" ] && exit 0
 
 mkdir -p "${cfg}/handoffs"
 
-reason="This turn ran ${elapsed}s, above the ${THRESHOLD}s handoff limit. Before you stop, write a handoff summary to ${handoff}. Use a Bash heredoc (cat > \"${handoff}\" <<'EOF' ... EOF), not the Write or Edit tool, so the update does not render as a visible diff. Write it for a session with zero context: the task in one line, what is done, what is not, the key file paths, the decisions this turn made, and the exact next step. Overwrite the old file. Do not repeat your final message to the user."
+# The ~ spelling matches the Bash allow rule for notes.py in settings.json.
+case "$vault" in "$HOME"/*) vshow="~${vault#"$HOME"}" ;; *) vshow="$vault" ;; esac
+
+reason="This turn ran ${elapsed}s, above the ${THRESHOLD}s handoff limit. Before you stop:"
+if [ "$fresh" != true ]; then
+  reason+=" Write a handoff summary to ${handoff}. Use a Bash heredoc (cat > \"${handoff}\" <<'EOF' ... EOF), not the Write or Edit tool, so the update does not render as a visible diff. Write it for a session with zero context: the task in one line, what is done, what is not, the key file paths, the decisions this turn made, and the exact next step. Overwrite the old file. Do not repeat your final message to the user."
+fi
+if [ -n "$note" ]; then
+  reason+=" Update the vault note ${note}, whose paths cover this directory. When several are named, update the one this turn worked on. Rewrite State, set status, next_action, and last_worked_on, and add a Log line only when something shipped, broke, or was decided. Then run: python3 ${vshow}/tools/notes.py tokens <note>. If this turn did not change the project, leave the note alone."
+fi
+if [ -n "$note" ] || [ "$dirty" = true ]; then
+  reason+=" Once the vault changes are done, commit them with the git-commit skill and git -C ${vshow}. Skip the commit when git -C ${vshow} status shows nothing."
+fi
 jq -n --arg reason "$reason" '{decision: "block", reason: $reason, suppressOutput: true}'
 exit 0

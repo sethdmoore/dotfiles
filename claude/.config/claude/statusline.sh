@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Claude Code status line, one line:
-#   model | ctx bar   ...   cwd branch | 5h usage bar | weekly usage bar
-# Usage bars carry time until reset on the left and percent on the right.
+#   model | ctx bar cache   ...   cwd branch | 5h usage bar | weekly usage bar
+# Bars carry percent on the right. On the left, the ctx bar carries context
+# tokens and usage bars carry the time until reset.
+# "cache" counts down the minutes until the prompt cache goes cold.
 # Left and right groups are justified to the row width.
 # The weekly bar is the model-scoped window (e.g. Fable) when the /usage cache
 # has one for the current model, otherwise the all-models 7d window.
@@ -23,6 +25,10 @@ USAGE_HI_END="255;0;0"
 CTX_LOW="144;238;144"
 CTX_HI_START="255;255;0"
 CTX_HI_END="255;0;0"
+# Cache countdown: WARM at a fresh cache, MID at half the TTL, COLD at zero.
+CACHE_WARM="0;200;0"
+CACHE_MID="255;255;0"
+CACHE_COLD="255;0;0"
 FRAME=4               # Claude Code draws the status line 2 cells in from each edge
 RIGHT_MARGIN=0        # extra cells kept free at the right edge
 
@@ -32,12 +38,20 @@ MODEL_COLOR_opus="170;220;0"
 MODEL_COLOR_sonnet="255;160;0"
 MODEL_COLOR_haiku="255;0;0"
 
-# draw_bar PCT LOW HI_START HI_END [LABEL] [RIGHT] -> colored "[c▊x    34%]"
+# lerp_rgb FROM TO T SPAN -> "r;g;b" at T/SPAN of the way from FROM to TO
+lerp_rgb() {
+  local -a a b; IFS=';' read -ra a <<<"$1"; IFS=';' read -ra b <<<"$2"
+  local t=$3 span=$4
+  printf '%d;%d;%d' $(( a[0] + (b[0]-a[0]) * t / span )) \
+    $(( a[1] + (b[1]-a[1]) * t / span )) $(( a[2] + (b[2]-a[2]) * t / span ))
+}
+
+# draw_bar PCT LOW HI_START HI_END [LABEL] [RIGHT] -> colored "[1m█▍   34%]"
 # LABEL is written into the first cells and RIGHT (default: the percent)
-# into the last. A letter on a filled cell is drawn in reverse video.
-# The partially filled cell shows the block instead of a label letter. On a filled cell the letter sits on
-# a background of the bar color. The partially filled cell shows the block
-# instead of its letter. Empty cells show the letter in the bar color.
+# into the last. A letter on a filled cell is drawn in reverse video. Empty
+# cells show the letter in the bar color. A letter on the partially filled
+# cell rounds up to a filled cell, so text is never clipped. A blank one
+# shows the fractional block.
 draw_bar() {
   local pct=${1%.*} low=$2 hs=$3 he=$4 label=${5:-} num=${6-${1%.*}%}
   (( pct < 0 )) && pct=0; (( pct > 100 )) && pct=100
@@ -46,11 +60,7 @@ draw_bar() {
   local partials=("" "▏" "▎" "▍" "▌" "▋" "▊" "▉")
   local rgb
   if (( pct < WARN_AT )); then rgb=$low
-  else
-    local -a a b; IFS=';' read -ra a <<<"$hs"; IFS=';' read -ra b <<<"$he"
-    local span=$(( 100 - WARN_AT )) t=$(( pct - WARN_AT ))
-    rgb="$(( a[0] + (b[0]-a[0]) * t / span ));$(( a[1] + (b[1]-a[1]) * t / span ));$(( a[2] + (b[2]-a[2]) * t / span ))"
-  fi
+  else rgb=$(lerp_rgb "$hs" "$he" $(( pct - WARN_AT )) $(( 100 - WARN_AT ))); fi
   # Filled letter cells use reverse video with the same fg color as the
   # blocks, so both cells carry one color value through tmux and Ink.
   local fg=$'\033[38;2;'"${rgb}m" onbar=$'\033[7;38;2;'"${rgb}m"
@@ -59,15 +69,11 @@ draw_bar() {
   local out="" i ch
   for ((i=0; i<BAR_WIDTH; i++)); do
     ch=${text:i:1}; [[ "$ch" == " " ]] && ch=""
-    # RIGHT text is never clipped: on the partial cell it is drawn
-    # filled when the cell is at least half full, else empty.
-    if (( i < full )) || (( i == full && part >= 4 && i >= BAR_WIDTH - ${#num} )); then
-      if [[ -n "$ch" ]]; then out+="${onbar}${ch}${RST}"; else out+="${fg}█${RST}"; fi
-    elif (( i == full && part > 0 && i < BAR_WIDTH - ${#num} )); then
-      out+="${fg}${partials[$part]}${RST}"
-    else
-      if [[ -n "$ch" ]]; then out+="${fg}${ch}${RST}"; else out+=" "; fi
-    fi
+    if (( i < full || (i == full && part > 0) )) && [[ -n "$ch" ]]; then out+="${onbar}${ch}${RST}"
+    elif (( i < full )); then out+="${fg}█${RST}"
+    elif (( i == full && part > 0 )); then out+="${fg}${partials[$part]}${RST}"
+    elif [[ -n "$ch" ]]; then out+="${fg}${ch}${RST}"
+    else out+=" "; fi
   done
   printf '[%s]' "$out"
 }
@@ -92,8 +98,8 @@ reset_text() {
 }
 
 # One jq pass over stdin, unit-separated. Tabs would collapse on empty fields.
-IFS=$'\x1f' read -r model_name model_id fast cwd ctx_pct ctx_used ctx_size fh_used fh_reset sd_used sd_reset < <(
-  jq -r '[.model.display_name, .model.id, .fast_mode, (.workspace.current_dir // .cwd),
+IFS=$'\x1f' read -r model_name model_id fast cwd transcript ctx_pct ctx_used ctx_size fh_used fh_reset sd_used sd_reset < <(
+  jq -r '[.model.display_name, .model.id, .fast_mode, (.workspace.current_dir // .cwd), .transcript_path,
           .context_window.used_percentage, .context_window.total_input_tokens, .context_window.context_window_size,
           .rate_limits.five_hour.used_percentage, .rate_limits.five_hour.resets_at,
           .rate_limits.seven_day.used_percentage, .rate_limits.seven_day.resets_at]
@@ -145,7 +151,38 @@ if [[ -z "$ctx_pct" ]]; then
   if [[ -n "$ctx_used" && -n "$ctx_size" && "${ctx_size%.*}" != 0 ]]; then
     ctx_pct=$(( ${ctx_used%.*} * 100 / ${ctx_size%.*} )); else ctx_pct=0; fi
 fi
-ctx=$(draw_bar "$ctx_pct" "$CTX_LOW" "$CTX_HI_START" "$CTX_HI_END" c)
+tok=""; [[ -n "$ctx_used" ]] && tok="$(( (${ctx_used%.*} + 500) / 1000 ))k"
+ctx=$(draw_bar "$ctx_pct" "$CTX_LOW" "$CTX_HI_START" "$CTX_HI_END" "$tok")
+
+# --- prompt cache countdown ----------------------------------------------
+# The cache goes cold TTL seconds after the last request that used it. The
+# request was sent at the transcript entry just before the first block of the
+# last assistant message. Block timestamps mark when each block finished, which
+# can be minutes after the send. TTL is 1h or 5m, read from the newest cache
+# write. A request still in flight is not counted yet, so the number runs low.
+if [[ -r "${transcript:-}" ]]; then
+  IFS=$'\x1f' read -r sent ttl < <(tail -n 300 "$transcript" | jq -Rrs '
+    [split("\n")[] | fromjson? | select(.timestamp != null and (.isSidechain | not))] as $e
+    | [range($e | length) | select($e[.].type == "assistant" and $e[.].message.usage != null)] as $ai
+    | select($ai | length > 0)
+    | $e[$ai[-1]].message.id as $id
+    | ([$ai[] | select($e[.].message.id == $id)] | min) as $first
+    | [$ai[] | $e[.].message.usage.cache_creation // {}
+       | if (.ephemeral_1h_input_tokens // 0) > 0 then 3600
+         elif (.ephemeral_5m_input_tokens // 0) > 0 then 300 else empty end] as $ttls
+    | [($e[[$first - 1, 0] | max].timestamp | sub("\\.[0-9]+"; "") | fromdateiso8601),
+       ($ttls | last // 3600)]
+    | map(tostring) | join("\u001f")' 2>/dev/null)
+  if [[ -n "${sent:-}" ]]; then
+    remain=$(( sent + ttl - now )) half=$(( ttl / 2 ))
+    if (( remain <= 0 )); then ctx+=$' \033[38;2;'"${CACHE_COLD}mcold${RST}"
+    else
+      if (( remain > half )); then rgb=$(lerp_rgb "$CACHE_MID" "$CACHE_WARM" $(( remain - half )) "$half")
+      else rgb=$(lerp_rgb "$CACHE_COLD" "$CACHE_MID" "$remain" "$half"); fi
+      ctx+=$' \033[38;2;'"${rgb}m$(( (remain + 59) / 60 ))m${RST}"
+    fi
+  fi
+fi
 
 # --- layout -----------------------------------------------------------------
 # left:  model | ctx bar          right: cwd branch | 5h bar | weekly bar
