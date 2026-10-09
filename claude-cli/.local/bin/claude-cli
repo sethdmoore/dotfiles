@@ -30,6 +30,12 @@ STATE_HOME = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/stat
 SKILLS_DIR = os.environ.get(
     "CLAUDE_CLI_SKILLS_DIR", str(Path.home() / "dotfiles/claude/.config/claude/skills")
 )
+CONFIG_PACKAGE = os.environ.get(
+    "CLAUDE_CLI_CONFIG_PACKAGE", str(Path.home() / "dotfiles/claude")
+)
+VAULT_DIR = os.environ.get(
+    "CLAUDE_CLI_VAULT_DIR", str(Path.home() / "Documents/vaults/obsidian/claude")
+)
 
 
 def show_help() -> None:
@@ -75,6 +81,16 @@ Environment:
                          configuration directory. Defaults to
                          ~/dotfiles/claude/.config/claude/skills. An
                          explicitly empty value skips this mount.
+  CLAUDE_CLI_CONFIG_PACKAGE
+                         Stow package that the hooks, statusline.sh and
+                         skills symlinks in the configuration directory
+                         point into. Mounted read-only at the same path
+                         when it exists. Defaults to ~/dotfiles/claude. An
+                         explicitly empty value skips this mount.
+  CLAUDE_CLI_VAULT_DIR   Claude's Obsidian vault, bind mounted at the same
+                         path when it exists. Defaults to
+                         ~/Documents/vaults/obsidian/claude. An explicitly
+                         empty value skips this mount.
   LOGSEQ_API_TOKEN       Passed into the container when set, directly or
                          through the secrets file."""
     )
@@ -288,6 +304,16 @@ def run(dirs: list[str]) -> int:
         cmd += ["-e", "LOGSEQ_API_TOKEN"]
     for directory in dirs:
         cmd += ["-v", f"{directory}:{directory}"]
+    # Skip a mount that a DIR argument already covers. Docker rejects a second
+    # mount on the same target, and a read-only mount under a DIR would block
+    # edits there.
+    def covered(path: str) -> bool:
+        return any(Path(path).is_relative_to(d) for d in dirs)
+
+    if CONFIG_PACKAGE and Path(CONFIG_PACKAGE).is_dir() and not covered(CONFIG_PACKAGE):
+        cmd += ["--mount", f"type=bind,src={CONFIG_PACKAGE},dst={CONFIG_PACKAGE},readonly"]
+    if VAULT_DIR and Path(VAULT_DIR).is_dir() and not covered(VAULT_DIR):
+        cmd += ["-v", f"{VAULT_DIR}:{VAULT_DIR}"]
     cmd += [
         *mounts,
         "-w",
