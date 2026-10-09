@@ -10,6 +10,20 @@ return {
   "AstroNvim/astrocore",
   ---@type AstroCoreOpts
   opts = {
+    rooter = {
+      autochdir = true, -- cd to the project root when opening a file
+      detector = {
+        -- files under a `.config/<app>/` dir (incl. the symlinked dotfiles repo) root at `<app>`
+        function(bufnr)
+          local path = require("astrocore.rooter").bufpath(bufnr)
+          local root = path and path:match "^(.*/%.config/[^/]+)/"
+          return root and { root } or {}
+        end,
+        "lsp",
+        { ".git", "_darcs", ".hg", ".bzr", ".svn" },
+        { "lua", "Makefile", "package.json" },
+      },
+    },
     -- Configure core features of AstroNvim
     features = {
       large_buf = { size = 1024 * 256, lines = 10000 }, -- set global limits for large files for disabling features like treesitter
