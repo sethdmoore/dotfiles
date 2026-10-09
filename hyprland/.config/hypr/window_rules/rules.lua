@@ -151,10 +151,13 @@ hl.window_rule({
     name = "move-moonlight",
     match = {
         class = "com.moonlight_stream.Moonlight",
-        title = "Moonlight",
+        --title = "Moonlight",
     },
     workspace = "special:scratch silent",
+    tag = "+no_opacity",
 })
+
+--io.github.Faugus.faugus-launcher
 
 local suppressMaximizeRule = hl.window_rule({
     -- Ignore maximize requests from all apps. You'll probably like this.

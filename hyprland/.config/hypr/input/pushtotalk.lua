@@ -1,11 +1,13 @@
 -- push to talk: discord's native module listens for keys via XWayland, so
 -- inject X key events (replaces wayland-push-to-talk-fix).
---  * Inject F13 itself: xwayland's keymap (a snapshot taken when xwayland
---    starts) has F13 at keycode 191 thanks to kb_options fkeys:basic_13-24.
---    Any keysym missing from that keymap makes xdotool remap a spare keycode
---    (8) on the fly, which discord reads as the wrong key (backspace). Don't
---    pick a different keysym without checking `xmodmap -pke`: which ones exist
---    depends on whether xwayland started before or after kb_options was set.
+--  * Inject XF86Tools (keycode 179), NOT F13/XF86Launch5. Xwayland's keymap is
+--    a snapshot taken when xwayland starts, and what it contains for keycodes
+--    191+ flips between sessions: sometimes F13/F14.. (kb_options
+--    fkeys:basic_13-24 reached it), sometimes XF86Tools/XF86Launch5.. (it did
+--    not). A keysym missing from the keymap makes xdotool remap a spare keycode
+--    (8) on the fly, which discord reads as backspace. XF86Tools sits at 179 in
+--    both layouts, so it always resolves to the same real keycode.
+--    Check with `xmodmap -pke` if this ever breaks again.
 --  * Press/release is driven from the raw key event, not bindr. A release bind
 --    is skipped if any other key was pressed+released while F13 was held
 --    (holding push to talk while hitting wasd), which left the key stuck down.
@@ -15,7 +17,7 @@
 --    we just write a line to it (a cheap, non-blocking write).
 --  * The binds below only exist to consume F13 so apps never see it.
 local PTT_KEYCODE = 191 -- XKB keycode: evdev KEY_F13 (183) + 8
-local PTT_XKEY = "F13"
+local PTT_XKEY = "XF86Tools"
 local FIFO = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-ptt.fifo"
 local ptt_down = false
 

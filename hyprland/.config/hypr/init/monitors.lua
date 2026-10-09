@@ -287,6 +287,9 @@ hl.config({ render = {
     --   rubinite: black screen on fullscreen (alt+enter / super enter / settings)
     --   wayfinder: black screen on fullscreen (alt+enter / super enter / settings)
     --  0 disabled / 1 on / 2 auto (content type game)
+    -- direct_scanout also does not work on scRGB.
+    -- - Needs a color conversion from scRGB -> HDR10
+    -- - This is a per-app choice, we cannot convert it in the config
     -- direct_scanout = 2,
 
     -- 2 - low latency with content type 'game'

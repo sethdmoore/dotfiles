@@ -15,7 +15,9 @@ hl.config({
   },
 
   cursor = {
-    no_hardware_cursors = 2, -- 2: auto (disable when tearing)
+    -- 0: always use the hardware cursor. 2 (auto) falls back to a software
+    -- cursor while a game has `immediate` set, which blocks direct scanout.
+    no_hardware_cursors = 0,
     no_break_fs_vrr = 2,
     min_refresh_rate = 72,
   }
