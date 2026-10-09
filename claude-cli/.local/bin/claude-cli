@@ -82,11 +82,11 @@ Environment:
                          ~/dotfiles/claude/.config/claude/skills. An
                          explicitly empty value skips this mount.
   CLAUDE_CLI_CONFIG_PACKAGE
-                         Stow package that the hooks, statusline.sh and
-                         skills symlinks in the configuration directory
-                         point into. Mounted read-only at the same path
-                         when it exists. Defaults to ~/dotfiles/claude. An
-                         explicitly empty value skips this mount.
+                         Stow package that the hooks, statusline.sh,
+                         CLAUDE.md and skills symlinks in the configuration
+                         directory point into. Mounted read-only at the same
+                         path when it exists. Defaults to ~/dotfiles/claude.
+                         An explicitly empty value skips this mount.
   CLAUDE_CLI_VAULT_DIR   Claude's Obsidian vault, bind mounted at the same
                          path when it exists. Defaults to
                          ~/Documents/vaults/obsidian/claude. An explicitly

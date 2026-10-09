@@ -17,3 +17,4 @@ _darcs
 ^/COPYING
 # package tooling, not config
 ^/Makefile
+^/settings\..+\.json

@@ -1,0 +1,69 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C ~/Documents/vaults/obsidian/claude *)",
+      "Bash(python3 ~/Documents/vaults/obsidian/claude/tools/notes.py *)",
+      "Edit(~/Documents/vaults/obsidian/claude/**)",
+      "Read(~/Documents/vaults/obsidian/claude/**)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-stop.sh\"",
+            "timeout": 15,
+            "statusMessage": "Checking turn duration for a handoff summary"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-session-start.sh\"",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/vault-session-start.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/statusline.sh\"",
+    "padding": 0,
+    "refreshInterval": 30
+  },
+  "enabledPlugins": {
+    "i-have-adhd@i-have-adhd": true
+  },
+  "extraKnownMarketplaces": {
+    "i-have-adhd": {
+      "source": {
+        "source": "github",
+        "repo": "ayghri/i-have-adhd"
+      }
+    }
+  },
+  "autoMemoryDirectory": "~/Documents/vaults/obsidian/claude/memory",
+  "modelSettings": {
+    "claude-sonnet-5-5": {
+      "effortLevel": "medium"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "xhigh"
+    }
+  },
+  "feedbackDrafts": "off",
+  "theme": "dark",
+  "agentPushNotifEnabled": true
+}

@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/linear-new-work.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking whether this work has a Linear issue"
+          }
+        ]
+      }
+    ]
+  }
+}
