@@ -1,7 +1,7 @@
 high_quality = true
 
 active_opacity = 1.0
-inactive_opacity = 0.75
+inactive_opacity = 0.85
 
 enable_touchpad = true
 touchpad_device = "pixa3854:00-093a:0274-touchpad"
