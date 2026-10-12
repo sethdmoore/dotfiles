@@ -72,5 +72,9 @@
   "feedbackDrafts": "off",
   "theme": "dark",
   "agentPushNotifEnabled": true,
-  "preferredNotifChannel": "notifications_disabled"
+  "preferredNotifChannel": "notifications_disabled",
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  }
 }

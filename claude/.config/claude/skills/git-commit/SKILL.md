@@ -58,8 +58,7 @@ explanation. The caller pastes your reply straight into `git commit`. The
 only text allowed after the message is the PR template note from step 4,
 separated by a line that reads `---`.
 
-Do not add a `Co-Authored-By` or any other trailer. The caller appends
-those.
+Do not add a `Co-Authored-By` or any other trailer.
 
 ## The seven rules
 

@@ -58,7 +58,8 @@ every run. Pass it the repository path and a short note on the purpose of the
 change, and the word `amend` or `squash` when that is the mode.
 
 - Do not write the message yourself, and do not paraphrase the one returned.
-- Append the attribution trailer when you commit. The skill leaves it out.
+- Add no `Co-Authored-By` or other attribution trailer to a commit or a
+  pull request.
 - The skill ends its reply with a note on which pull request template
   sections the change touches. Use that note for the template check below.
 
