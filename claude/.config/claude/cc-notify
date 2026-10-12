@@ -1,0 +1,32 @@
+#!/bin/sh
+# Usage: cc-notify [-i ICON] SUBJECT BODY
+icon=
+[ "$1" = -i ] && { icon=$2; shift 2; }
+# Strip control bytes so the text cannot inject escapes. OSC 777 ends the title at ";".
+subject=$(printf %s "$1" | tr '\n' ' ' | tr -d '\000-\037' | tr ';' ',')
+body=$(printf %s "$2" | tr '\n' ' ' | tr -d '\000-\037')
+
+if command -v notify-send >/dev/null 2>&1 && [ -n "$DBUS_SESSION_BUS_ADDRESS" ]; then
+  exec notify-send -a "Claude Code" -i "${icon:-dialog-information}" "$subject" "$body"
+fi
+
+# Claude Code runs hooks and Bash calls with no controlling terminal,
+# so write to the tty of the nearest ancestor that has one.
+pid=$$
+while [ "${pid:-0}" -gt 1 ]; do
+  if [ -d "/proc/$pid" ]; then
+    tty=$(readlink "/proc/$pid/fd/0"); ppid=$(awk '/^PPid/{print $2}' "/proc/$pid/status")
+  else
+    tty=/dev/$(ps -o tty= -p "$pid" | tr -d ' '); ppid=$(ps -o ppid= -p "$pid" | tr -d ' ')
+  fi
+  case $tty in /dev/tty?*|/dev/pts/*) break ;; esac
+  tty='' pid=$ppid
+done
+[ -w "$tty" ] || exit 0
+
+# Ghostty's OSC 777 has no icon field, so the robot goes in the title.
+if [ -n "$TMUX" ]; then
+  printf '\033Ptmux;\033\033]777;notify;%s;%s\007\033\134' "🤖 $subject" "$body"
+else
+  printf '\033]777;notify;%s;%s\007' "🤖 $subject" "$body"
+fi > "$tty"

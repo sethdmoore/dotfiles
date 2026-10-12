@@ -30,6 +30,17 @@
           }
         ]
       }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.cwd, .message' | { read -r cwd; read -r msg; \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/cc-notify\" \"${cwd##*/}\" \"$msg\"; }",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "statusLine": {
@@ -60,5 +71,6 @@
   },
   "feedbackDrafts": "off",
   "theme": "dark",
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "preferredNotifChannel": "notifications_disabled"
 }

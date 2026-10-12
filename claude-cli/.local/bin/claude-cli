@@ -302,6 +302,10 @@ def run(dirs: list[str]) -> int:
     if token:
         os.environ["LOGSEQ_API_TOKEN"] = token
         cmd += ["-e", "LOGSEQ_API_TOKEN"]
+    # cc-notify and Claude Code wrap terminal escapes for tmux only when TMUX
+    # is set. Without it, tmux drops their desktop notifications.
+    if "TMUX" in os.environ:
+        cmd += ["-e", "TMUX"]
     for directory in dirs:
         cmd += ["-v", f"{directory}:{directory}"]
     # Skip a mount that a DIR argument already covers. Docker rejects a second
