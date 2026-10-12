@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # SessionStart hook. Injects a brief of Claude's Obsidian vault: where it is,
-# which note lists this directory in `paths`, and the active notes.
+# which note lists this directory in `paths` with its Summary, and the active
+# notes.
 # Exits quietly where the vault is absent, for example inside a container.
 set -u
 

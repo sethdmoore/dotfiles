@@ -111,7 +111,7 @@ if [ "$fresh" != true ]; then
   reason+=" Write a handoff summary to ${handoff}. Use a Bash heredoc (cat > \"${handoff}\" <<'EOF' ... EOF), not the Write or Edit tool, so the update does not render as a visible diff. Write it for a session with zero context: the task in one line, what is done, what is not, the key file paths, the decisions this turn made, and the exact next step. Overwrite the old file. Do not repeat your final message to the user."
 fi
 if [ -n "$note" ]; then
-  reason+=" Update the vault note ${note}, whose paths cover this directory. When several are named, update the one this turn worked on. Rewrite State, set status, next_action, and last_worked_on, and add a Log line only when something shipped, broke, or was decided. Then run: python3 ${nshow} tokens <note>. If this turn did not change the project, leave the note alone."
+  reason+=" Update the vault note ${note}, whose paths cover this directory. When several are named, update the one this turn worked on. Rewrite State, and the Summary when State changed. Set status, next_action, and last_worked_on, add each new source to References, and add a Log line only when something shipped, broke, or was decided. Then run: python3 ${nshow} tokens <note>, and fix each problem it reports. If this turn did not change the project, leave the note alone."
 fi
 if [ -n "$note" ] || [ "$dirty" = true ]; then
   reason+=" Once the vault changes are done, commit them with the git-commit skill and git -C ${vshow}. Skip the commit when git -C ${vshow} status shows nothing."

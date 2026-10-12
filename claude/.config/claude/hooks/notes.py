@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 """Helpers for Claude's Obsidian vault, $CLAUDE_VAULT or ~/Documents/obsidian/vaults/claude.
 
-  notes.py index [dir]        one line per note: tokens, last_worked_on, path, description
-  notes.py tokens [file ...]  set the `tokens` field of each note (default: every note)
-  notes.py match <dir>        notes whose `paths` field contains dir, closest first
-  notes.py context <dir>      the brief the SessionStart hook injects
+  notes.py <note ...>                 print each note whole
+  notes.py +<section> ... <note ...>  print only the named sections, e.g. +summary +references
+  notes.py -<section> ... <note ...>  print each note without the named sections, e.g. -summary
+  notes.py index [dir]                one line per note: tokens, last_worked_on, path, description
+  notes.py tokens [file ...]          set the `tokens` field of each note (default: every note), then check it
+  notes.py check [file ...]           Summary first, References last, every [[link]] resolves
+  notes.py match <dir>                notes whose `paths` field contains dir, closest first
+  notes.py context <dir>              the brief the SessionStart hook injects
+
+A note is a path, or a link target such as claude-workflow/hooks. A section is
+a `## ` heading, named in lowercase with dashes (`## Deep dives` is deep-dives),
+or by a prefix that only one heading has.
 """
 import fnmatch
 import math
@@ -17,13 +25,22 @@ VAULT = pathlib.Path(os.environ.get("CLAUDE_VAULT", "~/Documents/obsidian/vaults
 SELF = pathlib.Path(__file__).absolute()
 HOME = pathlib.Path.home()
 SKIP = {".obsidian", "templates", "memory"}
+HIDDEN = {".git", ".obsidian", ".trash"}
 TOKENS = re.compile(r"^tokens:.*$", re.M)
+FENCE = re.compile(r"^(```|~~~)")
+LINK = re.compile(r"!?\[\[([^\]|#]*)[^\]]*\]\]")
+CODE = re.compile(r"^(```|~~~).*?^\1[^\n]*$|`[^`\n]*`", re.M | re.S)
 BRIEF_LIMIT = 30
+SUMMARY_LIMIT = 150
 
 
 def notes(paths):
     if paths:
-        return [pathlib.Path(p).resolve() for p in paths]
+        found = [resolve(p) for p in paths]
+        missing = [p for p, f in zip(paths, found) if f is None]
+        if missing:
+            sys.exit(f"no note matches {', '.join(missing)}")
+        return found
     return sorted(p for p in VAULT.rglob("*.md") if not SKIP & set(p.relative_to(VAULT).parts))
 
 
@@ -80,6 +97,141 @@ def matches(directory):
     return sorted(depth, key=depth.get, reverse=True)
 
 
+def shown(path):
+    return str(path.relative_to(VAULT)) if path.is_relative_to(VAULT) else tilde(path)
+
+
+def estimate(text):
+    # About 4 characters per token for English markdown. Rounded up to the nearest 10.
+    return max(10, math.ceil(len(text) / 40) * 10)
+
+
+def slug(heading):
+    return re.sub(r"[^a-z0-9]+", "-", heading.lower()).strip("-")
+
+
+def sections(text):
+    """The head (frontmatter and any text before the first `## ` heading), then (slug, text) per section.
+
+    A section runs to the next `## ` heading, the rule Obsidian uses for [[note#Heading]].
+    """
+    head, parts, fenced = [], [], False
+    for line in text.splitlines(keepends=True):
+        if FENCE.match(line):
+            fenced = not fenced
+        if not fenced and line.startswith("## "):
+            parts.append((slug(line[3:]), [line]))
+        elif parts:
+            parts[-1][1].append(line)
+        else:
+            head.append(line)
+    return "".join(head), [(name, "".join(lines)) for name, lines in parts]
+
+
+def pick(wanted, names):
+    """Index of the section `wanted` names: an exact slug, else a prefix only one slug has."""
+    wanted = slug(wanted)
+    if wanted in names:
+        return names.index(wanted)
+    prefixed = [i for i, name in enumerate(names) if name.startswith(wanted)]
+    return prefixed[0] if len(prefixed) == 1 else None
+
+
+def files():
+    return [p for p in VAULT.rglob("*") if p.is_file() and not HIDDEN & set(p.relative_to(VAULT).parts)]
+
+
+def resolve(name, every=None):
+    """The file a path or a link target names. Like Obsidian, a target matches the end of a vault path."""
+    path = pathlib.Path(name).expanduser()
+    if path.is_file():
+        return path.resolve()
+    name = re.sub(r"^!?\[\[|\]\]$", "", name).split("|")[0].split("#")[0].strip()
+    if not name:
+        return None
+    hits = []
+    for p in every if every is not None else files():
+        rel = p.relative_to(VAULT).as_posix()
+        if rel.endswith(".md"):
+            rel = rel[:-3]
+        if rel == name.removesuffix(".md") or rel.endswith("/" + name.removesuffix(".md")):
+            hits.append(p)
+    return min(hits, key=lambda p: len(p.parts)) if hits else None
+
+
+def problems(path, every):
+    text = path.read_text()
+    frontmatter, _ = split(text)
+    frontmatter = frontmatter or ""
+    _, parts = sections(text)
+    names = [name for name, _ in parts]
+    found = []
+    if field(frontmatter, "type") not in ("", "meta"):
+        if names[:1] != ["summary"]:
+            found.append("the first section is not ## Summary")
+        elif estimate(parts[0][1]) > SUMMARY_LIMIT:
+            found.append(f"the Summary is about {estimate(parts[0][1])} tokens, over {SUMMARY_LIMIT}")
+        if names[-1:] != ["references"]:
+            found.append("the last section is not ## References")
+    if listfield(frontmatter, "links"):
+        found.append("frontmatter `links` is set, move its URLs into ## References")
+    for target in LINK.findall(CODE.sub("", text)):
+        if target.strip() and resolve(target, every) is None:
+            found.append(f"[[{target}]] matches no file in the vault")
+    return found
+
+
+def report(paths):
+    every, clean = files(), True
+    for path in paths:
+        for problem in problems(path, every):
+            print(f"check {shown(path)}: {problem}", file=sys.stderr)
+            clean = False
+    return clean
+
+
+def show(args):
+    selectors = [a for a in args if a[:1] in "+-" and len(a) > 1]
+    targets = [a for a in args if a not in selectors]
+    signs = {s[0] for s in selectors}
+    if not targets or len(signs) > 1:
+        sys.exit("name at least one note, and either +sections or -sections, not both\n" + __doc__)
+    status = 0
+    for target in targets:
+        path = resolve(target)
+        if path is None:
+            print(f"no note matches {target}", file=sys.stderr)
+            status = 1
+            continue
+        text = path.read_text()
+        print(f"==> {shown(path)} <==")
+        if not selectors:
+            print(text.rstrip())
+            continue
+        head, parts = sections(text)
+        names = [name for name, _ in parts]
+        chosen = set()
+        for selector in selectors:
+            i = pick(selector[1:], names)
+            if i is not None:
+                chosen.add(i)
+            elif signs == {"+"} and slug(selector[1:]) == "summary":
+                description = field(split(text)[0] or "", "description")
+                print(f"(no Summary section. The description: {description})")
+            elif signs == {"+"}:
+                print(f"no section {selector[1:]} in {shown(path)}. It has: {', '.join(names)}", file=sys.stderr)
+                status = 1
+        if signs == {"+"}:
+            if chosen:
+                print("".join(parts[i][1] for i in sorted(chosen)).rstrip())
+            rest = [f"{name} {estimate(part)}" for i, (name, part) in enumerate(parts) if i not in chosen]
+            if rest:
+                print(f"(Not loaded, tokens each: {', '.join(rest)}. Load one with +<section>.)")
+        else:
+            print((head + "".join(part for i, (_, part) in enumerate(parts) if i not in chosen)).rstrip())
+    sys.exit(status)
+
+
 def index(args):
     root = (VAULT / args[0]).resolve() if args else VAULT
     for path, frontmatter in frontmatters():
@@ -90,18 +242,23 @@ def index(args):
 
 
 def tokens(args):
-    for path in notes(args):
+    paths = notes(args)
+    for path in paths:
         text = path.read_text()
         frontmatter, body = split(text)
         if frontmatter is None or not TOKENS.search(frontmatter):
             print(f"skipped, no tokens field: {path}", file=sys.stderr)
             continue
-        # About 4 characters per token for English markdown. Rounded up to the nearest 10.
-        estimate = max(10, math.ceil(len(text) / 40) * 10)
-        updated = TOKENS.sub(f"tokens: {estimate}", frontmatter, count=1) + body
+        estimated = estimate(text)
+        updated = TOKENS.sub(f"tokens: {estimated}", frontmatter, count=1) + body
         if updated != text:
             path.write_text(updated)
-            print(f"{estimate:>6}  {path.relative_to(VAULT)}")
+            print(f"{estimated:>6}  {path.relative_to(VAULT)}")
+    report(paths)
+
+
+def check(args):
+    sys.exit(0 if report(notes(args)) else 1)
 
 
 def match(args):
@@ -111,11 +268,19 @@ def match(args):
 
 def context(args):
     matched = matches(args[0])
+    command = f"python3 {tilde(SELF)}"
     lines = [f"Your Obsidian vault at {tilde(VAULT)} is your memory of projects across sessions. Read {tilde(VAULT / 'CLAUDE.md')} before you write a note."]
-    if matched:
-        lines.append(f"This directory belongs to {', '.join(tilde(p) for p in matched)}. Read it before you work on the project.")
-    else:
+    if not matched:
         lines.append("No note lists this directory in `paths`. If the work here will span sessions, add the directory to a note's `paths`, or create a project note.")
+    for path in matched:
+        _, parts = sections(path.read_text())
+        summary = [part for name, part in parts if name == "summary"]
+        if not summary:
+            lines.append(f"This directory belongs to {tilde(path)}. Load it with `{command} {tilde(path)}` before you work on the project.")
+            continue
+        rest = ", ".join(f"{name} {estimate(part)}" for name, part in parts if name != "summary")
+        lines.append(f"This directory belongs to {tilde(path)}. Its Summary is below and already loaded. When the work needs more, run `{command} -summary {tilde(path)}` for the rest of the note, or `+<section>` for single sections (tokens each: {rest}).")
+        lines.append(summary[0].split("\n", 1)[1].strip())
     listed = []
     for path, frontmatter in frontmatters():
         kind = field(frontmatter, "type")
@@ -128,12 +293,15 @@ def context(args):
     for date, rel, kind, status, description in listed[:BRIEF_LIMIT]:
         lines.append(f"- {rel} ({', '.join(filter(None, (kind, status, date)))}): {description}")
     if len(listed) > BRIEF_LIMIT:
-        lines.append(f"- {len(listed) - BRIEF_LIMIT} more: run python3 {tilde(SELF)} index")
+        lines.append(f"- {len(listed) - BRIEF_LIMIT} more: run {command} index")
     print("\n".join(lines))
 
 
 if __name__ == "__main__":
-    commands = {"index": index, "tokens": tokens, "match": match, "context": context}
-    if len(sys.argv) < 2 or sys.argv[1] not in commands or (sys.argv[1] in ("match", "context") and len(sys.argv) < 3):
+    commands = {"index": index, "tokens": tokens, "check": check, "match": match, "context": context}
+    if len(sys.argv) < 2 or (sys.argv[1] in ("match", "context") and len(sys.argv) < 3):
         sys.exit(__doc__)
-    commands[sys.argv[1]](sys.argv[2:])
+    if sys.argv[1] in commands:
+        commands[sys.argv[1]](sys.argv[2:])
+    else:
+        show(sys.argv[1:])
