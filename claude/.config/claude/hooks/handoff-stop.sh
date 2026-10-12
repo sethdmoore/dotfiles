@@ -52,16 +52,16 @@ fi
 
 # note: the vault notes for this directory joined with " or ", left empty
 # when the turn already updated one of them.
-vault="${CLAUDE_VAULT:-$HOME/Documents/vaults/obsidian/claude}"
+vault="${CLAUDE_VAULT:-$HOME/Documents/obsidian/vaults/claude}"
 note=""
-if [ -f "$vault/tools/notes.py" ]; then
+if [ -f "$vault/CLAUDE.md" ]; then
   while IFS= read -r n; do
     if [ "$(date -r "$n" +%s)" -ge "$start_s" ]; then
       note=""
       break
     fi
     note="${note:+$note or }$n"
-  done < <(python3 "$vault/tools/notes.py" match "$cwd" 2>/dev/null)
+  done < <(CLAUDE_VAULT="$vault" python3 "$here/notes.py" match "$cwd" 2>/dev/null)
 fi
 dirty=false
 [ -n "$(git -C "$vault" status --porcelain 2>/dev/null)" ] && dirty=true
@@ -102,15 +102,16 @@ fi
 
 mkdir -p "${cfg}/handoffs"
 
-# The ~ spelling matches the Bash allow rule for notes.py in settings.json.
+# The ~ spelling matches the Bash allow rules in settings.json.
 case "$vault" in "$HOME"/*) vshow="~${vault#"$HOME"}" ;; *) vshow="$vault" ;; esac
+case "$here" in "$HOME"/*) nshow="~${here#"$HOME"}/notes.py" ;; *) nshow="$here/notes.py" ;; esac
 
 reason="This turn ran ${elapsed}s, above the ${THRESHOLD}s handoff limit. Before you stop:"
 if [ "$fresh" != true ]; then
   reason+=" Write a handoff summary to ${handoff}. Use a Bash heredoc (cat > \"${handoff}\" <<'EOF' ... EOF), not the Write or Edit tool, so the update does not render as a visible diff. Write it for a session with zero context: the task in one line, what is done, what is not, the key file paths, the decisions this turn made, and the exact next step. Overwrite the old file. Do not repeat your final message to the user."
 fi
 if [ -n "$note" ]; then
-  reason+=" Update the vault note ${note}, whose paths cover this directory. When several are named, update the one this turn worked on. Rewrite State, set status, next_action, and last_worked_on, and add a Log line only when something shipped, broke, or was decided. Then run: python3 ${vshow}/tools/notes.py tokens <note>. If this turn did not change the project, leave the note alone."
+  reason+=" Update the vault note ${note}, whose paths cover this directory. When several are named, update the one this turn worked on. Rewrite State, set status, next_action, and last_worked_on, and add a Log line only when something shipped, broke, or was decided. Then run: python3 ${nshow} tokens <note>. If this turn did not change the project, leave the note alone."
 fi
 if [ -n "$note" ] || [ "$dirty" = true ]; then
   reason+=" Once the vault changes are done, commit them with the git-commit skill and git -C ${vshow}. Skip the commit when git -C ${vshow} status shows nothing."

@@ -34,7 +34,7 @@ CONFIG_PACKAGE = os.environ.get(
     "CLAUDE_CLI_CONFIG_PACKAGE", str(Path.home() / "dotfiles/claude")
 )
 VAULT_DIR = os.environ.get(
-    "CLAUDE_CLI_VAULT_DIR", str(Path.home() / "Documents/vaults/obsidian/claude")
+    "CLAUDE_CLI_VAULT_DIR", str(Path.home() / "Documents/obsidian/vaults/claude")
 )
 
 
@@ -89,7 +89,7 @@ Environment:
                          An explicitly empty value skips this mount.
   CLAUDE_CLI_VAULT_DIR   Claude's Obsidian vault, bind mounted at the same
                          path when it exists. Defaults to
-                         ~/Documents/vaults/obsidian/claude. An explicitly
+                         ~/Documents/obsidian/vaults/claude. An explicitly
                          empty value skips this mount.
   LOGSEQ_API_TOKEN       Passed into the container when set, directly or
                          through the secrets file."""
