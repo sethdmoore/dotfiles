@@ -49,6 +49,7 @@ displays = {
         resolution     = "3840x2160@165",
         -- resolution     = "2560x1440@288",
         depth          = "hdr",
+        -- depth          = "sdr",
         scale          = 1.0,
         single_monitor = true,
     },
