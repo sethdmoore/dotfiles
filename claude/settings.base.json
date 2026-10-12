@@ -13,9 +13,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-stop.sh\"",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/vault-stop.sh\"",
             "timeout": 15,
-            "statusMessage": "Checking turn duration for a handoff summary"
+            "statusMessage": "Checking vault notes for this turn"
           }
         ]
       }
@@ -23,11 +23,6 @@
     "SessionStart": [
       {
         "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-session-start.sh\"",
-            "timeout": 15
-          },
           {
             "type": "command",
             "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/vault-session-start.sh\"",

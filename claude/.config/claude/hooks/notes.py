@@ -271,7 +271,7 @@ def context(args):
     command = f"python3 {tilde(SELF)}"
     lines = [f"Your Obsidian vault at {tilde(VAULT)} is your memory of projects across sessions. Read {tilde(VAULT / 'CLAUDE.md')} before you write a note."]
     if not matched:
-        lines.append("No note lists this directory in `paths`. If the work here will span sessions, add the directory to a note's `paths`, or create a project note.")
+        lines.append("No note lists this directory in `paths`. If Seth asks to resume without naming a project, show him the first three notes below with their next step, and ask which one. If the work here will span sessions, add the directory to a note's `paths`, or create a project note.")
     for path in matched:
         _, parts = sections(path.read_text())
         summary = [part for name, part in parts if name == "summary"]
@@ -287,11 +287,15 @@ def context(args):
         rel = path.relative_to(VAULT)
         if kind in ("deep-dive", "meta") or rel.parts[0] == "4-archive":
             continue
-        listed.append((field(frontmatter, "last_worked_on"), rel, kind, field(frontmatter, "status"), field(frontmatter, "description")))
+        # The file time orders notes that share a date, so the last one touched comes first.
+        listed.append((field(frontmatter, "last_worked_on"), path.stat().st_mtime, rel, kind, field(frontmatter, "status"), field(frontmatter, "description"), field(frontmatter, "next_action")))
     listed.sort(reverse=True)
     lines.append("Notes, newest first (type, status, last worked on):")
-    for date, rel, kind, status, description in listed[:BRIEF_LIMIT]:
-        lines.append(f"- {rel} ({', '.join(filter(None, (kind, status, date)))}): {description}")
+    for i, (date, _, rel, kind, status, description, next_action) in enumerate(listed[:BRIEF_LIMIT]):
+        line = f"- {rel} ({', '.join(filter(None, (kind, status, date)))}): {description}"
+        if not matched and i < 3 and next_action:
+            line += f" Next: {next_action}"
+        lines.append(line)
     if len(listed) > BRIEF_LIMIT:
         lines.append(f"- {len(listed) - BRIEF_LIMIT} more: run {command} index")
     print("\n".join(lines))
