@@ -3,11 +3,37 @@
 icon=
 [ "$1" = -i ] && { icon=$2; shift 2; }
 # Strip control bytes so the text cannot inject escapes. OSC 777 ends the title at ";".
-subject=$(printf %s "$1" | tr '\n' ' ' | tr -d '\000-\037' | tr ';' ',')
+clean() { printf %s "$1" | tr '\n' ' ' | tr -d '\000-\037' | tr ';' ','; }
+subject=$(clean "$1")
 body=$(printf %s "$2" | tr '\n' ' ' | tr -d '\000-\037')
+# claude-cli containers have no tmux, so the launcher passes the location in.
+where=$CC_NOTIFY_WHERE
+if [ -n "$TMUX_PANE" ] && command -v tmux >/dev/null 2>&1; then
+  where=$(tmux display-message -p -t "$TMUX_PANE" '#S:#I #W')
+fi
+where=$(clean "$where")
 
 if command -v notify-send >/dev/null 2>&1 && [ -n "$DBUS_SESSION_BUS_ADDRESS" ]; then
-  exec notify-send -a "Claude Code" -i "${icon:-dialog-information}" "$subject" "$body"
+  exec notify-send -a "Claude Code" -i "${icon:-dialog-information}" "$subject${where:+ ($where)}" "$body"
+fi
+
+# Ghostty hides OSC notifications while its window has focus, and tmux draws
+# every pane into one Ghostty surface, so post through macOS directly.
+# A click raises the terminal app (macOS sets __CFBundleIdentifier for the
+# processes an app launches) and switches tmux to the sending pane.
+# Homebrew's terminal-notifier.app is not registered with LaunchServices, and
+# macOS refuses its permission request until it is. Run once per install:
+#   /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+#     -f "$(brew --prefix terminal-notifier)/terminal-notifier.app"
+if command -v terminal-notifier >/dev/null 2>&1; then
+  set -- -title "🤖 $subject" -message "${body:-$subject}" \
+    -activate "${__CFBundleIdentifier:-com.mitchellh.ghostty}"
+  [ -n "$where" ] && set -- "$@" -subtitle "$where"
+  if [ -n "$TMUX_PANE" ]; then
+    set -- "$@" -group "cc-notify$TMUX_PANE" \
+      -execute "'$(command -v tmux)' -S '${TMUX%%,*}' switch-client -t '$TMUX_PANE'"
+  fi
+  exec terminal-notifier "$@" </dev/null
 fi
 
 # Claude Code runs hooks and Bash calls with no controlling terminal,
@@ -25,8 +51,9 @@ done
 [ -w "$tty" ] || exit 0
 
 # Ghostty's OSC 777 has no icon field, so the robot goes in the title.
+title="🤖 $subject${where:+ ($where)}"
 if [ -n "$TMUX" ]; then
-  printf '\033Ptmux;\033\033]777;notify;%s;%s\007\033\134' "🤖 $subject" "$body"
+  printf '\033Ptmux;\033\033]777;notify;%s;%s\007\033\134' "$title" "$body"
 else
-  printf '\033]777;notify;%s;%s\007' "🤖 $subject" "$body"
+  printf '\033]777;notify;%s;%s\007' "$title" "$body"
 fi > "$tty"
