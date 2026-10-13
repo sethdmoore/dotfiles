@@ -8,7 +8,7 @@
   notes.py tokens [file ...]          set the `tokens` field of each note (default: every note), then check it
   notes.py check [file ...]           Summary first, References last, every [[link]] resolves
   notes.py match <dir>                notes whose `paths` field contains dir, closest first
-  notes.py context <dir>              the brief the SessionStart hook injects
+  notes.py context <dir>              the brief the SessionStart hook injects: the note that claims dir, or every note
 
 A note is a path, or a link target such as claude-workflow/hooks. A section is
 a `## ` heading, named in lowercase with dashes (`## Deep dives` is deep-dives),
@@ -281,6 +281,10 @@ def context(args):
         rest = ", ".join(f"{name} {estimate(part)}" for name, part in parts if name != "summary")
         lines.append(f"This directory belongs to {tilde(path)}. Its Summary is below and already loaded. When the work needs more, run `{command} -summary {tilde(path)}` for the rest of the note, or `+<section>` for single sections (tokens each: {rest}).")
         lines.append(summary[0].split("\n", 1)[1].strip())
+    # Other sessions update the other notes all day, so a claimed directory gets its own note alone.
+    if matched:
+        print("\n".join(lines))
+        return
     listed = []
     for path, frontmatter in frontmatters():
         kind = field(frontmatter, "type")
@@ -293,7 +297,7 @@ def context(args):
     lines.append("Notes, newest first (type, status, last worked on):")
     for i, (date, _, rel, kind, status, description, next_action) in enumerate(listed[:BRIEF_LIMIT]):
         line = f"- {rel} ({', '.join(filter(None, (kind, status, date)))}): {description}"
-        if not matched and i < 3 and next_action:
+        if i < 3 and next_action:
             line += f" Next: {next_action}"
         lines.append(line)
     if len(listed) > BRIEF_LIMIT:
