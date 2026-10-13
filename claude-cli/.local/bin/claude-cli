@@ -306,13 +306,13 @@ def run(dirs: list[str]) -> int:
     # is set. Without it, tmux drops their desktop notifications.
     if "TMUX" in os.environ:
         cmd += ["-e", "TMUX"]
-        where = subprocess.run(
-            ["tmux", "display-message", "-p", "-t", os.environ.get("TMUX_PANE", ""), "#S:#I #W"],
+        window = subprocess.run(
+            ["tmux", "display-message", "-p", "-t", os.environ.get("TMUX_PANE", ""), "#W"],
             capture_output=True,
             text=True,
         ).stdout.strip()
-        if where:
-            cmd += ["-e", f"CC_NOTIFY_WHERE={where}"]
+        if window:
+            cmd += ["-e", f"CC_NOTIFY_WINDOW={window}"]
     for directory in dirs:
         cmd += ["-v", f"{directory}:{directory}"]
     # Skip a mount that a DIR argument already covers. Docker rejects a second

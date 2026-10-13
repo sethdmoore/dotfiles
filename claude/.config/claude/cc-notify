@@ -7,14 +7,14 @@ clean() { printf %s "$1" | tr '\n' ' ' | tr -d '\000-\037' | tr ';' ','; }
 subject=$(clean "$1")
 body=$(printf %s "$2" | tr '\n' ' ' | tr -d '\000-\037')
 # claude-cli containers have no tmux, so the launcher passes the location in.
-where=$CC_NOTIFY_WHERE
+window=$CC_NOTIFY_WINDOW
 if [ -n "$TMUX_PANE" ] && command -v tmux >/dev/null 2>&1; then
-  where=$(tmux display-message -p -t "$TMUX_PANE" '#S:#I #W')
+  window=$(tmux display-message -p -t "$TMUX_PANE" '#W')
 fi
-where=$(clean "$where")
+window=$(clean "$window")
 
 if command -v notify-send >/dev/null 2>&1 && [ -n "$DBUS_SESSION_BUS_ADDRESS" ]; then
-  exec notify-send -a "Claude Code" -i "${icon:-dialog-information}" "$subject${where:+ ($where)}" "$body"
+  exec notify-send -a "Claude Code" -i "${icon:-dialog-information}" "${window:-$subject}" "${window:+$subject: }$body"
 fi
 
 # Ghostty hides OSC notifications while its window has focus, and tmux draws
@@ -26,9 +26,9 @@ fi
 #   /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
 #     -f "$(brew --prefix terminal-notifier)/terminal-notifier.app"
 if command -v terminal-notifier >/dev/null 2>&1; then
-  set -- -title "🤖 $subject" -message "${body:-$subject}" \
+  set -- -title "🤖 ${window:-$subject}" -message "${body:-$subject}" \
     -activate "${__CFBundleIdentifier:-com.mitchellh.ghostty}"
-  [ -n "$where" ] && set -- "$@" -subtitle "$where"
+  [ -n "$window" ] && set -- "$@" -subtitle "$subject"
   if [ -n "$TMUX_PANE" ]; then
     set -- "$@" -group "cc-notify$TMUX_PANE" \
       -execute "'$(command -v tmux)' -S '${TMUX%%,*}' switch-client -t '$TMUX_PANE'"
@@ -51,9 +51,10 @@ done
 [ -w "$tty" ] || exit 0
 
 # Ghostty's OSC 777 has no icon field, so the robot goes in the title.
-title="🤖 $subject${where:+ ($where)}"
+title="🤖 ${window:-$subject}"
+body_with_prefix="${window:+$subject: }$body"
 if [ -n "$TMUX" ]; then
-  printf '\033Ptmux;\033\033]777;notify;%s;%s\007\033\134' "$title" "$body"
+  printf '\033Ptmux;\033\033]777;notify;%s;%s\007\033\134' "$title" "$body_with_prefix"
 else
-  printf '\033]777;notify;%s;%s\007' "$title" "$body"
+  printf '\033]777;notify;%s;%s\007' "$title" "$body_with_prefix"
 fi > "$tty"
