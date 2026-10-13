@@ -1,5 +1,20 @@
 #!/bin/sh
 # Usage: cc-notify [-i ICON] SUBJECT BODY
+#        cc-notify -r    removes the banner this tmux pane posted
+# On Linux the pane's banner ID lives here, so -r can close it and the next
+# banner replaces it.
+id_file=${XDG_RUNTIME_DIR:-/tmp}/cc-notify/${TMUX_PANE#%}
+if [ "$1" = -r ]; then
+  [ -n "$TMUX_PANE" ] || exit 0
+  if [ -f "$id_file" ]; then
+    gdbus call --session --dest org.freedesktop.Notifications --object-path /org/freedesktop/Notifications \
+      --method org.freedesktop.Notifications.CloseNotification "$(cat "$id_file")" >/dev/null 2>&1
+    rm -f "$id_file"
+  elif command -v terminal-notifier >/dev/null 2>&1; then
+    terminal-notifier -remove "cc-notify$TMUX_PANE" >/dev/null 2>&1
+  fi
+  exit 0
+fi
 icon=
 [ "$1" = -i ] && { icon=$2; shift 2; }
 # Strip control bytes so the text cannot inject escapes. OSC 777 ends the title at ";".
@@ -14,7 +29,15 @@ fi
 window=$(clean "$window")
 
 if command -v notify-send >/dev/null 2>&1 && [ -n "$DBUS_SESSION_BUS_ADDRESS" ]; then
-  exec notify-send -a "Claude Code" -i "${icon:-dialog-information}" "${window:-$subject}" "${window:+$subject: }$body"
+  set -- -a "Claude Code" -i "${icon:-dialog-information}" "${window:-$subject}" "${window:+$subject: }$body"
+  # Older libnotify has no -p or -r, so its banners pile up and -r cannot close them.
+  if [ -z "$TMUX_PANE" ] || ! notify-send --help 2>&1 | grep -q -- --print-id; then
+    exec notify-send "$@"
+  fi
+  [ -s "$id_file" ] && set -- -r "$(cat "$id_file")" "$@"
+  mkdir -p "${id_file%/*}"
+  id=$(notify-send -p "$@") && [ -n "$id" ] && printf %s "$id" > "$id_file"
+  exit 0
 fi
 
 # Ghostty hides OSC notifications while its window has focus, and tmux draws

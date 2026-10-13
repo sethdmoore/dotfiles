@@ -2,8 +2,17 @@
 # Notification hook. The banner body says what Claude wants: "Approve: " and
 # the pending tool call's description, or the last line of Claude's reply.
 # Without a usable transcript it falls back to Claude Code's generic message.
+# Every other event means the user answered, so it clears this pane's banner.
 payload=$(cat)
 field() { printf %s "$payload" | jq -r "$1 // empty" 2>/dev/null; }
+case $(field .hook_event_name) in
+  Notification|'') ;;
+  *)
+    # A background subagent's tool call must not clear a banner the main
+    # thread still waits on.
+    [ -n "$(field .agent_id)" ] || exec "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/cc-notify" -r
+    exit 0 ;;
+esac
 cwd=$(field .cwd)
 message=$(field .message)
 transcript=$(field .transcript_path)
