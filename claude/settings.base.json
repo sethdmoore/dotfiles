@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.cwd, .message' | { read -r cwd; read -r msg; \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/cc-notify\" \"${cwd##*/}\" \"$msg\"; }",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/cc-notify-hook.sh\"",
             "timeout": 10
           }
         ]
