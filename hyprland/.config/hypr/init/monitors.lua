@@ -15,7 +15,8 @@
 --                                      are not primary stay off.
 --
 -- Matching is DESCRIPTION PREFIX, the same rule Hyprland's `desc:` selector
--- uses. Read descriptions with:
+-- uses, optionally narrowed by physical panel size in mm (`match.physical`),
+-- since the description string alone is not stable across the Hisense TVs. Read descriptions with:
 --     hyprctl monitors all -j | jq -r '.[].description'
 --
 -- Note: hl.get_monitors() and the Lua monitor objects only expose .name,
@@ -53,16 +54,34 @@ local function desc_matches(description, prefix)
     return description:sub(1, #prefix) == prefix
 end
 
+-- physical panel size test (mm, from EDID). `phys` is optional:
+--   { min_width = N, max_width = N, min_height = N, max_height = N }
+-- Any bound may be omitted. Needed because some TVs report an identical
+-- description string at times, but their physical size never changes.
+local function phys_matches(mon, phys)
+    if not phys then return true end
+    local w, h = mon.physical_width, mon.physical_height
+    if not w or not h then return false end
+    if phys.min_width  and w < phys.min_width  then return false end
+    if phys.max_width  and w > phys.max_width  then return false end
+    if phys.min_height and h < phys.min_height then return false end
+    if phys.max_height and h > phys.max_height then return false end
+    return true
+end
+
 -- friendly-name key of the `displays` entry this monitor object matches, or nil.
--- When several prefixes match (e.g. a generic "... HISENSE" and a specific
--- "... HISENSE 0x616D0000"), the LONGEST prefix wins, so specific entries
--- are never shadowed by generic ones regardless of pairs() order.
+-- A match needs the description prefix AND (if given) the physical size.
+-- When several entries match, one with a physical constraint beats one without,
+-- then the LONGEST prefix wins, so specific entries are never shadowed by
+-- generic ones regardless of pairs() order.
 local function key_for(mon)
-    local best, best_len = nil, -1
+    local best, best_score = nil, -1
     for name, cfg in pairs(displays) do
-        local prefix = cfg.match and cfg.match.description
-        if prefix and desc_matches(mon.description, prefix) and #prefix > best_len then
-            best, best_len = name, #prefix
+        local m = cfg.match
+        local prefix = m and m.description
+        if prefix and desc_matches(mon.description, prefix) and phys_matches(mon, m.physical) then
+            local score = #prefix + (m.physical and 1000 or 0)
+            if score > best_score then best, best_score = name, score end
         end
     end
     return best

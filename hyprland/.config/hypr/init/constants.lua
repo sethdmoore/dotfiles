@@ -24,6 +24,8 @@ taskManager = 'resources'
 -- Read descriptions with:  hyprctl monitors all -j | jq -r '.[].description'
 --
 --   match.description  prefix of the description string (Hyprland `desc:` rule)
+--   match.physical     optional { min_width, max_width, min_height, max_height }
+--                      in mm (hyprctl monitors: physicalWidth/Height)
 --   resolution         tuned mode
 --   depth              "hdr" or "sdr"
 --   scale              optional, default 1
@@ -35,7 +37,10 @@ taskManager = 'resources'
 displays = {
     livingroom_tv = {
         match          = {
-            description = "Hisense Electric Co. Ltd. HISENSE"
+            description = "Hisense Electric Co. Ltd. HISENSE",
+            -- ~75" (1660x930 mm). The description is identical to the desktop
+            -- TV's, so tell them apart by physical size.
+            physical    = { min_width = 1500 },
         },
         resolution     = "3840x2160@144",
         depth          = "hdr",
@@ -44,7 +49,9 @@ displays = {
     },
     desktop = {
         match          = {
-            description = "Hisense Electric Co. Ltd. HISENSE 0x616D0000"
+            description = "Hisense Electric Co. Ltd. HISENSE 0x616D0000",
+            -- ~55" (about 1220x690 mm)
+            physical    = { max_width = 1400 },
         },
         resolution     = "3840x2160@165",
         -- resolution     = "2560x1440@288",
