@@ -9,6 +9,7 @@
   notes.py check [file ...]           Summary first, References last, every [[link]] resolves
   notes.py match <dir>                notes whose `paths` field contains dir, closest first
   notes.py context <dir>              the brief the SessionStart hook injects: the note that claims dir, or every note
+  notes.py fold-memory <dir ...>      move memories saved before the vault existed into memory/, and index them
 
 A note is a path, or a link target such as claude-workflow/hooks. A section is
 a `## ` heading, named in lowercase with dashes (`## Deep dives` is deep-dives),
@@ -319,9 +320,39 @@ def context(args):
     print("\n".join(lines))
 
 
+def fold_memory(args):
+    """Each file moves into memory/ with an index line, unless memory/ already has its name. Those stay for a session to merge."""
+    memory = VAULT / "memory"
+    memory.mkdir(exist_ok=True)
+    index = memory / "MEMORY.md"
+    added, kept = [], []
+    for directory in (pathlib.Path(a) for a in args):
+        for path in sorted(directory.iterdir()):
+            if path.name == "MEMORY.md":
+                path.unlink()
+            elif (memory / path.name).exists():
+                kept.append(path)
+            else:
+                frontmatter, _ = split(path.read_text()) if path.suffix == ".md" else (None, "")
+                title = (field(frontmatter or "", "name") or path.stem).replace("-", " ").capitalize()
+                added.append(f"- [{title}]({path.name}): {field(frontmatter or '', 'description')}")
+                path.rename(memory / path.name)
+        if not any(directory.iterdir()):
+            directory.rmdir()
+    if added:
+        text = index.read_text() if index.exists() else ""
+        index.write_text(text.rstrip("\n") + f"\n\n## Folded in by make vault, sort these\n" + "\n".join(added) + "\n")
+        print(f"folded {len(added)} memories into {tilde(memory)}")
+    for path in kept:
+        print(f"kept {tilde(path)}: memory/ already has {path.name}. Ask Claude to merge it.")
+    for directory in (pathlib.Path(a).parent for a in args):
+        if directory.exists() and not any(directory.iterdir()):
+            directory.rmdir()
+
+
 if __name__ == "__main__":
-    commands = {"index": index, "tokens": tokens, "check": check, "match": match, "context": context}
-    if len(sys.argv) < 2 or (sys.argv[1] in ("match", "context") and len(sys.argv) < 3):
+    commands = {"index": index, "tokens": tokens, "check": check, "match": match, "context": context, "fold-memory": fold_memory}
+    if len(sys.argv) < 2 or (sys.argv[1] in ("match", "context", "fold-memory") and len(sys.argv) < 3):
         sys.exit(__doc__)
     if sys.argv[1] in commands:
         commands[sys.argv[1]](sys.argv[2:])

@@ -39,9 +39,9 @@ else
   bad "autoMemoryDirectory is not the vault memory folder" "make -C ~/dotfiles/claude"
 fi
 
-[ -d "$vault" ] && ok "vault at $vault" || bad "no vault at $vault" "install the seed: tar -xkzf claude-vault-seed.tar.gz -C ~/Documents/obsidian/vaults, or set CLAUDE_VAULT"
+[ -d "$vault" ] && ok "vault at $vault" || bad "no vault at $vault" "copy the seed to ~/vault-seed/claude-vault-seed.tar.gz and run make -C ~/dotfiles/claude, or set CLAUDE_VAULT"
 [ -f "$vault/CLAUDE.md" ] && ok "$vault/CLAUDE.md exists, so the hooks are live" \
-  || bad "$vault/CLAUDE.md is missing, so both hooks exit silently" "install the seed vault, it carries CLAUDE.md"
+  || bad "$vault/CLAUDE.md is missing, so both hooks exit silently" "make -C ~/dotfiles/claude installs the seed vault, which carries CLAUDE.md"
 
 if [ "$fail" = 0 ]; then
   echo
