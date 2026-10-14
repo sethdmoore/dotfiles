@@ -109,7 +109,7 @@ local function apply(name, cfg, x)
         m.cm = "hdredid"
 
         -- 0: off, 1: on, 2: fullscreen only, 3: video/game content fullscreen
-        m.vrr = 3
+        m.vrr = 1
         m.supports_hdr = 0
         m.supports_wide_color = 0
         m.min_luminance = 0
