@@ -32,6 +32,14 @@ LINK = re.compile(r"!?\[\[([^\]|#]*)[^\]]*\]\]")
 CODE = re.compile(r"^(```|~~~).*?^\1[^\n]*$|`[^`\n]*`", re.M | re.S)
 BRIEF_LIMIT = 30
 SUMMARY_LIMIT = 150
+# Frontmatter a note needs beyond description, last_worked_on and created. The vault CLAUDE.md has the table.
+REQUIRED = {
+    "project": ("status", "next_action", "area", "paths"),
+    "area": ("paths",),
+    "deep-dive": ("project",),
+    "resource": (),
+    "meta": (),
+}
 
 
 def notes(paths):
@@ -166,7 +174,13 @@ def problems(path, every):
     _, parts = sections(text)
     names = [name for name, _ in parts]
     found = []
-    if field(frontmatter, "type") not in ("", "meta"):
+    kind = field(frontmatter, "type")
+    if kind not in REQUIRED:
+        found.append(f"frontmatter `type` is `{kind}`, not one of {', '.join(REQUIRED)}")
+    for name in ("description", "last_worked_on", "created", *REQUIRED.get(kind, ())):
+        if not (listfield(frontmatter, name) if name == "paths" else field(frontmatter, name)):
+            found.append(f"frontmatter `{name}` is empty, and a {kind or 'note'} needs it")
+    if kind not in ("", "meta"):
         if names[:1] != ["summary"]:
             found.append("the first section is not ## Summary")
         elif estimate(parts[0][1]) > SUMMARY_LIMIT:
