@@ -157,6 +157,16 @@ hl.window_rule({
     tag = "+no_opacity",
 })
 
+hl.window_rule({
+    name = "move-gpg-passphrase-prompt",
+    match = {
+	    initial_class = "^gcr-prompter$",
+	    title = ".*gpg --status.*",
+    },
+    float = true,
+    move = {"monitor_w * 0.5 - window_w * 0.5", "window_y + 60"}
+})
+
 --io.github.Faugus.faugus-launcher
 
 local suppressMaximizeRule = hl.window_rule({
