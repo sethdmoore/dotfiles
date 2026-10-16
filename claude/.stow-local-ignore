@@ -18,3 +18,4 @@ _darcs
 # package tooling, not config
 ^/Makefile
 ^/settings\..+\.json
+^/vault

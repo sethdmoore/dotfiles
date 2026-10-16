@@ -39,9 +39,12 @@ else
   bad "autoMemoryDirectory is not the vault memory folder" "make -C ~/dotfiles/claude"
 fi
 
-[ -d "$vault" ] && ok "vault at $vault" || bad "no vault at $vault" "copy the seed to ~/vault-seed/claude-vault-seed.tar.gz and run make -C ~/dotfiles/claude, or set CLAUDE_VAULT"
-[ -f "$vault/CLAUDE.md" ] && ok "$vault/CLAUDE.md exists, so the hooks are live" \
-  || bad "$vault/CLAUDE.md is missing, so both hooks exit silently" "make -C ~/dotfiles/claude installs the seed vault, which carries CLAUDE.md"
+[ -d "$vault" ] && ok "vault at $vault" || bad "no vault at $vault" "make -C ~/dotfiles/claude, or set CLAUDE_VAULT"
+rules="$HOME/dotfiles/claude/vault"
+for f in CLAUDE.md templates; do
+  [ "$(readlink "$vault/$f")" = "$rules/$f" ] && ok "$vault/$f links to the rules in dotfiles" \
+    || bad "$vault/$f is not a link to $rules/$f, so the rules can differ from what notes.py checks" "make -C ~/dotfiles/claude"
+done
 
 if [ "$fail" = 0 ]; then
   echo
@@ -52,5 +55,8 @@ if [ "$fail" = 0 ]; then
   n=$(CLAUDE_VAULT="$vault" python3 "$hooks/notes.py" match "$dir" | wc -l | tr -d ' ')
   [ "$n" -gt 0 ] && ok "$n note(s) claim $dir, the brief carries a Summary" \
     || echo "note  no note claims $dir. The brief lists active notes instead. Add the directory to a note's paths for a Summary."
+  n=$(CLAUDE_VAULT="$vault" python3 "$hooks/notes.py" check 2>&1 | wc -l | tr -d ' ')
+  [ "$n" = 0 ] && ok "notes.py check finds no problems" \
+    || echo "note  notes.py check finds $n problems. Ask a session to fix them, or to migrate the vault to PARA per the vault CLAUDE.md."
 fi
 exit $fail

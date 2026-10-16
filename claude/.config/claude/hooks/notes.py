@@ -26,6 +26,7 @@ VAULT = pathlib.Path(os.environ.get("CLAUDE_VAULT", "~/Documents/obsidian/vaults
 SELF = pathlib.Path(__file__).absolute()
 HOME = pathlib.Path.home()
 SKIP = {".obsidian", "templates", "memory"}
+PARA = {"1-projects", "2-areas", "3-resources", "4-archive"}
 HIDDEN = {".git", ".obsidian", ".trash"}
 TOKENS = re.compile(r"^tokens:.*$", re.M)
 FENCE = re.compile(r"^(```|~~~)")
@@ -50,7 +51,8 @@ def notes(paths):
         if missing:
             sys.exit(f"no note matches {', '.join(missing)}")
         return found
-    return sorted(p for p in VAULT.rglob("*.md") if not SKIP & set(p.relative_to(VAULT).parts))
+    # The vault CLAUDE.md is the rules, not a note, and on an old vault it has no frontmatter.
+    return sorted(p for p in VAULT.rglob("*.md") if not SKIP & set(p.relative_to(VAULT).parts) and p != VAULT / "CLAUDE.md")
 
 
 def split(text):
@@ -181,6 +183,8 @@ def problems(path, every):
     for name in ("description", "last_worked_on", "created", *REQUIRED.get(kind, ())):
         if not (listfield(frontmatter, name) if name == "paths" else field(frontmatter, name)):
             found.append(f"frontmatter `{name}` is empty, and a {kind or 'note'} needs it")
+    if kind not in ("", "meta") and path.is_relative_to(VAULT) and path.relative_to(VAULT).parts[0] not in PARA:
+        found.append("the note is outside the PARA folders, see Migrating a vault to PARA in the vault CLAUDE.md")
     if kind not in ("", "meta"):
         if names[:1] != ["summary"]:
             found.append("the first section is not ## Summary")
@@ -268,7 +272,7 @@ def tokens(args):
         updated = TOKENS.sub(f"tokens: {estimated}", frontmatter, count=1) + body
         if updated != text:
             path.write_text(updated)
-            print(f"{estimated:>6}  {path.relative_to(VAULT)}")
+            print(f"{estimated:>6}  {shown(path)}")
     report(paths)
 
 

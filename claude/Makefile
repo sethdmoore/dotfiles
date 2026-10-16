@@ -4,8 +4,8 @@
 #   make -C ~/dotfiles/claude         personal machine
 #   make -C ~/dotfiles/claude work    work machine, adds the Linear hook
 #
-# Both merge the settings templates into settings.json, then install the
-# vault from the seed tarball when no vault exists yet (the `vault` target).
+# Both merge the settings templates into settings.json, then link the vault
+# rules into the vault and make its folders (the `vault` target).
 #
 # A template wins on every key it names, and a key no template names keeps the
 # value Claude Code wrote. An array is replaced, except permissions.allow,
@@ -32,24 +32,42 @@ settings work:
 	@echo 'merged $(TEMPLATES) into $(SETTINGS)'
 	@$(MAKE) --no-print-directory vault
 
-# The seed tarball holds the vault as a git repo under claude/. Memories Claude
-# Code saved before the vault existed, in the vault's own memory/ or at the
-# path the vault had before 2026-10-12, are moved aside first: tar -k would
-# keep their MEMORY.md and leave the seeded memories unindexed. notes.py then
-# folds them in, and leaves only a file whose name the seed also has, for a
-# session to merge by hand.
+# The vault rules and templates live in vault/ here, beside notes.py, which
+# enforces them. Every run links them into the vault, so a vault made before a
+# rule changed gets the rule its checker enforces. A different file or folder
+# in their place moves to $(BEFORE) first.
+#
+# The seed tarball holds notes and memories only, and installs only where the
+# vault has no git repository, so it never overwrites a vault's history. A
+# vault without CLAUDE.md is not new: on 2026-10-16 that test let the seed
+# overwrite the work Mac's vault. Memories Claude Code saved before the vault
+# existed, in the vault's own memory/ or at the path the vault had before
+# 2026-10-12, are moved aside first: tar would keep their MEMORY.md and leave
+# the seeded memories unindexed. notes.py then folds them in, and leaves only
+# a file whose name the seed also has, for a session to merge by hand.
 VAULT ?= $(or $(CLAUDE_VAULT),$(HOME)/Documents/obsidian/vaults/claude)
 SEED ?= $(HOME)/vault-seed/claude-vault-seed.tar.gz
 OLD_MEMORY ?= $(HOME)/Documents/vaults/obsidian/claude/memory
 STAGED := $(HOME)/claude-memory-before-seed
+BEFORE := $(HOME)/claude-vault-rules-before-dotfiles
+RULES := $(CURDIR)/vault
 
 .PHONY: vault
 vault:
-	@[ ! -f '$(VAULT)/CLAUDE.md' ] || exit 0; \
-	if [ ! -f '$(SEED)' ]; then echo 'no vault at $(VAULT). Copy the seed to $(SEED), or run make vault SEED=<path>'; exit 0; fi; \
-	i=0; for d in '$(VAULT)/memory' '$(OLD_MEMORY)'; do \
-	  [ -d "$$d" ] || continue; i=$$((i+1)); mkdir -p '$(STAGED)'; mv "$$d" "$(STAGED)/$$i"; \
-	done; \
-	mkdir -p '$(dir $(VAULT))' && tar -xzf '$(SEED)' -C '$(dir $(VAULT))' && echo 'installed the vault at $(VAULT)'; \
-	[ -d '$(STAGED)' ] && CLAUDE_VAULT='$(VAULT)' python3 .config/claude/hooks/notes.py fold-memory '$(STAGED)'/*; \
-	exit 0
+	@if [ ! -d '$(VAULT)/.git' ] && [ -f '$(SEED)' ]; then \
+	  i=0; for d in '$(VAULT)/memory' '$(OLD_MEMORY)'; do \
+	    [ -d "$$d" ] || continue; i=$$((i+1)); mkdir -p '$(STAGED)'; mv "$$d" "$(STAGED)/$$i"; \
+	  done; \
+	  mkdir -p '$(dir $(VAULT))' && tar -xzf '$(SEED)' -C '$(dir $(VAULT))' && echo 'installed the seed at $(VAULT)'; \
+	  [ ! -d '$(STAGED)' ] || CLAUDE_VAULT='$(VAULT)' python3 .config/claude/hooks/notes.py fold-memory '$(STAGED)'/*; \
+	fi
+	@mkdir -p '$(VAULT)/1-projects' '$(VAULT)/2-areas' '$(VAULT)/3-resources' '$(VAULT)/4-archive' '$(VAULT)/memory'
+	@[ -d '$(VAULT)/.git' ] || { git -C '$(VAULT)' init -q && echo 'made $(VAULT) a git repository'; }
+	@for f in CLAUDE.md templates; do \
+	  t='$(VAULT)'/$$f; \
+	  [ "$$(readlink "$$t")" != '$(RULES)'/$$f ] || continue; \
+	  if [ -L "$$t" ]; then rm "$$t"; \
+	  elif [ -e "$$t" ] && diff -rq "$$t" '$(RULES)'/$$f >/dev/null 2>&1; then rm -r "$$t"; \
+	  elif [ -e "$$t" ]; then mkdir -p '$(BEFORE)' && mv "$$t" '$(BEFORE)'/ && echo "moved the old $$f to $(BEFORE)"; fi; \
+	  ln -s '$(RULES)'/$$f "$$t" && echo "linked $$t to the rules in dotfiles"; \
+	done
