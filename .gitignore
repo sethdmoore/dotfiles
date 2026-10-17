@@ -17,3 +17,5 @@ yay/.local
 hyprland/.config/hypr/noctalia.lua
 alacritty/.config/alacritty/themes
 claude/.config/claude/skills/synced
+claude/.config/claude/skills/*aws*
+claude/.config/claude/skills/*amazon*
