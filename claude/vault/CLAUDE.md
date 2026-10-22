@@ -69,6 +69,7 @@ Every note has frontmatter.
 | `area`           | `"[[<area-slug>]]"`, required                                | project     |
 | `project`        | `"[[<slug>]]"`, the project or area the note belongs to      | deep-dive   |
 | `paths`          | Local directories where the work happens, never empty on a project. A session started in or under one loads this note, and the hooks match a session by nothing else | project, area |
+| `sessions`       | Optional. Claude sessions for this note as `<project folder>/<session-id>`, newest first. Resume one with `claude --resume <session-id>` from that directory | project, area |
 | `tags`           | Optional                                                     | all         |
 
 ## Note body

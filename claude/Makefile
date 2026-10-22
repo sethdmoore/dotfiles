@@ -71,3 +71,19 @@ vault:
 	  elif [ -e "$$t" ]; then mkdir -p '$(BEFORE)' && mv "$$t" '$(BEFORE)'/ && echo "moved the old $$f to $(BEFORE)"; fi; \
 	  ln -s '$(RULES)'/$$f "$$t" && echo "linked $$t to the rules in dotfiles"; \
 	done
+
+# The migration board and its guarded session helpers (migration/README.md).
+# Links each into ~/claude_migration. A file already there that matches is
+# replaced by the link, and a different one is kept and reported.
+MIGRATION ?= $(HOME)/claude_migration
+MIGRATION_FILES := bin/say bin/hear scripts/sess.py scripts/trashpath.py README.md PROMPT.md
+
+.PHONY: migration
+migration:
+	@mkdir -p '$(MIGRATION)/bin' '$(MIGRATION)/scripts' '$(MIGRATION)/chat' '$(MIGRATION)/agents' '$(MIGRATION)/trash'
+	@for f in $(MIGRATION_FILES); do \
+	  s='$(CURDIR)/migration'/$$f; t='$(MIGRATION)'/$$f; \
+	  [ "$$(readlink "$$t")" != "$$s" ] || continue; \
+	  if [ -e "$$t" ] && ! cmp -s "$$t" "$$s"; then echo "kept $$t, it differs from dotfiles"; continue; fi; \
+	  rm -f "$$t" && ln -s "$$s" "$$t" && echo "linked $$t"; \
+	done

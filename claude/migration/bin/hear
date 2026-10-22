@@ -1,0 +1,26 @@
+#!/bin/sh
+# usage: hear <your-name> [tag ...] [--all] [--wait SECONDS]
+# Prints messages that mention @<your-name>, @all, or @<tag>, oldest first.
+# By default prints only lines you have not seen yet. --all prints the full history.
+# --wait polls every 10s until something new arrives or SECONDS pass (max 110).
+set -eu
+[ $# -ge 1 ] || { echo "usage: hear <your-name> [tag ...] [--all] [--wait SECONDS]" >&2; exit 2; }
+name=$1; shift
+pat="@$name\\b|@all\\b"; all=0; wait=0
+while [ $# -gt 0 ]; do
+  case $1 in --all) all=1;; --wait) wait=${2:-60}; shift;; *) pat="$pat|@$1\\b";; esac; shift
+done
+[ "$wait" -gt 110 ] && wait=110
+base="$HOME/claude_migration"; seen="$base/agents/$name/.seen"; mkdir -p "$base/agents/$name"
+matches() { cat "$base"/chat/*.log 2>/dev/null | grep -E "$pat" | sort -s -k1,2 || true; }
+old=$(cat "$seen" 2>/dev/null || echo 0)
+[ $all -eq 1 ] && { matches; exit 0; }
+elapsed=0
+while :; do
+  n=$(matches | wc -l | tr -d ' ')
+  if [ "$n" -gt "$old" ] || [ "$elapsed" -ge "$wait" ]; then break; fi
+  sleep 10; elapsed=$((elapsed+10))
+done
+matches | tail -n +$((old+1))
+echo "$n" > "$seen"
+[ "$n" -gt "$old" ] || echo "(nothing new for @$name)"

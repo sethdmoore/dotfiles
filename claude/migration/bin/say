@@ -1,0 +1,11 @@
+#!/bin/sh
+# usage: say <channel> <your-name> <message ...>
+# Appends one line to ~/claude_migration/chat/<channel>.log. Newlines in the message become spaces.
+set -eu
+[ $# -ge 3 ] || { echo "usage: say <channel> <your-name> <message ...>" >&2; exit 2; }
+ch=$1 from=$2; shift 2
+case $ch in ''|*[!a-zA-Z0-9-]*) echo "bad channel name: $ch (letters, digits, -)" >&2; exit 2;; esac
+msg=$(printf '%s' "$*" | tr '\n' ' ')
+mkdir -p "$HOME/claude_migration/chat"
+# One printf to an O_APPEND file is one write(2), so concurrent agents do not interleave lines.
+printf '%s #%s <%s> %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$ch" "$from" "$msg" >> "$HOME/claude_migration/chat/$ch.log"
