@@ -21,3 +21,4 @@ claude/.config/claude/skills/synced
 claude/.config/claude/skills/*aws*
 claude/.config/claude/skills/*amazon*
 claude/.config/claude/hooks/herdr-agent-state.sh
+ghostty/.config/ghostty/themes/noctalia

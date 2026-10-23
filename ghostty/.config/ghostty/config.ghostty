@@ -5,9 +5,10 @@ cursor-opacity = 0.9
 cursor-text = "#FFFFFF"
 cursor-style = "block"
 
-background-opacity = 0.7
+background-opacity = 0.92
 background-opacity-cells = true
 
 custom-shader = ./ghostty-cursor-shaders/ghostty/cursor_warp.glsl
 
 config-file = ?./include/macos.toml
+theme = noctalia
