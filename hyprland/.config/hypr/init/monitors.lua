@@ -193,10 +193,42 @@ local function name_of(cands, key)
     end
 end
 
+-- A connector can announce itself before its EDID physical size is readable
+-- (boot, hotplug). Physical size is the only thing separating the identical-
+-- description Hisense TVs, so a monitor whose description matches an entry that
+-- NEEDS a physical size, but which reports none yet, is "unsettled": judging it
+-- now would match nothing and could power the TV off in favour of the laptop.
+local function unsettled(cands)
+    for _, mon in ipairs(cands) do
+        local w, h = mon.physical_width, mon.physical_height
+        if not w or not h or w == 0 or h == 0 then
+            for _, cfg in pairs(displays) do
+                local m = cfg.match
+                if m and m.physical and desc_matches(mon.description, m.description) then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
 local last_primary = nil
+local settle_tries = 0
+local MAX_SETTLE_TRIES = 10
 
 local function select(added)
     local cands = candidates(added)
+
+    -- hold off (and re-run in 1s) until the size is readable, up to ~10s;
+    -- after that fall through and use whatever we have.
+    if unsettled(cands) and settle_tries < MAX_SETTLE_TRIES then
+        settle_tries = settle_tries + 1
+        hl.exec_cmd("sleep 1; hyprctl eval 'monitor_reapply()'")
+        return
+    end
+    settle_tries = 0
+
     local pkey  = primary_key(cands)
 
     if not pkey then
