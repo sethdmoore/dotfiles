@@ -10,7 +10,7 @@ created: 2026-10-08
 
 This vault is Claude's memory of projects across sessions. Claude reads it before work and writes it after, in every working directory. Seth reads it too. Seth's own vaults sit beside this one in `~/Documents/obsidian/vaults`. Leave them alone unless asked.
 
-Do not read this whole file. Read down to the first `## ` heading, then load the sections your task needs:
+Do not read this whole file. Run `notes.py +top CLAUDE` to read down to the first `## ` heading, then load the sections your task needs:
 
 | Task | Run |
 | --- | --- |

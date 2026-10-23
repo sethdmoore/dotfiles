@@ -2,7 +2,7 @@
 """Helpers for Claude's Obsidian vault, $CLAUDE_VAULT or ~/Documents/obsidian/vaults/claude.
 
   notes.py <note ...>                 print each note whole
-  notes.py +<section> ... <note ...>  print only the named sections, e.g. +summary +references
+  notes.py +<section> ... <note ...>  print only the named sections, e.g. +summary +references, or +top for the text above the first section
   notes.py -<section> ... <note ...>  print each note without the named sections, e.g. -summary
   notes.py index [dir]                one line per note: tokens, last_worked_on, path, description
   notes.py tokens [file ...]          set the `tokens` field of each note (default: every note), then check it
@@ -147,6 +147,15 @@ def sections(text):
     return "".join(head), [(name, "".join(lines)) for name, lines in parts]
 
 
+def top_text(text):
+    """The text after the frontmatter and before the first `## ` heading."""
+    head, _ = sections(text)
+    frontmatter, _ = split(text)
+    if frontmatter is None:
+        return head
+    return head[len(frontmatter):].split("\n", 2)[-1].lstrip("\n")
+
+
 def pick(wanted, names):
     """Index of the section `wanted` names: an exact slug, else a prefix only one slug has."""
     wanted = slug(wanted)
@@ -224,21 +233,25 @@ def show(args):
     if not targets or len(signs) > 1:
         sys.exit("name at least one note, and either +sections or -sections, not both\n" + __doc__)
     status = 0
-    for target in targets:
-        path = resolve(target)
+    paths = [resolve(target) for target in targets]
+    for target, path in zip(targets, paths):
         if path is None:
             print(f"no note matches {target}", file=sys.stderr)
             status = 1
             continue
         text = path.read_text()
-        print(f"==> {shown(path)} <==")
+        if sum(p is not None for p in paths) > 1:
+            print(f"==> {shown(path)} <==")
         if not selectors:
             print(text.rstrip())
             continue
         head, parts = sections(text)
         names = [name for name, _ in parts]
-        chosen = set()
+        chosen, with_top = set(), False
         for selector in selectors:
+            if signs == {"+"} and slug(selector[1:]) == "top":
+                with_top = True
+                continue
             i = pick(selector[1:], names)
             if i is not None:
                 chosen.add(i)
@@ -249,11 +262,12 @@ def show(args):
                 print(f"no section {selector[1:]} in {shown(path)}. It has: {', '.join(names)}", file=sys.stderr)
                 status = 1
         if signs == {"+"}:
-            if chosen:
-                print("".join(parts[i][1] for i in sorted(chosen)).rstrip())
+            body = ([top_text(text)] if with_top else []) + [parts[i][1] for i in sorted(chosen)]
+            if body:
+                print("".join(body).rstrip())
             rest = [f"{name} {estimate(part)}" for i, (name, part) in enumerate(parts) if i not in chosen]
             if rest:
-                print(f"(Not loaded, tokens each: {', '.join(rest)}. Load one with +<section>.)")
+                print(f"(not loaded: {', '.join(rest)})")
         else:
             print((head + "".join(part for i, (_, part) in enumerate(parts) if i not in chosen)).rstrip())
     sys.exit(status)
@@ -296,7 +310,7 @@ def match(args):
 def context(args):
     matched = matches(args[0])
     command = f"python3 {tilde(SELF)}"
-    lines = [f"Your Obsidian vault at {tilde(VAULT)} is your memory of projects across sessions. Read {tilde(VAULT / 'CLAUDE.md')} before you write a note."]
+    lines = [f"Your Obsidian vault at {tilde(VAULT)} is your memory of projects across sessions. Before you write a note, run `{command} +top CLAUDE`, which names the sections to load. Do not read the whole file."]
     if not matched and any(pathlib.Path(args[0]).expanduser().resolve().is_relative_to(s) for s in SCRATCH):
         print(lines[0])
         return
@@ -309,7 +323,7 @@ def context(args):
             lines.append(f"This directory belongs to {tilde(path)}. Load it with `{command} {tilde(path)}` before you work on the project.")
             continue
         rest = ", ".join(f"{name} {estimate(part)}" for name, part in parts if name != "summary")
-        lines.append(f"This directory belongs to {tilde(path)}. Its Summary is below and already loaded. When the work needs more, run `{command} -summary {tilde(path)}` for the rest of the note, or `+<section>` for single sections (tokens each: {rest}).")
+        lines.append(f"Note: {tilde(path)}. Rest: `{command} -summary {tilde(path)}`, or `+<section>`: {rest}.")
         lines.append(summary[0].split("\n", 1)[1].strip())
     # Other sessions update the other notes all day, so a claimed directory gets its own note alone.
     if matched:
