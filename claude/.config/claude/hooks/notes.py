@@ -10,18 +10,23 @@
   notes.py match <dir>                notes whose `paths` field contains dir, closest first
   notes.py context <dir>              the brief the SessionStart hook injects: the note that claims dir, or the newest notes
   notes.py fold-memory <dir ...>      move memories saved before the vault existed into memory/, and index them
+  notes.py stop                       the Stop hook: reads the hook event on stdin, prints a block decision or nothing
 
 A note is a path, or a link target such as claude-workflow/hooks. A section is
 a `## ` heading, named in lowercase with dashes (`## Deep dives` is deep-dives),
 or by a prefix that only one heading has.
 """
+import datetime
 import fnmatch
+import json
 import math
 import os
 import pathlib
 import re
+import subprocess
 import sys
 import textwrap
+import time
 
 VAULT = pathlib.Path(os.environ.get("CLAUDE_VAULT", "~/Documents/obsidian/vaults/claude")).expanduser().resolve()
 SELF = pathlib.Path(__file__).absolute()
@@ -360,8 +365,88 @@ def fold_memory(args):
             directory.rmdir()
 
 
+EDITORS = {"Edit", "Write", "MultiEdit", "NotebookEdit"}
+
+
+def lines_backward(path, chunk=1 << 20):
+    with open(path, "rb") as f:
+        end = f.seek(0, os.SEEK_END)
+        rest = b""
+        while end > 0:
+            start = max(0, end - chunk)
+            f.seek(start)
+            lines = (f.read(end - start) + rest).split(b"\n")
+            # Above the start of the file, the first piece is the end of a line the next chunk back begins.
+            rest = lines.pop(0) if start else b""
+            end = start
+            yield from reversed(lines)
+
+
+def last_turn(transcript):
+    """When the last prompt arrived, and each file an edit tool wrote since. Reads back from the end of the transcript."""
+    edited = set()
+    for line in lines_backward(transcript):
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        content = (entry.get("message") or {}).get("content")
+        # A prompt carries a string content, and a tool result carries a list.
+        if entry.get("type") == "user" and isinstance(content, str):
+            return datetime.datetime.fromisoformat(entry["timestamp"].replace("Z", "+00:00")).timestamp(), edited
+        if entry.get("type") == "assistant" and isinstance(content, list):
+            for block in content:
+                tool_input = block.get("input") or {}
+                path = tool_input.get("file_path") or tool_input.get("notebook_path")
+                if block.get("type") == "tool_use" and block.get("name") in EDITORS and path:
+                    edited.add(pathlib.Path(path).expanduser().resolve())
+    return None, edited
+
+
+def stale_notes(edited):
+    """Live notes that track a file the turn edited, when the turn updated none of the notes that track it."""
+    stale = []
+    # A note may track the vault itself, and editing the vault is note upkeep, not work to record.
+    for directory in sorted({p.parent for p in edited if not p.is_relative_to(VAULT)}):
+        matched = [n for n in matches(directory) if n.relative_to(VAULT).parts[0] != "4-archive"]
+        if not edited & set(matched):
+            stale += [n for n in matched if n not in stale]
+    return stale
+
+
+def commit_ask(edited, stale):
+    """The commit half of the stop ask, or None. A stale note counts, since updating it leaves a vault file to commit."""
+    files = [str(p) for p in edited if p.is_relative_to(VAULT)]
+    dirty = files and subprocess.run(["git", "-C", str(VAULT), "status", "--porcelain", "--", *files], capture_output=True, text=True, timeout=5, check=True).stdout.strip()
+    if not stale and not dirty:
+        return None
+    git = f"git -C {tilde(VAULT)}"
+    return f"Commit the vault files this turn edited: get the message from the git-commit skill, then run {git} add <files> && {git} commit as one command."
+
+
+def stop(args):
+    """The Stop hook. Prints a block decision, or nothing. Any error allows the stop."""
+    try:
+        event = json.load(sys.stdin)
+        # stop_hook_active is true when this stop follows a block from this hook. Allow it, or the loop never ends.
+        if event.get("stop_hook_active") or not (VAULT / "CLAUDE.md").is_file():
+            return
+        start, edited = last_turn(event["transcript_path"])
+        if start is None or not edited or time.time() - start <= int(os.environ.get("CLAUDE_VAULT_STOP_SECONDS", 180)):
+            return
+        stale = stale_notes(edited)
+        asks = [f"Update vault note {', '.join(map(shown, stale))} for this turn: State, status, next_action, last_worked_on, References, then python3 {tilde(SELF)} tokens <note>."] if stale else []
+        commit = commit_ask(edited, stale)
+        if commit:
+            asks.append(commit)
+        if asks:
+            print(json.dumps({"decision": "block", "reason": "Before you stop: " + " ".join(asks), "suppressOutput": True}))
+    except Exception:
+        return
+
+
 if __name__ == "__main__":
-    commands = {"index": index, "tokens": tokens, "check": check, "match": match, "context": context, "fold-memory": fold_memory}
+    commands = {"index": index, "tokens": tokens, "check": check, "match": match, "context": context, "fold-memory": fold_memory, "stop": stop}
     if len(sys.argv) < 2 or (sys.argv[1] in ("match", "context", "fold-memory") and len(sys.argv) < 3):
         sys.exit(__doc__)
     if sys.argv[1] in commands:
