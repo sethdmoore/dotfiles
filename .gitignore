@@ -11,6 +11,7 @@ zsh/.config/zsh/private_aliases
 zsh/.config/zsh/private_environment
 bookmarks
 gtk/.config/gtk-3.0/bookmarks
+gtk/.config/gtk-4.0/noctalia.css
 nvim/.config/gocode
 yay/.local
 # auto generated files
