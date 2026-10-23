@@ -8,7 +8,7 @@
   notes.py tokens [file ...]          set the `tokens` field of each note (default: every note), then check it
   notes.py check [file ...]           Summary first, References last, every [[link]] resolves
   notes.py match <dir>                notes whose `paths` field contains dir, closest first
-  notes.py context <dir>              the brief the SessionStart hook injects: the note that claims dir, or every note
+  notes.py context <dir>              the brief the SessionStart hook injects: the note that claims dir, or the newest notes
   notes.py fold-memory <dir ...>      move memories saved before the vault existed into memory/, and index them
 
 A note is a path, or a link target such as claude-workflow/hooks. A section is
@@ -21,6 +21,7 @@ import os
 import pathlib
 import re
 import sys
+import textwrap
 
 VAULT = pathlib.Path(os.environ.get("CLAUDE_VAULT", "~/Documents/obsidian/vaults/claude")).expanduser().resolve()
 SELF = pathlib.Path(__file__).absolute()
@@ -32,7 +33,9 @@ TOKENS = re.compile(r"^tokens:.*$", re.M)
 FENCE = re.compile(r"^(```|~~~)")
 LINK = re.compile(r"!?\[\[([^\]|#]*)[^\]]*\]\]")
 CODE = re.compile(r"^(```|~~~).*?^\1[^\n]*$|`[^`\n]*`", re.M | re.S)
-BRIEF_LIMIT = 30
+BRIEF_LIMIT = 3
+NEXT_LIMIT = 100
+SCRATCH = [pathlib.Path(p).resolve() for p in ("/tmp", "/private/tmp", "/var/folders")]
 SUMMARY_LIMIT = 150
 # Frontmatter a note needs beyond description, last_worked_on and created. The vault CLAUDE.md has the table.
 REQUIRED = {
@@ -289,6 +292,9 @@ def context(args):
     matched = matches(args[0])
     command = f"python3 {tilde(SELF)}"
     lines = [f"Your Obsidian vault at {tilde(VAULT)} is your memory of projects across sessions. Read {tilde(VAULT / 'CLAUDE.md')} before you write a note."]
+    if not matched and any(pathlib.Path(args[0]).expanduser().resolve().is_relative_to(s) for s in SCRATCH):
+        print(lines[0])
+        return
     if not matched:
         lines.append("No note lists this directory in `paths`. If Seth asks to resume without naming a project, show him the first three notes below with their next step, and ask which one. If the work here will span sessions, add the directory to a note's `paths`, or create a project note.")
     for path in matched:
@@ -314,13 +320,13 @@ def context(args):
         listed.append((field(frontmatter, "last_worked_on"), path.stat().st_mtime, rel, kind, field(frontmatter, "status"), field(frontmatter, "description"), field(frontmatter, "next_action")))
     listed.sort(reverse=True)
     lines.append("Notes, newest first (type, status, last worked on):")
-    for i, (date, _, rel, kind, status, description, next_action) in enumerate(listed[:BRIEF_LIMIT]):
+    for date, _, rel, kind, status, description, next_action in listed[:BRIEF_LIMIT]:
         line = f"- {rel} ({', '.join(filter(None, (kind, status, date)))}): {description}"
-        if i < 3 and next_action:
-            line += f" Next: {next_action}"
+        if next_action:
+            line += f" Next: {textwrap.shorten(next_action, NEXT_LIMIT, placeholder='...')}"
         lines.append(line)
     if len(listed) > BRIEF_LIMIT:
-        lines.append(f"- {len(listed) - BRIEF_LIMIT} more: run {command} index")
+        lines.append(f"- {len(listed) - BRIEF_LIMIT} more. For the full list, run `{command} index`.")
     print("\n".join(lines))
 
 
