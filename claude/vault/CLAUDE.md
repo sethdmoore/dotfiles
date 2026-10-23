@@ -1,8 +1,8 @@
 ---
 type: meta
-description: Rules for Claude's vault on every machine. Read before creating or editing a note.
-tokens: 2950
-last_worked_on: 2026-10-16
+description: Rules for Claude's vault on every machine. Read the top part before creating or editing a note, then load only the sections the task needs.
+tokens: 3010
+last_worked_on: 2026-10-23
 created: 2026-10-08
 ---
 
@@ -10,12 +10,42 @@ created: 2026-10-08
 
 This vault is Claude's memory of projects across sessions. Claude reads it before work and writes it after, in every working directory. Seth reads it too. Seth's own vaults sit beside this one in `~/Documents/obsidian/vaults`. Leave them alone unless asked.
 
+Do not read this whole file. Read down to the first `## ` heading, then load the sections your task needs:
+
+| Task | Run |
+| --- | --- |
+| Write or edit a note | `notes.py +frontmatter +note-body +workflow CLAUDE` |
+| Create a project or area | `notes.py +layout +frontmatter +note-body +workflow CLAUDE` |
+| Load a note to read it | `notes.py +reading CLAUDE` |
+| Decide where something belongs | `notes.py +purpose +layout CLAUDE` |
+| Add a calendar reminder | `notes.py +calendar CLAUDE` |
+| Change or debug a vault hook | `notes.py +hooks CLAUDE` |
+| Migrate a vault to PARA | `notes.py +migrating +layout +frontmatter +note-body CLAUDE` |
+| Edit this file or a template | Read the whole file |
+
+- `notes.py` is `python3 ~/.config/claude/hooks/notes.py`.
+- Name this file `CLAUDE`, not `CLAUDE.md`. A bare `CLAUDE.md` is read from the working directory first.
+
+The vault is PARA, one folder per project:
+
+```
+1-projects/<slug>/<slug>.md    overview of an active project
+1-projects/<slug>/<topic>.md   deep dive for that project
+1-projects/<slug>/<topic>/     files that deep dive carries
+2-areas/<slug>/<slug>.md       ongoing responsibility, with deep dives beside it
+3-resources/<slug>.md          reference not tied to one project
+4-archive/<slug>/              closed project, moved whole
+memory/                        Claude Code auto-memory, indexed by memory/MEMORY.md
+templates/                     one template per note type
+Home.md, Projects.base         dashboard for Obsidian
+```
+
 This file and `templates/` are links into `~/dotfiles/claude/vault`, which `make -C ~/dotfiles/claude` links into the vault on every machine. The rules ship with `notes.py`, so the checker and the rules it enforces never differ. Notes and memories stay on their machine. A change to this file or a template is a dotfiles commit, not a vault commit.
 
 ## Purpose
 
 - One overview note per project. It answers three questions: what is this, where does it stand, what is next.
-- Detail goes in deep-dive notes inside the project folder. That includes research, proposals, and the directives written for agents. Files a deep dive carries (patches, screenshots, mockups) go in a folder of the same name beside it. Nothing for a project goes in `~/.config/claude`.
+- Detail goes in deep-dive notes in the project folder: research, proposals, and directives written for agents. Files a deep dive carries (patches, screenshots, mockups) go in a folder of the same name beside it. Nothing for a project goes in `~/.config/claude`.
 - Keep an overview under about 1000 tokens. Move anything longer into a deep dive.
 - Project state lives in project notes. `memory/` keeps facts about how to work: feedback, user facts, references.
 - `memory/` is Claude Code's auto-memory directory (`autoMemoryDirectory` in `~/.config/claude/settings.json`). Claude Code loads `memory/MEMORY.md` into every session, in every working directory. The harness system prompt sets the format of memory files, not this file. `notes.py` and the dashboard skip this folder.
@@ -30,21 +60,7 @@ Two hooks in `~/.config/claude/hooks` connect the vault to every session. They c
 
 ## Layout
 
-PARA, with one folder per project:
-
-```
-1-projects/<slug>/<slug>.md    overview of an active project
-1-projects/<slug>/<topic>.md   deep dive for that project
-1-projects/<slug>/<topic>/     files that deep dive carries
-2-areas/<slug>/<slug>.md       ongoing responsibility with no end date, with deep dives beside it
-3-resources/<slug>.md          reference not tied to one project
-4-archive/<slug>/              finished or dropped project, moved whole
-memory/                        Claude Code auto-memory, indexed by memory/MEMORY.md
-templates/                     one template per note type
-Home.md, Projects.base         dashboard for Obsidian
-```
-
-PARA, the same on every machine:
+The folder tree is at the top of this file. PARA works the same on every machine:
 
 - A project has an end state and a next action, and names the area it serves in `area`.
 - An area is a responsibility with no end date. It holds the standards its projects keep, and it can own deep dives the way a project does.
@@ -57,24 +73,24 @@ PARA, the same on every machine:
 
 Every note has frontmatter.
 
-| Field            | Notes                                                        | On          |
-| ---------------- | ------------------------------------------------------------ | ----------- |
-| `type`           | `project`, `deep-dive`, `area`, `resource`, `meta`           | all         |
-| `description`    | One or two sentences. Quote it if it contains `: `           | all         |
-| `tokens`         | Estimated size of the note. Set by `notes.py tokens`         | all         |
-| `last_worked_on` | ISO date of the last real change                             | all         |
-| `created`        | ISO date                                                     | all         |
-| `status`         | `active`, `paused`, `blocked`, `done`, `dropped`             | project     |
-| `next_action`    | One concrete step, small enough to start now                 | project, area |
-| `area`           | `"[[<area-slug>]]"`, required                                | project     |
-| `project`        | `"[[<slug>]]"`, the project or area the note belongs to      | deep-dive   |
-| `paths`          | Local directories where the work happens, never empty on a project. A session started in or under one loads this note, and the hooks match a session by nothing else | project, area |
-| `sessions`       | Optional. Claude sessions for this note as `<project folder>/<session-id>`, newest first. Resume one with `claude --resume <session-id>` from that directory | project, area |
-| `tags`           | Optional                                                     | all         |
+| Field | Notes | On |
+| --- | --- | --- |
+| `type` | `project`, `deep-dive`, `area`, `resource`, `meta` | all |
+| `description` | One or two sentences. Quote it if it contains `: ` | all |
+| `tokens` | Estimated size of the note. Set by `notes.py tokens` | all |
+| `last_worked_on` | ISO date of the last real change | all |
+| `created` | ISO date | all |
+| `status` | `active`, `paused`, `blocked`, `done`, `dropped` | project |
+| `next_action` | One concrete step, small enough to start now | project, area |
+| `area` | `"[[<area-slug>]]"`, required | project |
+| `project` | `"[[<slug>]]"`, the project or area the note belongs to | deep-dive |
+| `paths` | Local directories where the work happens, never empty on a project. A session started in or under one loads this note. The hooks match a session by nothing else | project, area |
+| `sessions` | Optional. Claude sessions for this note as `<project folder>/<session-id>`, newest first. Resume one with `claude --resume <session-id>` from that directory | project, area |
+| `tags` | Optional | all |
 
 ## Note body
 
-Every note except `meta` opens with `## Summary` and ends with `## References`. `notes.py check` enforces both, and the frontmatter table above.
+Every note except `meta` opens with `## Summary` and ends with `## References`. `notes.py check` enforces both, and the frontmatter table.
 
 - `## Summary`: two to five sentences, under about 150 tokens. What the note is, where it stands, and `[[links]]` to the notes a reader opens next. It condenses the body and adds no fact the body lacks.
 - `## References`: the sources behind the facts in the note, one bullet each, so a reader can check a claim instead of trusting it. Web URLs (PRs, issues, docs, Linear, Notion), `owner/repo#123`, Linear IDs, `repo@commit`, and local repository or file paths. Cite only a source the note names or one you opened. Never build a URL you have not seen. A note with no outside source says so in one bullet.
@@ -96,18 +112,18 @@ notes.py +state +references <note>   the named sections only
 notes.py <note>                      the whole note, for a deep dive you will read in full
 ```
 
-- `notes.py` is `python3 ~/.config/claude/hooks/notes.py`. A note is a path or a link target such as `claude-workflow/hooks`, and one call takes several. A section is its heading in lowercase with dashes, or a prefix only one heading has.
+- A note is a path or a link target such as `claude-workflow/hooks`, and one call takes several. A section is its heading in lowercase with dashes, or a prefix only one heading has.
 - The session start brief already holds the Summary of the note for the working directory. Load the rest with `-summary`.
-- The Edit tool needs a Read of the whole file first. Before you edit a note, Read it instead of loading it with `notes.py`.
 
 ## Workflow
 
-1. In a directory no note claims, the session start brief lists the active notes. For the full list, run `python3 ~/.config/claude/hooks/notes.py index` (or `index 1-projects`). Load a note's Summary only when its description says it is relevant.
+1. In a directory no note claims, the session start brief lists the active notes. For the full list, run `notes.py index` (or `index 1-projects`). Load a note's Summary only when its description says it is relevant.
 2. New project: copy `templates/project.md` to `1-projects/<slug>/<slug>.md`, replace `{{date}}`, name its `area`, and list the repos it touches in `paths`. New area: `templates/area.md` to `2-areas/<slug>/<slug>.md`.
-3. After working on a project: rewrite State, and the Summary when State changed. Update `status`, `next_action`, `last_worked_on`, add each new source to References, and add a Log line.
-4. After every edit, run `python3 ~/.config/claude/hooks/notes.py tokens <changed files>`. It also reports what `check` finds. Fix each problem.
-5. Done, dropped, or paused for over 30 days: set `status`, then `mv 1-projects/<slug> 4-archive/`.
-6. The vault is a git repository with no remote, one per machine. Commit note and memory changes with the `git-commit` skill and `git -C ~/Documents/obsidian/vaults/claude`, in the turn that made them. Other sessions commit here too, so stage nothing while the skill runs. Once it returns the message, run `git add <files> && git commit` as one command.
+3. Before you edit a note, Read the whole file instead of loading it with `notes.py`. The Edit tool needs that Read.
+4. After working on a project: rewrite State, and the Summary when State changed. Update `status`, `next_action`, `last_worked_on`, add each new source to References, and add a Log line.
+5. After every edit, run `notes.py tokens <changed files>`. It also reports what `check` finds. Fix each problem.
+6. Done, dropped, or paused for over 30 days: set `status`, then `mv 1-projects/<slug> 4-archive/`.
+7. The vault is a git repository with no remote, one per machine. Commit note and memory changes with the `git-commit` skill and `git -C ~/Documents/obsidian/vaults/claude`, in the turn that made them. Other sessions commit here too, so stage nothing while the skill runs. Once it returns the message, run `git add <files> && git commit` as one command.
 
 ## Calendar reminders
 
