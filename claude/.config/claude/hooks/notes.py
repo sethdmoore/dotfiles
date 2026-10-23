@@ -10,7 +10,7 @@
   notes.py match <dir>                notes whose `paths` field contains dir, closest first
   notes.py context <dir>              the brief the SessionStart hook injects: the note that claims dir, or the newest notes
   notes.py fold-memory <dir ...>      move memories saved before the vault existed into memory/, and index them
-  notes.py stop                       the Stop hook: reads the hook event on stdin, prints a block decision or nothing
+  notes.py stop                       the Stop hook: commits the turn's vault edits, prints a block decision or nothing
 
 A note is a path, or a link target such as claude-workflow/hooks. A section is
 a `## ` heading, named in lowercase with dashes (`## Deep dives` is deep-dives),
@@ -428,33 +428,60 @@ def stale_notes(edited):
     return stale
 
 
-def commit_ask(edited, stale):
-    """The commit half of the stop ask, or None. A stale note counts, since updating it leaves a vault file to commit."""
-    files = [str(p) for p in edited if p.is_relative_to(VAULT)]
-    dirty = files and subprocess.run(["git", "-C", str(VAULT), "status", "--porcelain", "--", *files], capture_output=True, text=True, timeout=5, check=True).stdout.strip()
-    if not stale and not dirty:
-        return None
-    git = f"git -C {tilde(VAULT)}"
-    return f"Commit the vault files this turn edited: get the message from the git-commit skill, then run {git} add <files> && {git} commit as one command."
+def git(*args):
+    return subprocess.run(["git", "-C", str(VAULT), *args], capture_output=True, text=True, timeout=5, check=True).stdout
+
+
+def commit_message(names):
+    head = "vault: update "
+    text = head + ", ".join(names)
+    if len(text) <= 72 or len(names) == 1:
+        return text
+    kept = names[:1]
+    for name in names[1:]:
+        if len(head + ", ".join(kept + [name]) + f" and {len(names) - len(kept) - 1} more") > 72:
+            break
+        kept.append(name)
+    return head + ", ".join(kept) + f" and {len(names) - len(kept)} more"
+
+
+def auto_commit(edited):
+    """Commit the vault files this turn edited. The pathspec keeps other sessions' staged and unstaged work out."""
+    paths = [os.path.relpath(p, VAULT) for p in edited if p.is_relative_to(VAULT)]
+    if not paths:
+        return
+    entries = git("status", "--porcelain", "-z", "-uall", "--", *paths).split("\0")
+    changed = [entry[3:] for entry in entries if entry]
+    if not changed:
+        return
+    git("add", "-A", "--", *changed)
+    identity = []
+    # The claude-cli container has no git config, so borrow the author of the last vault commit.
+    if subprocess.run(["git", "-C", str(VAULT), "config", "user.email"], capture_output=True, timeout=5).returncode:
+        name, email = git("log", "-1", "--format=%an%n%ae").splitlines()
+        identity = ["-c", f"user.name={name}", "-c", f"user.email={email}"]
+    git(*identity, "commit", "-q", "-m", commit_message(changed), "--", *changed)
 
 
 def stop(args):
-    """The Stop hook. Prints a block decision, or nothing. Any error allows the stop."""
+    """The Stop hook. Commits the turn's vault edits, and prints a block decision for stale notes, or nothing. Any error allows the stop."""
     try:
         event = json.load(sys.stdin)
-        # stop_hook_active is true when this stop follows a block from this hook. Allow it, or the loop never ends.
-        if event.get("stop_hook_active") or not (VAULT / "CLAUDE.md").is_file():
+        if not (VAULT / "CLAUDE.md").is_file():
             return
         start, edited = last_turn(event["transcript_path"])
-        if start is None or not edited or time.time() - start <= int(os.environ.get("CLAUDE_VAULT_STOP_SECONDS", 180)):
+        # Runs before the early returns, so a turn that updates a stale note still gets its commit.
+        try:
+            auto_commit(edited)
+        except Exception:
+            pass
+        # stop_hook_active is true when this stop follows a block from this hook. Allow it, or the loop never ends.
+        if event.get("stop_hook_active") or start is None or not edited or time.time() - start <= int(os.environ.get("CLAUDE_VAULT_STOP_SECONDS", 180)):
             return
         stale = stale_notes(edited)
-        asks = [f"Update vault note {', '.join(map(shown, stale))} for this turn: State, status, next_action, last_worked_on, References, then python3 {tilde(SELF)} tokens <note>."] if stale else []
-        commit = commit_ask(edited, stale)
-        if commit:
-            asks.append(commit)
-        if asks:
-            print(json.dumps({"decision": "block", "reason": "Before you stop: " + " ".join(asks), "suppressOutput": True}))
+        if stale:
+            ask = f"Update vault note {', '.join(map(shown, stale))} for this turn: State, status, next_action, last_worked_on, References, then python3 {tilde(SELF)} tokens <note>."
+            print(json.dumps({"decision": "block", "reason": "Before you stop: " + ask, "suppressOutput": True}))
     except Exception:
         return
 
