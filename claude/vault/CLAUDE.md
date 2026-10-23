@@ -1,7 +1,7 @@
 ---
 type: meta
 description: Rules for Claude's vault on every machine. Read before creating or editing a note.
-tokens: 2650
+tokens: 2950
 last_worked_on: 2026-10-16
 created: 2026-10-08
 ---
@@ -108,6 +108,16 @@ notes.py <note>                      the whole note, for a deep dive you will re
 4. After every edit, run `python3 ~/.config/claude/hooks/notes.py tokens <changed files>`. It also reports what `check` finds. Fix each problem.
 5. Done, dropped, or paused for over 30 days: set `status`, then `mv 1-projects/<slug> 4-archive/`.
 6. The vault is a git repository with no remote, one per machine. Commit note and memory changes with the `git-commit` skill and `git -C ~/Documents/obsidian/vaults/claude`, in the turn that made them. Other sessions commit here too, so stage nothing while the skill runs. Once it returns the message, run `git add <files> && git commit` as one command.
+
+## Calendar reminders
+
+Seth asks for a reminder on his Google Calendar when a note needs him on a later day.
+
+- His day starts at 10:00 Eastern. Put a reminder at 10:00 or later, never 9:00 to 10:00 or earlier. Block 9:00 to 10:00 as busy on that day if nothing blocks it yet.
+- List that day's events first. Move any Claude-made reminder that sits at or before 10:00, and place the new one so it overlaps none of them.
+- The event description carries the topic, the vault project link, the Claude session ID, and the resume command, `cd <session directory> && claude --resume <session-id>`. The session ID is the name of the scratchpad folder, and the directory is the one the session started in.
+- Add the session to the project note's `sessions` field, as `<project folder>/<session-id>`.
+- The connector creates events only when it holds write scope. On an insufficient scope error, ask Seth to re-authorize it, and make a macOS Reminder with `osascript` in the meantime.
 
 ## Migrating a vault to PARA
 
