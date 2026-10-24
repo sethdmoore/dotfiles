@@ -64,7 +64,7 @@ hl.bind(mainMod .. " + period", hl.dsp.window.tag({tag = "no_opacity"}))
 
 -- lock / logout
 hl.bind(mainMod .. " + SHIFT + q", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { long_press = true })
-hl.bind(mainMod .. " + SHIFT + l", hl.dsp.exec_cmd("hyprlock -c /home/seth/.config/hypr/hyprlock.conf || notify-send 'not working'"), { long_press = true })
+hl.bind("SHIFT + CTRL + ALT + l", hl.dsp.exec_cmd("hyprlock -c /home/seth/.config/hypr/hyprlock.conf || notify-send 'not working'"), { long_press = true })
 
 hl.bind(mainMod .. " + y", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())

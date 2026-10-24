@@ -21,4 +21,5 @@ require("window_rules/quirks")
 -- require("window_rules/k724")
 
 -- For Noctalia Color templates
-require("noctalia")
+local noctalia = require("noctalia")
+noctalia.apply_theme()

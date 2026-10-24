@@ -128,7 +128,7 @@ local function apply(name, cfg, x)
         m.cm = "hdredid"
 
         -- 0: off, 1: on, 2: fullscreen only, 3: video/game content fullscreen
-        m.vrr = 1
+        --m.vrr = 1
         m.supports_hdr = 0
         m.supports_wide_color = 0
         m.min_luminance = 0
@@ -331,7 +331,7 @@ hl.config({ render = {
     -- 0 - disabled
     -- 1 - on
     -- 2 - auto (enabled in HDR with SDR modifiers). Set to 1 if screenshots are transparent. (default)
-    keep_unmodified_copy = 0,
+    keep_unmodified_copy = 1,
     -- on 595.43, there's graphical corruption with direct_scanout = 2
     -- combination of factors: gamescope, reverse tonemapping (fine),
     --   but issuing super+enter, fullscreen / no fullscreen causes graphical glitches

@@ -35,6 +35,7 @@ hl.env("GNUPGHOME", os.getenv("XDG_DATA_HOME") .. "/gnupg")
 hl.env("PASSWORD_STORE_DIR", os.getenv("XDG_DATA_HOME") .. "/pass")
 
 -- force proton to run in wayland
-hl.env("PROTON_ENABLE_WAYLAND", "1")
+-- wineland sets this automatically
+-- hl.env("PROTON_ENABLE_WAYLAND", "1")
 -- force electron / discord to run in wayland
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
