@@ -2,7 +2,6 @@ config_version = 12
 
 [bar.default]
 background_opacity = 0.55000001192092896
-capsule_groups = [ "start", "center", "end", "end tray" ]
 center = [ "workspaces" ]
 end = [ "media", "tray", "notifications", "clipboard", "network", "bluetooth", "volume", "brightness", "session" ]
 margin_ends = 500
@@ -77,11 +76,7 @@ widget_order = [ "lockscreen-login-box@HDMI-A-1" ]
     cy = 2037.0
     output = "HDMI-A-1"
     rotation = 0.0
-    scale = 1.0
     type = "login_box"
-
-[noctalia_state]
-setup_wizard_completed = true
 
 [notification]
 background_opacity = 0.55000001192092896
@@ -109,9 +104,6 @@ wallpaper_scheme = "vibrant"
 [wallpaper]
 directory = "~/Documents/Wallpapers"
 
-    [wallpaper.automation]
-    interval_minutes = 3
-
     [wallpaper.default]
     path = "/home/seth/Documents/Wallpapers/wallhaven-5ymjz9.png"
 
@@ -130,43 +122,32 @@ directory = "~/Documents/Wallpapers"
     theme_mode = "dark"
     wallpaper_scheme = "vibrant"
 
-[weather]
-address = "Pittsburgh, USA"
-
 [widget.clipboard]
 capsule = true
-capsule_group = "end"
 
 [widget.clock]
 capsule = false
-capsule_group = "center"
 
 [widget.launcher]
 capsule = true
-capsule_group = "start"
 
 [widget.media]
 capsule = true
-capsule_group = "end"
 
 [widget.network]
 capsule = true
-capsule_group = "end"
 
 [widget.notifications]
 capsule = true
-capsule_group = "end"
 
 [widget.session]
 capsule = true
 
 [widget.tray]
 capsule = true
-capsule_group = "end tray"
 
 [widget.wallpaper]
 capsule = true
-capsule_group = "start"
 
 [widget.workspaces]
 capsule = true
