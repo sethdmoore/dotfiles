@@ -29,6 +29,8 @@ hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 -- Disables window decorations on Qt applications
 hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
 
+-- always present HDR as an option
+hl.env("DXVK_HDR", "1")
 
 hl.env("BROWSER", browser_env_var)
 hl.env("GNUPGHOME", os.getenv("XDG_DATA_HOME") .. "/gnupg")
