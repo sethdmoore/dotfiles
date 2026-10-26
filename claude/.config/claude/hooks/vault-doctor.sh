@@ -16,7 +16,7 @@ ok()   { printf 'ok    %s\n' "$1"; }
 bad()  { printf 'FAIL  %s\n      fix: %s\n' "$1" "$2"; fail=1; }
 
 [ -n "${CLAUDE_CONFIG_DIR:-}" ] && ok "CLAUDE_CONFIG_DIR=$CLAUDE_CONFIG_DIR" \
-  || bad "CLAUDE_CONFIG_DIR is unset, Claude Code reads ~/.claude" "stow the zsh package (zsh/.zshenv exports it) and open a new shell"
+  || bad "CLAUDE_CONFIG_DIR is unset, Claude Code reads ~/.claude" "stow the profile package (.profile exports it) and open a login shell"
 
 for f in vault-session-start.sh vault-stop.sh notes.py; do
   [ -f "$hooks/$f" ] && ok "$hooks/$f" \
