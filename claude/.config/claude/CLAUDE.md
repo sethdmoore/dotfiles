@@ -111,3 +111,9 @@ in the file.
 When Seth asks to be notified, run
 `~/.config/claude/cc-notify [-i ICON] "SUBJECT" "BODY"`. The icon shows on
 Linux only.
+
+# Shell
+
+The Bash tool runs zsh, which does not split an unquoted `$var` into words.
+`set -- $x` and `for w in $list` get one word. Use a zsh array, `${=var}`, or
+run the loop under `bash -c`.
