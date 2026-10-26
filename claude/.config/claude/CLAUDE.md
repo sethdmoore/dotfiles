@@ -95,7 +95,7 @@ outside the container.
 Put the file in one of these two places instead:
 
 - Inside the repository, for example under a `resources/` directory.
-- Under a path that Docker bind-mounts to the host, for example `~/.claude`.
+- In the vault project folder for the work, as a `.txt` file. Never `~/.claude`.
 
 Tell the user the file path once you save it.
 
