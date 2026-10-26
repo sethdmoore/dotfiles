@@ -80,12 +80,6 @@ function nvm() {
     local nvm_sh
     local nvm_source_dir
 
-    # if NVM_DIR is not defined, use the gross default directory
-    if ! [ -n "$NVM_DIR" ]; then
-        export NVM_DIR="${HOME}/.nvm"
-        nvm_sh="${NVM_DIR}/nvm.sh"
-    fi
-
     nvm_sh="${NVM_DIR}/nvm.sh"
 
     # nvm shim core functionality
