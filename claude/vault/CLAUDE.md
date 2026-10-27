@@ -134,7 +134,7 @@ Seth asks for a reminder on his Google Calendar when a note needs him on a later
 - Keep the steps in the note, not the event. The event description carries only the topic, the vault project link, the Claude session ID, and the resume command, `cd <session directory> && claude --resume <session-id>`. The session ID is the name of the scratchpad folder, and the directory is the one the session started in.
 - Write to the calendar directly, and set a popup reminder at 0 minutes, as his own events do. Never use a session-only cron, which dies with the session.
 - Add the session to the project note's `sessions` field, as `<project folder>/<session-id>`.
-- The connector creates events only when it holds write scope. On an insufficient scope error, ask Seth to re-authorize it, and make a macOS Reminder with `osascript` in the meantime.
+- The connector creates events only when it holds write scope. On an insufficient scope error, ask Seth to re-authorize it. Until then, the dated line in the vault `TODO.md` is the reminder.
 
 ## Migrating a vault to PARA
 
