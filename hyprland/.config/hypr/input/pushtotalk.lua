@@ -16,8 +16,14 @@
 --    press. Instead one long-lived `xdotool -` reads commands from a fifo, and
 --    we just write a line to it (a cheap, non-blocking write).
 --  * The binds below only exist to consume F13 so apps never see it.
+--  * They are limited to the mouse's keyboard device. Since Hyprland 0.57 a
+--    single-key bind partially matches whenever any other key is held with
+--    it, and a partial match consumes the key, so every key typed while push
+--    to talk was held got swallowed. Check `hyprctl devices` if the mouse
+--    ever shows up under another name.
 local PTT_KEYCODE = 191 -- XKB keycode: evdev KEY_F13 (183) + 8
 local PTT_XKEY = "XF86Tools"
+local PTT_DEVICE = { list = { "logitech-g502-x-plus" } }
 local FIFO = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/hypr-ptt.fifo"
 local ptt_down = false
 
@@ -76,6 +82,7 @@ local ptt_consume_flags = {
     dont_inhibit = true,
     allow_input_capture = true,
     transparent = true,
+    device = PTT_DEVICE,
 }
 hl.bind("f13", function() end, ptt_consume_flags)
 hl.bind("f13", function() end, {
@@ -84,4 +91,5 @@ hl.bind("f13", function() end, {
     dont_inhibit = true,
     allow_input_capture = true,
     transparent = true,
+    device = PTT_DEVICE,
 })
