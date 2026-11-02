@@ -10,6 +10,34 @@ hl.window_rule({
     no_vrr = true,
 })
 
+
+hl.window_rule({
+    name = "battle-net-workspace",
+    match = {
+        initial_class = "^steam_app_default$",
+        initial_title = "^(Battle\\.net.*|.*Installation)$",
+    },
+    workspace = "4 silent",
+    float = true,
+})
+
+-- Rule expressions can't read another window's position.
+hl.on("window.open", function(w)
+    if w.initial_class ~= "steam_app_default" or not w.initial_title:find("Installation$") then
+        return
+    end
+    for _, parent in pairs(hl.get_windows()) do
+        if parent.pid == w.pid and parent.initial_title:find("^Battle%.net") then
+            hl.dispatch(hl.dsp.window.move({
+                window = w,
+                x = parent.at.x + (parent.size.x - w.size.x) / 2,
+                y = parent.at.y + (parent.size.y - w.size.y) / 2,
+            }))
+            return
+        end
+    end
+end)
+
 -- tag steam games
 -- apparently we can't tag and move
 hl.window_rule({
@@ -17,12 +45,14 @@ hl.window_rule({
     match = {
         -- aniimo runs as class "aniimo.exe", not steam_app_<id>
         initial_class = "^(steam_app_.*|aniimo\\.exe)$",
+        initial_title = "negative:^(Battle\\.net.*|.*Installation)$",
         -- title = "negative:|^(?i)(.*(Launcher|NetEase Game Security).*)$",
         -- tag = "negative:|novrr",
     },
     tag = "+game",
     content = "game",
     workspace = "5 silent",
+    suppress_event = "maximize fullscreenoutput",
     -- for tearing
     immediate = true,
 })
@@ -48,6 +78,7 @@ hl.window_rule({
     tag = "+game",
     content = "game",
     workspace = "5 silent",
+    suppress_event = "maximize fullscreenoutput",
 })
 
 hl.window_rule({
@@ -166,6 +197,7 @@ hl.window_rule({
     float = true,
     move = {"monitor_w * 0.5 - window_w * 0.5", "window_y + 60"}
 })
+
 
 --io.github.Faugus.faugus-launcher
 
