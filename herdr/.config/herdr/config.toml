@@ -1,0 +1,28 @@
+onboarding = false
+
+[ui.toast]
+delivery = "system"
+
+[keys]
+prefix = "f1"
+
+#focus_pane_left = "prefix+h"
+#focus_pane_down = "prefix+j"
+# focus_pane_up = "prefix+k"
+#focus_pane_right = "prefix+l"
+
+# nav
+focus_pane_left  = "ctrl+h"
+focus_pane_down  = "ctrl+j"
+focus_pane_up    = "ctrl+k"
+focus_pane_right = "ctrl+l"
+
+# session nav
+goto             = "ctrl+w"
+next_agent       = "ctrl+n"
+previous_agent   = "ctrl+p"
+
+# splits
+split_vertical = "ctrl+backslash"
+split_horizontal = "ctrl+minus"
+

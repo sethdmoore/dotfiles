@@ -1,0 +1,5 @@
+.*\.log
+.*\.sock
+.*\.sock\.agent
+.*session-snapshots.*
+.*\.json
