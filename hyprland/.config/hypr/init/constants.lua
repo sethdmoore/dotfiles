@@ -20,7 +20,7 @@ bar = 'waybar'
 taskManager = 'resources'
 
 -- 0: off, 1: on, 2: fullscreen, 3: video/game content fullscreen
-vrr = 3
+vrr = 1
 
 -- Known displays, matched by EDID description PREFIX (see init/monitors.lua),
 -- NOT by output port -- port names shift between GPUs, docks and boots.
@@ -57,7 +57,7 @@ displays = {
             physical    = { max_width = 1400 },
         },
         resolution     = "3840x2160@165",
-        --  resolution     = "2560x1440@288",
+        -- resolution     = "2560x1440@288",
         depth          = "hdr",
         -- depth          = "sdr",
         scale          = 1.0,

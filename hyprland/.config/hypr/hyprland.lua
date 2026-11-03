@@ -23,3 +23,16 @@ require("window_rules/quirks")
 -- For Noctalia Color templates
 local noctalia = require("noctalia")
 noctalia.apply_theme()
+
+-- Active border as an animated gradient (rotated by the "borderangle" animation).
+-- Built from Noctalia's own palette so it stays in-theme.
+hl.config({
+    general = {
+        col = {
+            active_border = {
+                colors = { noctalia.colors.primary, noctalia.colors.secondary },
+                angle = 45,
+            },
+        },
+    },
+})

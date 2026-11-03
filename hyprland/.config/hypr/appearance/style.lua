@@ -27,9 +27,9 @@ hl.config({
     },
 
     -- enabled due to 0.55+ not working with blur
-    -- render = {
-    --     use_shader_blur_blend = true,
-    -- },
+    render = {
+        use_shader_blur_blend = true,
+    },
 
     decoration = {
         rounding       = 18,
