@@ -11,10 +11,15 @@
   notes.py context <dir>              the brief the SessionStart hook injects: the note that claims dir, or the newest notes
   notes.py fold-memory <dir ...>      move memories saved before the vault existed into memory/, and index them
   notes.py stop                       the Stop hook: commits the turn's vault edits, prints a block decision or nothing
+  notes.py usage [days]               tokens each command printed over the last 7 days, or [days], and the largest runs
 
 A note is a path, or a link target such as claude-workflow/hooks. A section is
 a `## ` heading, named in lowercase with dashes (`## Deep dives` is deep-dives),
 or by a prefix that only one heading has.
+
+Every run appends one line to $XDG_STATE_HOME/claude-vault/usage.tsv (default
+~/.local/state): time, tokens printed, command, arguments. The log stays on this
+machine and never rotates.
 """
 import datetime
 import fnmatch
@@ -42,6 +47,8 @@ BRIEF_LIMIT = 3
 NEXT_LIMIT = 100
 SCRATCH = [pathlib.Path(p).resolve() for p in ("/tmp", "/private/tmp", "/var/folders")]
 SUMMARY_LIMIT = 150
+USAGE = pathlib.Path(os.environ.get("XDG_STATE_HOME") or "~/.local/state").expanduser() / "claude-vault" / "usage.tsv"
+USAGE_TOP = 5
 # Frontmatter a note needs beyond description, last_worked_on and created. The vault CLAUDE.md has the table.
 REQUIRED = {
     "project": ("status", "next_action", "area", "paths"),
@@ -486,11 +493,74 @@ def stop(args):
         return
 
 
+class Counted:
+    """A stream that passes writes through and counts the characters."""
+
+    def __init__(self, stream):
+        self.stream, self.chars = stream, 0
+
+    def write(self, text):
+        self.chars += len(text)
+        return self.stream.write(text)
+
+    def __getattr__(self, name):
+        return getattr(self.stream, name)
+
+
+def log_usage(command, args, chars):
+    """Logging never fails a run, so a full disk or a read-only home only loses the line."""
+    try:
+        USAGE.parent.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
+        words = " ".join(args).replace("\t", " ").replace("\n", " ")
+        with USAGE.open("a") as f:
+            f.write(f"{stamp}\t{math.ceil(chars / 4)}\t{command}\t{words}\n")
+    except OSError:
+        pass
+
+
+def usage(args):
+    days = int(args[0]) if args else 7
+    since = time.time() - days * 86400
+    totals, runs = {}, []
+    for line in USAGE.read_text().splitlines() if USAGE.exists() else []:
+        try:
+            stamp, count, command, words = line.split("\t", 3)
+            when, count = datetime.datetime.fromisoformat(stamp).timestamp(), int(count)
+        except ValueError:
+            continue
+        if when < since:
+            continue
+        calls, total, largest = totals.get(command, (0, 0, 0))
+        totals[command] = (calls + 1, total + count, max(largest, count))
+        runs.append((count, stamp[:16], command, words))
+    if not runs:
+        print(f"no runs logged in the last {days} days, in {tilde(USAGE)}")
+        return
+    print(f"last {days} days: {len(runs)} runs, {sum(r[0] for r in runs):,} tokens")
+    print(f"{'calls':>6} {'tokens':>9} {'mean':>6} {'max':>6}  command")
+    for command, (calls, total, largest) in sorted(totals.items(), key=lambda item: item[1][1], reverse=True):
+        print(f"{calls:>6} {total:>9,} {total // calls:>6,} {largest:>6,}  {command}")
+    print("largest runs:")
+    for count, stamp, command, words in sorted(runs, reverse=True)[:USAGE_TOP]:
+        print(f"{count:>6,}  {stamp}  {command} {textwrap.shorten(words, 60, placeholder='...')}")
+
+
 if __name__ == "__main__":
-    commands = {"index": index, "tokens": tokens, "check": check, "match": match, "context": context, "fold-memory": fold_memory, "stop": stop}
-    if len(sys.argv) < 2 or (sys.argv[1] in ("match", "context", "fold-memory") and len(sys.argv) < 3):
-        sys.exit(__doc__)
-    if sys.argv[1] in commands:
-        commands[sys.argv[1]](sys.argv[2:])
-    else:
-        show(sys.argv[1:])
+    commands = {"index": index, "tokens": tokens, "check": check, "match": match, "context": context, "fold-memory": fold_memory, "stop": stop, "usage": usage}
+    command = "help" if len(sys.argv) < 2 else sys.argv[1] if sys.argv[1] in commands else "show"
+    sys.stdout, sys.stderr = Counted(sys.stdout), Counted(sys.stderr)
+    try:
+        if len(sys.argv) < 2 or (sys.argv[1] in ("match", "context", "fold-memory") and len(sys.argv) < 3):
+            sys.exit(__doc__)
+        if command in commands:
+            commands[command](sys.argv[2:])
+        else:
+            show(sys.argv[1:])
+    except SystemExit as exit:
+        # Python prints a string exit code to stderr after this block, so count it here.
+        if isinstance(exit.code, str):
+            sys.stderr.chars += len(exit.code) + 1
+        raise
+    finally:
+        log_usage(command, sys.argv[2:] if command in commands else sys.argv[1:], sys.stdout.chars + sys.stderr.chars)
