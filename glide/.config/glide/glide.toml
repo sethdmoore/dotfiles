@@ -10,7 +10,7 @@ default_layout_kind = "grid"
 
 [keys]
 # Alt+1..5 switches Desktops through the native shortcuts that
-# ~/.local/bin/desktop-keys.sh sets.
+# ~/.local/bin/desktop-keys.py sets.
 # Needs the local build from ~/dev/git/glide, branch sethdmoore/local.
 "Alt + Shift + Digit1" = { move_window_to_desktop = 1 }
 "Alt + Shift + Digit2" = { move_window_to_desktop = 2 }
