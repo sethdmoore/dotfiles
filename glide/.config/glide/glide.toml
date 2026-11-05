@@ -1,0 +1,13 @@
+# Glide reads ~/.config/glide/glide.toml on top of glide.default.toml in the Glide repo.
+
+[settings]
+# Tile every Desktop without pressing Alt+Z first.
+default_disable = false
+# Keep the default bindings (Alt+hjkl focus and the rest) alongside [keys] below.
+default_keys = true
+
+[keys]
+# Needs the local build from ~/dev/git/glide, branch sethdmoore/feature/move-to-desktop.
+"Alt + Shift + Digit1" = { move_window_to_desktop = 1 }
+"Alt + Shift + Digit2" = { move_window_to_desktop = 2 }
+"Alt + Shift + Digit3" = { move_window_to_desktop = 3 }
