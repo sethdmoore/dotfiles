@@ -50,6 +50,7 @@ MY_DOT_FILES=(
     "${ZDOTDIR}/ENV"
     "${ZDOTDIR}/private_environment"
     "${ZDOTDIR}/private_aliases"
+    "${XDG_STATE_HOME:-${HOME}/.local/state}/secrets"
 )
 
 set_ps1() {
