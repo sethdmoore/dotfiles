@@ -15,6 +15,7 @@ gtk/.config/gtk-4.0/noctalia.css
 nvim/.config/gocode
 yay/.local
 # auto generated files
+__pycache__
 hyprland/.config/hypr/noctalia.lua
 alacritty/.config/alacritty/themes
 claude/.config/claude/skills/synced
