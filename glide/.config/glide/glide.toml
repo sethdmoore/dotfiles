@@ -5,9 +5,11 @@
 default_disable = false
 # Keep the default bindings (Alt+hjkl focus and the rest) alongside [keys] below.
 default_keys = true
+# Tile new Desktops as a grid. Grid cells default to 1280x1080, so 3x2 on 4K.
+default_layout_kind = "grid"
 
 [keys]
-# Needs the local build from ~/dev/git/glide, branch sethdmoore/feature/move-to-desktop.
+# Needs the local build from ~/dev/git/glide, branch sethdmoore/local.
 "Alt + Shift + Digit1" = { move_window_to_desktop = 1 }
 "Alt + Shift + Digit2" = { move_window_to_desktop = 2 }
 "Alt + Shift + Digit3" = { move_window_to_desktop = 3 }
