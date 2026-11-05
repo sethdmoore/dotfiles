@@ -9,7 +9,11 @@ default_keys = true
 default_layout_kind = "grid"
 
 [keys]
+# Alt+1..5 switches Desktops through the native shortcuts that
+# ~/.local/bin/desktop-keys.sh sets.
 # Needs the local build from ~/dev/git/glide, branch sethdmoore/local.
 "Alt + Shift + Digit1" = { move_window_to_desktop = 1 }
 "Alt + Shift + Digit2" = { move_window_to_desktop = 2 }
 "Alt + Shift + Digit3" = { move_window_to_desktop = 3 }
+"Alt + Shift + Digit4" = { move_window_to_desktop = 4 }
+"Alt + Shift + Digit5" = { move_window_to_desktop = 5 }
