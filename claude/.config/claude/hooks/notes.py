@@ -4,6 +4,8 @@
   notes.py <note ...>                 print each note whole
   notes.py +<section> ... <note ...>  print only the named sections, e.g. +summary +references, or +top for the text above the first section
   notes.py -<section> ... <note ...>  print each note without the named sections, e.g. -summary
+  notes.py --page N ...               any of the three above, page N. Output over about 1,000 tokens comes in pages
+  notes.py recent                     live projects and areas worked on in the last week, about 100 tokens
   notes.py index [dir]                one line per note: tokens, last_worked_on, path, description
   notes.py tokens [file ...]          set the `tokens` field of each note (default: every note), then check it
   notes.py check [file ...]           Summary first, References last, every [[link]] resolves
@@ -28,6 +30,7 @@ import math
 import os
 import pathlib
 import re
+import shlex
 import subprocess
 import sys
 import textwrap
@@ -43,12 +46,16 @@ TOKENS = re.compile(r"^tokens:.*$", re.M)
 FENCE = re.compile(r"^(```|~~~)")
 LINK = re.compile(r"!?\[\[([^\]|#]*)[^\]]*\]\]")
 CODE = re.compile(r"^(```|~~~).*?^\1[^\n]*$|`[^`\n]*`", re.M | re.S)
-BRIEF_LIMIT = 3
-NEXT_LIMIT = 100
 SCRATCH = [pathlib.Path(p).resolve() for p in ("/tmp", "/private/tmp", "/var/folders")]
 SUMMARY_LIMIT = 150
 USAGE = pathlib.Path(os.environ.get("XDG_STATE_HOME") or "~/.local/state").expanduser() / "claude-vault" / "usage.tsv"
 USAGE_TOP = 5
+# About 1,000 tokens.
+PAGE_CHARS = 4000
+RECENT_DAYS = 7
+RECENT_LIMIT = 8
+RECENT_NEXT = 2
+RECENT_NEXT_CHARS = 40
 # Frontmatter a note needs beyond description, last_worked_on and created. The vault CLAUDE.md has the table.
 REQUIRED = {
     "project": ("status", "next_action", "area", "paths"),
@@ -233,13 +240,37 @@ def report(paths):
     return clean
 
 
+def pages(text):
+    """Pages of at most PAGE_CHARS. A page ends before a heading in its back half, else at a blank line there, else at a line end."""
+    if len(text) <= PAGE_CHARS + PAGE_CHARS // 4:
+        return [text]
+    found = []
+    while len(text) > PAGE_CHARS:
+        cut = max(text.rfind("\n#", PAGE_CHARS // 2, PAGE_CHARS), text.rfind("\n==> ", PAGE_CHARS // 2, PAGE_CHARS))
+        if cut == -1:
+            cut = text.rfind("\n\n", PAGE_CHARS // 2, PAGE_CHARS)
+        if cut == -1:
+            cut = text.rfind("\n", 0, PAGE_CHARS)
+        if cut <= 0:
+            cut = PAGE_CHARS
+        found.append(text[:cut].rstrip("\n"))
+        text = text[cut:].lstrip("\n")
+    return found + [text] if text else found
+
+
 def show(args):
+    page = 1
+    if "--page" in args:
+        i = args.index("--page")
+        if i + 1 >= len(args) or not args[i + 1].isdigit():
+            sys.exit("--page takes a number")
+        page, args = int(args[i + 1]), args[:i] + args[i + 2:]
     selectors = [a for a in args if a[:1] in "+-" and len(a) > 1]
     targets = [a for a in args if a not in selectors]
     signs = {s[0] for s in selectors}
     if not targets or len(signs) > 1:
         sys.exit("name at least one note, and either +sections or -sections, not both\n" + __doc__)
-    status = 0
+    status, out = 0, []
     paths = [resolve(target) for target in targets]
     for target, path in zip(targets, paths):
         if path is None:
@@ -248,9 +279,9 @@ def show(args):
             continue
         text = path.read_text()
         if sum(p is not None for p in paths) > 1:
-            print(f"==> {shown(path)} <==")
+            out.append(f"==> {shown(path)} <==")
         if not selectors:
-            print(text.rstrip())
+            out.append(text.rstrip())
             continue
         head, parts = sections(text)
         names = [name for name, _ in parts]
@@ -264,19 +295,27 @@ def show(args):
                 chosen.add(i)
             elif signs == {"+"} and slug(selector[1:]) == "summary":
                 description = field(split(text)[0] or "", "description")
-                print(f"(no Summary section. The description: {description})")
+                out.append(f"(no Summary section. The description: {description})")
             elif signs == {"+"}:
                 print(f"no section {selector[1:]} in {shown(path)}. It has: {', '.join(names)}", file=sys.stderr)
                 status = 1
         if signs == {"+"}:
             body = ([top_text(text)] if with_top else []) + [parts[i][1] for i in sorted(chosen)]
             if body:
-                print("".join(body).rstrip())
+                out.append("".join(body).rstrip())
             rest = [f"{name} {estimate(part)}" for i, (name, part) in enumerate(parts) if i not in chosen]
             if rest:
-                print(f"(not loaded: {', '.join(rest)})")
+                out.append(f"(not loaded: {', '.join(rest)})")
         else:
-            print((head + "".join(part for i, (_, part) in enumerate(parts) if i not in chosen)).rstrip())
+            out.append((head + "".join(part for i, (_, part) in enumerate(parts) if i not in chosen)).rstrip())
+    found = pages("\n".join(out))
+    if not 1 <= page <= len(found):
+        sys.exit(f"page {page} does not exist, the output has {len(found)}")
+    if found[page - 1]:
+        print(found[page - 1])
+    if len(found) > 1:
+        more = f" Next: python3 {tilde(SELF)} --page {page + 1} {shlex.join(args)}" if page < len(found) else ""
+        print(f"(page {page} of {len(found)}, about {estimate(''.join(found)):,} tokens in all.{more})")
     sys.exit(status)
 
 
@@ -322,7 +361,7 @@ def context(args):
         print(lines[0])
         return
     if not matched:
-        lines.append("No note lists this directory in `paths`. If Seth asks to resume without naming a project, show him the first three notes below with their next step, and ask which one. If the work here will span sessions, add the directory to a note's `paths`, or create a project note.")
+        lines.append("No note lists this directory in `paths`. If Seth asks to resume without naming a project, show him the notes below and ask which one. If the work here will span sessions, add the directory to a note's `paths`, or create a project note.")
     for path in matched:
         _, parts = sections(path.read_text())
         summary = [part for name, part in parts if name == "summary"]
@@ -333,27 +372,41 @@ def context(args):
         lines.append(f"Note: {tilde(path)}. Rest: `{command} -summary {tilde(path)}`, or `+<section>`: {rest}.")
         lines.append(summary[0].split("\n", 1)[1].strip())
     # Other sessions update the other notes all day, so a claimed directory gets its own note alone.
-    if matched:
-        print("\n".join(lines))
-        return
-    listed = []
-    for path, frontmatter in frontmatters():
-        kind = field(frontmatter, "type")
-        rel = path.relative_to(VAULT)
-        if kind in ("deep-dive", "meta") or rel.parts[0] == "4-archive":
-            continue
-        # The file time orders notes that share a date, so the last one touched comes first.
-        listed.append((field(frontmatter, "last_worked_on"), path.stat().st_mtime, rel, kind, field(frontmatter, "status"), field(frontmatter, "description"), field(frontmatter, "next_action")))
-    listed.sort(reverse=True)
-    lines.append("Notes, newest first (type, status, last worked on):")
-    for date, _, rel, kind, status, description, next_action in listed[:BRIEF_LIMIT]:
-        line = f"- {rel} ({', '.join(filter(None, (kind, status, date)))}): {description}"
-        if next_action:
-            line += f" Next: {textwrap.shorten(next_action, NEXT_LIMIT, placeholder='...')}"
-        lines.append(line)
-    if len(listed) > BRIEF_LIMIT:
-        lines.append(f"- {len(listed) - BRIEF_LIMIT} more. For the full list, run `{command} index`.")
+    if not matched:
+        lines += recent_lines()
     print("\n".join(lines))
+
+
+def recent_lines():
+    """Live projects and areas worked on in the last RECENT_DAYS days, newest first. The newest carry their next action."""
+    today, found = datetime.date.today(), []
+    for path, frontmatter in frontmatters():
+        kind, status = field(frontmatter, "type"), field(frontmatter, "status")
+        if kind not in ("project", "area") or status not in ("", "active", "blocked") or path.relative_to(VAULT).parts[0] == "4-archive":
+            continue
+        try:
+            age = (today - datetime.date.fromisoformat(field(frontmatter, "last_worked_on"))).days
+        except ValueError:
+            continue
+        if age <= RECENT_DAYS:
+            # The file time orders notes that share a date, so the last one touched comes first.
+            found.append((-age, path.stat().st_mtime, path.stem, status or kind, field(frontmatter, "next_action")))
+    found.sort(reverse=True)
+    if not found:
+        return [f"No project or area worked on in the last {RECENT_DAYS} days. `notes.py index` lists every note."]
+    lines = ["Recent notes, newest first. Load one with `notes.py +summary <name>`:"]
+    for i, (age, _, name, state, next_action) in enumerate(found[:RECENT_LIMIT]):
+        line = f"- {name} {state} {f'{-age}d' if age else 'today'}"
+        if i < RECENT_NEXT and next_action:
+            line += ": " + textwrap.shorten(next_action.replace("`", ""), RECENT_NEXT_CHARS, placeholder="...")
+        lines.append(line)
+    if len(found) > RECENT_LIMIT:
+        lines.append(f"- {len(found) - RECENT_LIMIT} more in `notes.py index`")
+    return lines
+
+
+def recent(args):
+    print("\n".join(recent_lines()))
 
 
 def fold_memory(args):
@@ -547,7 +600,7 @@ def usage(args):
 
 
 if __name__ == "__main__":
-    commands = {"index": index, "tokens": tokens, "check": check, "match": match, "context": context, "fold-memory": fold_memory, "stop": stop, "usage": usage}
+    commands = {"index": index, "tokens": tokens, "check": check, "match": match, "context": context, "fold-memory": fold_memory, "stop": stop, "usage": usage, "recent": recent}
     command = "help" if len(sys.argv) < 2 else sys.argv[1] if sys.argv[1] in commands else "show"
     sys.stdout, sys.stderr = Counted(sys.stdout), Counted(sys.stderr)
     try:
