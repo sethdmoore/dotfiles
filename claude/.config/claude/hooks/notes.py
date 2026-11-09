@@ -24,6 +24,7 @@ Every run appends one line to $XDG_STATE_HOME/claude-vault/usage.tsv (default
 machine and never rotates.
 """
 import datetime
+import fcntl
 import fnmatch
 import json
 import math
@@ -31,6 +32,7 @@ import os
 import pathlib
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import textwrap
@@ -41,7 +43,7 @@ SELF = pathlib.Path(__file__).absolute()
 HOME = pathlib.Path.home()
 SKIP = {".obsidian", "templates", "memory"}
 PARA = {"1-projects", "2-areas", "3-resources", "4-archive"}
-HIDDEN = {".git", ".obsidian", ".trash"}
+HIDDEN = {".git", ".jj", ".obsidian", ".trash"}
 TOKENS = re.compile(r"^tokens:.*$", re.M)
 FENCE = re.compile(r"^(```|~~~)")
 LINK = re.compile(r"!?\[\[([^\]|#]*)[^\]]*\]\]")
@@ -523,6 +525,42 @@ def auto_commit(edited):
     git(*identity, "commit", "-q", "-m", commit_message(changed), "--", *changed)
 
 
+# A snapshot runs with no terminal, so nothing it starts can prompt. An editor call fails instead of opening one.
+QUIET = {"GIT_TERMINAL_PROMPT": "0", "GIT_EDITOR": "false", "JJ_EDITOR": "false", "EDITOR": "false", "VISUAL": "false"}
+
+
+def jj(*args):
+    """With --quiet, jj writes only warnings to stderr, such as a file over its 1 MiB limit that it refused to track."""
+    done = subprocess.run(
+        [shutil.which("jj") or "jj", "--no-pager", "--quiet", "--color=never", "-R", str(VAULT), *args],
+        capture_output=True, text=True, timeout=120, check=True,
+        stdin=subprocess.DEVNULL, start_new_session=True, env={**os.environ, **QUIET},
+    )
+    sys.stderr.write(done.stderr)
+    return done.stdout
+
+
+def snapshot(args):
+    """A timer runs this, never a session, so each machine has one writer. Commits every vault change since the last run."""
+    if not (VAULT / ".jj").is_dir():
+        sys.exit(f"{tilde(VAULT)} is not a jj repository. Run: jj git init --colocate {tilde(VAULT)}")
+    # jj survives two runs at once, but both commit the same change and leave an extra head. A second run skips instead.
+    USAGE.parent.mkdir(parents=True, exist_ok=True)
+    lock = open(USAGE.parent / "snapshot.lock", "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return
+    try:
+        changed = jj("diff", "--name-only", "-r", "@").splitlines()
+        if not changed:
+            return
+        jj("commit", "-m", commit_message(changed))
+        jj("bookmark", "move", "--from", "heads(::@- & bookmarks())", "--to", "@-")
+    except subprocess.CalledProcessError as error:
+        sys.exit(f"jj {' '.join(error.cmd[6:])} failed: {error.stderr.strip()}")
+
+
 def stop(args):
     """The Stop hook. Commits the turn's vault edits, and prints a block decision for stale notes, or nothing. Any error allows the stop."""
     try:
@@ -600,7 +638,7 @@ def usage(args):
 
 
 if __name__ == "__main__":
-    commands = {"index": index, "tokens": tokens, "check": check, "match": match, "context": context, "fold-memory": fold_memory, "stop": stop, "usage": usage, "recent": recent}
+    commands = {"index": index, "tokens": tokens, "check": check, "match": match, "context": context, "fold-memory": fold_memory, "stop": stop, "usage": usage, "recent": recent, "snapshot": snapshot}
     command = "help" if len(sys.argv) < 2 else sys.argv[1] if sys.argv[1] in commands else "show"
     sys.stdout, sys.stderr = Counted(sys.stdout), Counted(sys.stderr)
     try:
