@@ -106,12 +106,6 @@ or "replace lines X to Y". The user pastes the whole file into GitHub, so a
 note like that pastes too. Put any instructions for the user in chat, not
 in the file.
 
-# Desktop notifications
-
-When Seth asks to be notified, run
-`~/.config/claude/cc-notify [-i ICON] "SUBJECT" "BODY"`. The icon shows on
-Linux only.
-
 # Shell
 
 The Bash tool runs zsh, which does not split an unquoted `$var` into words.

@@ -10,9 +10,12 @@
 # make its folders (the `vault` target).
 #
 # A template wins on every key it names, and a key no template names keeps the
-# value Claude Code wrote. An array is replaced, except permissions.allow,
-# which is unioned so a permission granted in a session survives. Two
-# templates must not name the same hook event, or the later one replaces it.
+# value Claude Code wrote. An array is replaced, with two exceptions.
+# permissions.allow is unioned, so a permission granted in a session survives.
+# A hook another tool installed, such as herdr's, survives too, unless a
+# template entry runs the same command. So a hook deleted from a template stays
+# in settings.json until you delete it there. Two templates must not name the
+# same hook event, or the later one replaces it.
 #
 # jq edits the JSON instead of sed or awk: it is portable across BSD and
 # GNU, keeps the file valid JSON, and statusline.sh already requires it.
@@ -20,7 +23,10 @@ CLAUDE_CONFIG_DIR ?= $(HOME)/.claude
 PACKAGE := $(notdir $(CURDIR))
 SETTINGS := $(CLAUDE_CONFIG_DIR)/settings.json
 MERGE := (map(.permissions.allow // []) | add | unique) as $$allow \
+  | (.[0].hooks // {}) as $$old \
   | reduce .[] as $$t ({}; . * $$t) \
+  | if .hooks then .hooks |= with_entries(.key as $$e | [.value[].hooks[]?.command] as $$have \
+      | .value += [($$old[$$e] // [])[] | select(any(.hooks[]?.command; IN($$have[])) | not)]) else . end \
   | if $$allow == [] then . else .permissions.allow = $$allow end
 
 .PHONY: stow settings work

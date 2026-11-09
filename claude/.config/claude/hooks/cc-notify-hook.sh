@@ -3,6 +3,8 @@
 # the pending tool call's description, or the last line of Claude's reply.
 # Without a usable transcript it falls back to Claude Code's generic message.
 # Every other event means the user answered, so it clears this pane's banner.
+# Herdr posts its own banners for the agents in its panes.
+[ "${HERDR_ENV:-}" = 1 ] && exit 0
 payload=$(cat)
 field() { printf %s "$payload" | jq -r "$1 // empty" 2>/dev/null; }
 case $(field .hook_event_name) in
