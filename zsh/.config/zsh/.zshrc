@@ -2,6 +2,7 @@
 # zmodload zsh/zprof
 # autoload -U colors && colors
 # add git autocomplete
+fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
 autoload -Uz compinit colors && compinit && colors
 
 setopt inc_append_history

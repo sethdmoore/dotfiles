@@ -1,0 +1,198 @@
+#!/usr/bin/env python3
+"""Preview a script Claude wrote, then run it on a y.
+
+    claude-run [--apply] [project] script [-- args...]
+    claude-run                          list every script
+
+Scripts live in $XDG_DATA_HOME/scripts/<project>/, by default
+~/.local/share/scripts. A name matches exactly first, then without its
+extension, then by prefix, by substring, and by its letters in order. A single
+inexact match counts down 5 seconds before it goes on: Enter skips the wait and
+Ctrl-C cancels. The script runs from its project folder.
+
+    --apply   skip the preview and the [y/N] prompt
+"""
+import os
+import select
+import shutil
+import subprocess
+import sys
+
+BASE = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), "scripts")
+COUNTDOWN = 5
+TIERS = [
+    lambda q, n: n == q,
+    lambda q, n: os.path.splitext(n)[0].lower() == q.lower(),
+    lambda q, n: n.lower().startswith(q.lower()),
+    lambda q, n: q.lower() in n.lower(),
+    lambda q, n: in_order(q.lower(), n.lower()),
+]
+
+
+def in_order(query, name):
+    rest = iter(name)
+    return all(c in rest for c in query)
+
+
+def fail(message):
+    sys.exit(f"claude-run: {message}")
+
+
+def parse(argv):
+    apply, words, extra = False, [], []
+    for i, arg in enumerate(argv):
+        if arg == "--":
+            extra = argv[i + 1:]
+            break
+        if arg == "--apply":
+            apply = True
+        elif arg in ("-h", "--help"):
+            print(__doc__.strip())
+            sys.exit(0)
+        elif arg.startswith("-"):
+            fail(f"unknown flag {arg}. See claude-run --help")
+        else:
+            words.append(arg)
+    if len(words) == 1 and "/" in words[0]:
+        words = words[0].split("/", 1)
+    if len(words) > 2:
+        fail("too many names. Usage: claude-run [--apply] [project] script")
+    return apply, words, extra
+
+
+def listdir(path, want):
+    try:
+        names = sorted(os.listdir(path))
+    except OSError:
+        return []
+    return [n for n in names if not n.startswith(".") and want(os.path.join(path, n))]
+
+
+def projects():
+    return listdir(BASE, os.path.isdir)
+
+
+def scripts(project):
+    return listdir(os.path.join(BASE, project), os.path.isfile)
+
+
+def best(query, names):
+    """The names in the first tier that matches, and whether that tier is exact."""
+    for tier, test in enumerate(TIERS):
+        hits = [n for n in names if test(query, n)]
+        if hits:
+            return hits, tier == 0
+    return [], False
+
+
+def find(words):
+    """Every project/script the words match, and whether every word matched exactly."""
+    if len(words) == 2:
+        found, exact = best(words[0], projects())
+    else:
+        found, exact = projects(), True
+    paths = [f"{p}/{s}" for p in found for s in scripts(p)]
+    names = [p.split("/", 1)[1] for p in paths]
+    hits, script_exact = best(words[-1], names)
+    return [p for p in paths if p.split("/", 1)[1] in hits], exact and script_exact
+
+
+def show_all():
+    found = [f"{p}/{s}" for p in projects() for s in scripts(p)]
+    if not found:
+        print(f"No scripts yet in {BASE}")
+    for path in found:
+        print(path)
+
+
+def open_tty():
+    """The terminal as (input, output). Text mode "r+" fails on a tty, which cannot seek."""
+    try:
+        return open("/dev/tty"), open("/dev/tty", "w")
+    except OSError:
+        return None
+
+
+def ask(tty, prompt):
+    if tty is None:
+        return ""
+    tty[1].write(prompt)
+    tty[1].flush()
+    return tty[0].readline().strip()
+
+
+def countdown(tty, verb):
+    keys, screen = tty
+    screen.write(f"{verb} in ")
+    for n in range(COUNTDOWN, -1, -1):
+        screen.write(str(n))
+        screen.flush()
+        if n == 0:
+            break
+        if select.select([keys], [], [], 1)[0]:
+            keys.readline()
+            return
+        screen.write("\b" * len(str(n)))
+    screen.write("\n")
+
+
+def choose(tty, hits, exact, verb):
+    if len(hits) == 1:
+        if exact:
+            return hits[0]
+        if tty is None:
+            fail(f"{hits[0]} is not an exact match, and there is no terminal to confirm it")
+        tty[1].write(f"Found a single close match\n{hits[0]}\n")
+        countdown(tty, verb)
+        return hits[0]
+    lines = ["Found these scripts, which one?", "0) cancel"]
+    lines += [f"{i}) {path}" for i, path in enumerate(hits, 1)]
+    answer = ask(tty, "\n".join(lines) + "\n> ")
+    if answer.isdigit() and 1 <= int(answer) <= len(hits):
+        return hits[int(answer) - 1]
+    sys.exit("cancelled")
+
+
+def preview(path, name):
+    with open(path, errors="replace") as f:
+        text = f"==> {name} <==\n{f.read()}"
+    rows = shutil.get_terminal_size().lines
+    if sys.stdout.isatty() and text.count("\n") + 2 > rows and shutil.which("less"):
+        # -X leaves the last page on screen above the prompt. -Ps sets less's
+        # prompt, where a backslash keeps . ? : % literal.
+        title = "".join("\\" + c if c in ".?:%\\" else c for c in name)
+        subprocess.run(["less", "-X", f"-Ps{title} (q to quit, then answer y or N)"], input=text, text=True)
+    else:
+        print(text, end="" if text.endswith("\n") else "\n")
+
+
+def run(path, extra):
+    if not os.access(path, os.X_OK):
+        fail(f"it is not executable. Fix: chmod +x {path}")
+    os.chdir(os.path.dirname(path))
+    os.execv(path, [path, *extra])
+
+
+def main():
+    apply, words, extra = parse(sys.argv[1:])
+    if not words:
+        show_all()
+        return
+    hits, exact = find(words)
+    if not hits:
+        fail(f"no script matches {' '.join(words)}. Run claude-run to list them")
+    tty = open_tty()
+    name = choose(tty, hits, exact, "running" if apply else "previewing")
+    path = os.path.join(BASE, name)
+    if not apply:
+        preview(path, name)
+        if ask(tty, f"Run {name}? [y/N] ").lower() not in ("y", "yes"):
+            sys.exit("not run")
+    run(path, extra)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit("\ncancelled")

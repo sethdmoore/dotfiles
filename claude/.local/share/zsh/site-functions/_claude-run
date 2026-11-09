@@ -1,0 +1,17 @@
+#compdef claude-run
+local base=${XDG_DATA_HOME:-$HOME/.local/share}/scripts expl
+local -a names projects scripts
+names=(${${words[2,CURRENT-1]}:#-*})
+
+if [[ $PREFIX == -* ]]; then
+  _wanted flags expl flag compadd -- --apply --help
+elif (( ${#names} == 0 )); then
+  projects=($base/*(N/:t))
+  scripts=($base/*/*(N.:t))
+  scripts=(${(u)scripts})
+  _wanted projects expl project compadd -a projects
+  _wanted scripts expl script compadd -a scripts
+elif (( ${#names} == 1 )); then
+  scripts=($base/${names[1]}*/*(N.:t))
+  _wanted scripts expl script compadd -a scripts
+fi
