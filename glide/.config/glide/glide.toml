@@ -7,11 +7,13 @@ default_disable = false
 default_keys = true
 # Tile new Desktops as a grid. Grid cells default to 1280x1080, so 3x2 on 4K.
 default_layout_kind = "grid"
+# Alt+1..9 switches Desktops.
+desktop_switch_modifier = "alt"
 
 [keys]
-# Alt+1..5 switches Desktops through the native shortcuts that
-# ~/.local/bin/desktop-keys.py sets.
 # Needs the local build from ~/dev/git/glide, branch sethdmoore/local.
+# Fill the screen with the focused window. Glide also binds Alt+F to this.
+"Alt + Enter" = "toggle_fullscreen"
 "Alt + Shift + Digit1" = { move_window_to_desktop = 1 }
 "Alt + Shift + Digit2" = { move_window_to_desktop = 2 }
 "Alt + Shift + Digit3" = { move_window_to_desktop = 3 }
