@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""Push a branch, copy its pull request body, and open the compare page.
+
+    claude-pr REPO BODY [--force-with-lease=SHA]
+
+REPO is a checkout or worktree on the branch to push. BODY is the file with the
+pull request body, which goes to the clipboard. The browser opens GitHub's
+compare page against the remote's default branch. With --force-with-lease, the
+push replaces the remote branch only if it still points at SHA.
+"""
+import platform
+import re
+import shutil
+import subprocess
+import sys
+
+
+def fail(message):
+    sys.exit(f"claude-pr: {message}")
+
+
+def git(repo, *args):
+    out = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True)
+    if out.returncode:
+        fail(f"git {' '.join(args)}: {out.stderr.strip()}")
+    return out.stdout.strip()
+
+
+def parse(argv):
+    lease = None
+    words = []
+    for arg in argv:
+        if arg in ("-h", "--help"):
+            print(__doc__.strip())
+            sys.exit(0)
+        if arg.startswith("--force-with-lease="):
+            lease = arg.split("=", 1)[1]
+        elif arg.startswith("-"):
+            fail(f"unknown flag {arg}. See claude-pr --help")
+        else:
+            words.append(arg)
+    if len(words) != 2:
+        fail("usage: claude-pr REPO BODY [--force-with-lease=SHA]")
+    return words[0], words[1], lease
+
+
+def github_repo(repo):
+    url = git(repo, "remote", "get-url", "origin")
+    match = re.search(r"github\.com[:/](.+?)(?:\.git)?$", url)
+    if not match:
+        fail(f"origin is not a GitHub remote: {url}")
+    return match.group(1)
+
+
+def default_branch(repo):
+    ref = subprocess.run(["git", "-C", repo, "symbolic-ref", "--short", "refs/remotes/origin/HEAD"], capture_output=True, text=True)
+    return ref.stdout.strip().removeprefix("origin/") if ref.returncode == 0 else "main"
+
+
+def push(repo, branch, lease):
+    args = ["push", "-u", "origin", branch]
+    if lease:
+        args.insert(1, f"--force-with-lease={branch}:{lease}")
+    subprocess.run(["git", "-C", repo, *args], check=True)
+
+
+def copy(path):
+    tools = [["pbcopy"]] if platform.system() == "Darwin" else [["wl-copy"], ["xclip", "-selection", "clipboard"]]
+    tool = next((t for t in tools if shutil.which(t[0])), None)
+    if not tool:
+        fail("no clipboard tool (pbcopy, wl-copy or xclip)")
+    with open(path) as body:
+        subprocess.run(tool, stdin=body, check=True)
+
+
+def open_url(url):
+    subprocess.run(["open" if platform.system() == "Darwin" else "xdg-open", url], check=True)
+
+
+def main():
+    repo, body, lease = parse(sys.argv[1:])
+    branch = git(repo, "branch", "--show-current")
+    if not branch:
+        fail(f"{repo} is not on a branch")
+    base = default_branch(repo)
+    if branch == base:
+        fail(f"{repo} is on {base}. Push a feature branch")
+    push(repo, branch, lease)
+    copy(body)
+    url = f"https://github.com/{github_repo(repo)}/compare/{base}...{branch}?expand=1"
+    open_url(url)
+    print(f"Body copied. Opened {url}")
+
+
+main()
