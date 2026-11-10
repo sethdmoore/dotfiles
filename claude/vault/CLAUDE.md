@@ -55,7 +55,7 @@ This file and `templates/` are links into `~/dotfiles/claude/vault`, which `make
 Two hooks in `~/.config/claude/hooks` connect the vault to every session. They call `~/.config/claude/hooks/notes.py`, which lives in the `claude` package of `~/dotfiles` with the hooks, so it reaches every machine. `CLAUDE_VAULT` overrides the vault path. The claude-cli launcher mounts the vault into its container at the same path. Both hooks skip silently where the vault has no `CLAUDE.md`.
 
 - `vault-session-start.sh` runs `notes.py context <cwd>` and injects the result: the vault path and every note whose `paths` contains the working directory, closest first, each with its Summary. An area claims a broad root such as `~/dev/git/all`, and a project claims its repos, so a session gets both. When no note claims the directory, it lists the active notes instead, newest first. It skips a resumed session.
-- `vault-stop.sh` runs `notes.py stop`. After a turn longer than 180 seconds (`CLAUDE_VAULT_STOP_SECONDS`), it blocks the stop when the turn edited a file under a live note's `paths` and left that note unchanged, and asks for an update. It also commits the vault files the turn edited, on every stop, so Claude does not commit the vault by hand. Only this turn's Edit and Write calls count. Edits inside the vault never make a note stale.
+- `vault-stop.sh` runs `notes.py stop`. After a turn longer than 180 seconds (`CLAUDE_VAULT_STOP_SECONDS`), it blocks the stop when the turn edited a file under a live note's `paths` and left that note unchanged, and asks for an update. On every stop it also starts `notes.py snapshot` in the background, which commits every vault change with jj, so Claude does not commit the vault by hand. Only this turn's Edit and Write calls count. Edits inside the vault never make a note stale.
 - There are no handoff files. A new session resumes from the vault: the brief carries the Summary of the note for the working directory, and any note loads by name with `notes.py`.
 
 ## Layout
@@ -123,7 +123,7 @@ notes.py <note>                      the whole note, for a deep dive you will re
 4. After working on a project: rewrite State, and the Summary when State changed. Update `status`, `next_action`, `last_worked_on`, add each new source to References, and add a Log line.
 5. After every edit, run `notes.py tokens <changed files>`. It also reports what `check` finds. Fix each problem.
 6. Done, dropped, or paused for over 30 days: set `status`, then `mv 1-projects/<slug> 4-archive/`.
-7. The vault is a git repository with no remote, one per machine. The Stop hook commits the vault files each turn edited, so do not commit them by hand. The commit covers only those paths, so other sessions' work stays as it was.
+7. The vault is a jj repository colocated with git, with no remote, one per machine. The Stop hook's snapshot commits every change in the vault, including subagent writes and Obsidian edits, so do not commit by hand. `git log` still works.
 
 ## Calendar reminders
 
@@ -146,4 +146,4 @@ A vault from before PARA keeps its notes in a flat folder such as `projects/`, a
 4. Fill a missing `created` from the file's first commit, `git log --diff-filter=A --format=%as -- <file> | tail -n 1`, or else the oldest date in its Log.
 5. Fill a missing `paths` with the directories its State and References name that exist on this machine. Ask Seth when none does.
 6. Move a project that is done, dropped, or paused for over 30 days to `4-archive/`.
-7. Run `notes.py check` until it reports nothing, then commit the vault.
+7. Run `notes.py check` until it reports nothing. The Stop hook commits the result.

@@ -76,6 +76,12 @@ vault:
 	fi
 	@mkdir -p '$(VAULT)/1-projects' '$(VAULT)/2-areas' '$(VAULT)/3-resources' '$(VAULT)/4-archive' '$(VAULT)/memory'
 	@[ -d '$(VAULT)/.git' ] || { git -C '$(VAULT)' init -q && echo 'made $(VAULT) a git repository'; }
+	@command -v jj >/dev/null 2>&1 || { echo 'jj is required, the Stop hook commits the vault with it, please install it' >&2; exit 1; }
+	@[ -d '$(VAULT)/.jj' ] || { cd '$(VAULT)' && jj --quiet git init --colocate . \
+	  && jj --quiet config set --repo user.name "$$(git config user.name)" \
+	  && jj --quiet config set --repo user.email "$$(git config user.email)" \
+	  && jj --quiet metaedit --update-author -r @ \
+	  && echo 'made $(VAULT) a jj repository'; }
 	@for f in CLAUDE.md templates; do \
 	  t='$(VAULT)'/$$f; \
 	  [ "$$(readlink "$$t")" != '$(RULES)'/$$f ] || continue; \

@@ -490,10 +490,6 @@ def stale_notes(edited):
     return stale
 
 
-def git(*args):
-    return subprocess.run(["git", "-C", str(VAULT), *args], capture_output=True, text=True, timeout=5, check=True).stdout
-
-
 def commit_message(names):
     head = "vault: update "
     text = head + ", ".join(names)
@@ -507,33 +503,17 @@ def commit_message(names):
     return head + ", ".join(kept) + f" and {len(names) - len(kept)} more"
 
 
-def auto_commit(edited):
-    """Commit the vault files this turn edited. The pathspec keeps other sessions' staged and unstaged work out."""
-    paths = [os.path.relpath(p, VAULT) for p in edited if p.is_relative_to(VAULT)]
-    if not paths:
-        return
-    entries = git("status", "--porcelain", "-z", "-uall", "--", *paths).split("\0")
-    changed = [entry[3:] for entry in entries if entry]
-    if not changed:
-        return
-    git("add", "-A", "--", *changed)
-    identity = []
-    # The claude-cli container has no git config, so borrow the author of the last vault commit.
-    if subprocess.run(["git", "-C", str(VAULT), "config", "user.email"], capture_output=True, timeout=5).returncode:
-        name, email = git("log", "-1", "--format=%an%n%ae").splitlines()
-        identity = ["-c", f"user.name={name}", "-c", f"user.email={email}"]
-    git(*identity, "commit", "-q", "-m", commit_message(changed), "--", *changed)
-
-
 # A snapshot runs with no terminal, so nothing it starts can prompt. An editor call fails instead of opening one.
 QUIET = {"GIT_TERMINAL_PROMPT": "0", "GIT_EDITOR": "false", "JJ_EDITOR": "false", "EDITOR": "false", "VISUAL": "false"}
 
 
 def jj(*args):
-    """With --quiet, jj writes only warnings to stderr, such as a file over its 1 MiB limit that it refused to track."""
+    """With --quiet, jj writes only warnings to stderr, such as a file over its 1 MiB limit that it refused to track.
+
+    It runs in the vault because jj prints paths relative to the working directory."""
     done = subprocess.run(
         [shutil.which("jj") or "jj", "--no-pager", "--quiet", "--color=never", "-R", str(VAULT), *args],
-        capture_output=True, text=True, timeout=120, check=True,
+        capture_output=True, text=True, timeout=120, check=True, cwd=VAULT,
         stdin=subprocess.DEVNULL, start_new_session=True, env={**os.environ, **QUIET},
     )
     sys.stderr.write(done.stderr)
@@ -541,7 +521,7 @@ def jj(*args):
 
 
 def snapshot(args):
-    """A timer runs this, never a session, so each machine has one writer. Commits every vault change since the last run."""
+    """Commits every vault change since the last run: subagent writes, Obsidian edits, and turns the Stop hook missed."""
     if not (VAULT / ".jj").is_dir():
         sys.exit(f"{tilde(VAULT)} is not a jj repository. Run: jj git init --colocate {tilde(VAULT)}")
     # jj survives two runs at once, but both commit the same change and leave an extra head. A second run skips instead.
@@ -561,18 +541,28 @@ def snapshot(args):
         sys.exit(f"jj {' '.join(error.cmd[6:])} failed: {error.stderr.strip()}")
 
 
+def spawn_snapshot():
+    """Starts a snapshot that outlives the Stop hook, so a slow or stuck jj never holds up a session.
+
+    Without jj, as in the claude-cli container, the next snapshot on the host commits this session's edits."""
+    if not (VAULT / ".jj").is_dir() or not shutil.which("jj"):
+        return
+    USAGE.parent.mkdir(parents=True, exist_ok=True)
+    with open(USAGE.parent / "snapshot.log", "a") as log:
+        subprocess.Popen(
+            [sys.executable, str(SELF), "snapshot"],
+            stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True,
+        )
+
+
 def stop(args):
-    """The Stop hook. Commits the turn's vault edits, and prints a block decision for stale notes, or nothing. Any error allows the stop."""
+    """The Stop hook. Starts a vault snapshot, and prints a block decision for stale notes, or nothing. Any error allows the stop."""
     try:
         event = json.load(sys.stdin)
         if not (VAULT / "CLAUDE.md").is_file():
             return
+        spawn_snapshot()
         start, edited = last_turn(event["transcript_path"])
-        # Runs before the early returns, so a turn that updates a stale note still gets its commit.
-        try:
-            auto_commit(edited)
-        except Exception:
-            pass
         # stop_hook_active is true when this stop follows a block from this hook. Allow it, or the loop never ends.
         if event.get("stop_hook_active") or start is None or not edited or time.time() - start <= int(os.environ.get("CLAUDE_VAULT_STOP_SECONDS", 180)):
             return
