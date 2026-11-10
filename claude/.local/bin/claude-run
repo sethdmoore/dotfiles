@@ -6,20 +6,25 @@
 
 Scripts live in $XDG_DATA_HOME/scripts/<project>/, by default
 ~/.local/share/scripts. A name matches exactly first, then without its
-extension, then by prefix, by substring, and by its letters in order. A single
-inexact match counts down 5 seconds before it goes on: Enter skips the wait and
-Ctrl-C cancels. The script runs from its project folder.
+extension, then by prefix, by substring, and by its letters in order. Several
+matches give a menu. The script runs from its project folder on a y.
 
-    --apply   skip the preview and the [y/N] prompt
+    --apply   skip the preview, and the [y/N] prompt for an exact match
+
+A script can ask for two steps after it exits 0, one comment line each:
+
+    # claude-run: copy ~/path/to/pr-body.txt   the file goes to the clipboard
+    # claude-run: open https://github.com/...   the browser opens the URL
 """
 import os
-import select
+import platform
+import re
 import shutil
 import subprocess
 import sys
 
 BASE = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), "scripts")
-COUNTDOWN = 5
+AFTER = re.compile(r"^#\s*claude-run:\s*(copy|open)\s+(.+?)\s*$", re.MULTILINE)
 TIERS = [
     lambda q, n: n == q,
     lambda q, n: os.path.splitext(n)[0].lower() == q.lower(),
@@ -121,29 +126,8 @@ def ask(tty, prompt):
     return tty[0].readline().strip()
 
 
-def countdown(tty, verb):
-    keys, screen = tty
-    screen.write(f"{verb} in ")
-    for n in range(COUNTDOWN, -1, -1):
-        screen.write(str(n))
-        screen.flush()
-        if n == 0:
-            break
-        if select.select([keys], [], [], 1)[0]:
-            keys.readline()
-            return
-        screen.write("\b" * len(str(n)))
-    screen.write("\n")
-
-
-def choose(tty, hits, exact, verb):
+def choose(tty, hits):
     if len(hits) == 1:
-        if exact:
-            return hits[0]
-        if tty is None:
-            fail(f"{hits[0]} is not an exact match, and there is no terminal to confirm it")
-        tty[1].write(f"Found a single close match\n{hits[0]}\n")
-        countdown(tty, verb)
         return hits[0]
     lines = ["Found these scripts, which one?", "0) cancel"]
     lines += [f"{i}) {path}" for i, path in enumerate(hits, 1)]
@@ -166,11 +150,50 @@ def preview(path, name):
         print(text, end="" if text.endswith("\n") else "\n")
 
 
-def run(path, extra):
+def afterwards(path):
+    """The copy and open steps the script asks for, copies first so the clipboard is ready when the page loads."""
+    with open(path, errors="replace") as f:
+        steps = AFTER.findall(f.read())
+    return sorted(steps, key=lambda step: step[0] != "copy")
+
+
+def describe(steps):
+    return "".join(f", then {verb} {os.path.basename(target) if verb == 'copy' else target}" for verb, target in steps)
+
+
+def copy(target, folder):
+    path = os.path.join(folder, os.path.expanduser(target))
+    tools = [["pbcopy"]] if platform.system() == "Darwin" else [["wl-copy"], ["xclip", "-selection", "clipboard"]]
+    tool = next((t for t in tools if shutil.which(t[0])), None)
+    if not tool:
+        fail("no clipboard tool: pbcopy, wl-copy or xclip")
+    try:
+        with open(path) as f:
+            subprocess.run(tool, stdin=f, check=True)
+    except OSError as error:
+        fail(f"cannot copy {path}: {error.strerror}")
+    print(f"claude-run: copied {target}")
+
+
+def browse(url):
+    subprocess.run(["open" if platform.system() == "Darwin" else "xdg-open", url], check=True)
+    print(f"claude-run: opened {url}")
+
+
+def run(path, extra, steps):
     if not os.access(path, os.X_OK):
         fail(f"it is not executable. Fix: chmod +x {path}")
-    os.chdir(os.path.dirname(path))
-    os.execv(path, [path, *extra])
+    folder = os.path.dirname(path)
+    code = subprocess.run([path, *extra], cwd=folder).returncode
+    if code:
+        if steps:
+            print(f"claude-run: exit {code}, so no copy or open", file=sys.stderr)
+        sys.exit(code)
+    for verb, target in steps:
+        if verb == "copy":
+            copy(target, folder)
+        else:
+            browse(target)
 
 
 def main():
@@ -182,13 +205,15 @@ def main():
     if not hits:
         fail(f"no script matches {' '.join(words)}. Run claude-run to list them")
     tty = open_tty()
-    name = choose(tty, hits, exact, "running" if apply else "previewing")
+    name = choose(tty, hits)
     path = os.path.join(BASE, name)
+    steps = afterwards(path)
     if not apply:
         preview(path, name)
-        if ask(tty, f"Run {name}? [y/N] ").lower() not in ("y", "yes"):
-            sys.exit("not run")
-    run(path, extra)
+    # --apply still asks when the name was not exact, so a typo cannot run the wrong script.
+    if (not apply or not exact) and ask(tty, f"Run {name}{describe(steps)}? [y/N] ").lower() not in ("y", "yes"):
+        sys.exit("not run")
+    run(path, extra, steps)
 
 
 if __name__ == "__main__":
