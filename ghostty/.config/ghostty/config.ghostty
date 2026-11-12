@@ -16,4 +16,5 @@ background-opacity-cells = true
 custom-shader = ./ghostty-cursor-shaders/ghostty/cursor_warp.glsl
 
 config-file = ?./include/macos.toml
-theme = noctalia
+config-file = ?./include/theme.toml
+# theme = noctalia
