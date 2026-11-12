@@ -21,6 +21,7 @@ focus_pane_right = "ctrl+l"
 goto             = "ctrl+w"
 next_agent       = "ctrl+n"
 previous_agent   = "ctrl+p"
+new_tab          = "ctrl+c"
 
 # splits
 split_vertical = "ctrl+backslash"
