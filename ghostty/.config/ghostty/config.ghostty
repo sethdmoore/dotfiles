@@ -1,11 +1,16 @@
 font-family = "Hack Nerd Font Mono"
-# custom-shader = ./shaders/cursor_warp.glsl
 cursor-color = "#AAAAFF"
 cursor-opacity = 0.9
 cursor-text = "#FFFFFF"
 cursor-style = "block"
 
-background-opacity = 0.92
+keybind      = ctrl+==unbind
+keybind      = ctrl+-=unbind
+
+keybind      = shift+ctrl+==increase_font_size:1
+keybind      = shift+ctrl+-=decrease_font_size:1
+
+background-opacity = 0.87
 background-opacity-cells = true
 
 custom-shader = ./ghostty-cursor-shaders/ghostty/cursor_warp.glsl
