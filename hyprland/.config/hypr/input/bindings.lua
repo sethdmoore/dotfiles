@@ -71,16 +71,40 @@ hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + v", hl.dsp.layout("togglesplit"))
 hl.bind(mainMod .. " + return", hl.dsp.window.fullscreen())
 
+-- General focus can't leave a fullscreen window unless
+-- binds:movefocus_cycles_fullscreen is on, and that option would also drop
+-- fullscreen games on the other layouts. Layout focus has no such check, but it
+-- does nothing from a floating window.
+local function horizontal_focus(dir, layout_msg)
+    return function ()
+        local workspace = hl.get_active_special_workspace() or hl.get_active_workspace()
+        local window = hl.get_active_window()
+
+        if workspace and workspace.tiled_layout == "scrolling" and window and not window.floating then
+            hl.dispatch(hl.dsp.layout(layout_msg))
+        else
+            hl.dispatch(hl.dsp.focus({ direction = dir }))
+        end
+    end
+end
+
+local focus_binds = {
+    left  = horizontal_focus("left", "focus l"),
+    down  = hl.dsp.focus({ direction = "down" }),
+    up    = hl.dsp.focus({ direction = "up" }),
+    right = horizontal_focus("right", "focus r"),
+}
+
 local dirs = { h = "left", j = "down", k = "up", l = "right"}
 for key, dir in pairs(dirs) do
     -- vim focus
-    hl.bind(mainMod .. " + " .. key, hl.dsp.focus({ direction = dir }))
+    hl.bind(mainMod .. " + " .. key, focus_binds[dir])
 
     -- vim swap window
     hl.bind(mainMod .. " + CTRL + " .. key, hl.dsp.window.swap({direction = dir}))
 
     -- arrow focus
-    hl.bind(mainMod .. " + " .. dir,  hl.dsp.focus({ direction = dir }))
+    hl.bind(mainMod .. " + " .. dir, focus_binds[dir])
 
     -- arrow swap window
     hl.bind(mainMod .. " + CTRL + " .. dir, hl.dsp.window.swap({direction = dir}))
@@ -124,11 +148,11 @@ hl.bind(mainMod .. " + SHIFT + mouse_up", hl.dsp.focus({ workspace = "e+1" }))
 
 -- layout #2 / scrolling
 hl.bind(mainMod .. "+ mouse_down", layout_bind({
-    scrolling = hl.dsp.layout("move +col"),
+    scrolling = hl.dsp.layout("focus r"),
 }), { bypass_inhibit = true })
 
 hl.bind(mainMod .. "+ mouse_up", layout_bind({
-    scrolling = hl.dsp.layout("move -col"),
+    scrolling = hl.dsp.layout("focus l"),
 }), { bypass_inhibit = true })
 
 -- Move/resize windows with mainMod + LMB/RMB and dragging

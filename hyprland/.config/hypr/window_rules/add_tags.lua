@@ -21,8 +21,29 @@ hl.window_rule({
     name = "steam-tag",
     match = {
         initial_class = "^steam$",
+        title = "negative:^notificationtoasts_.*$",
     },
     tag = "+overlay",
+})
+
+-- tag apps that fake a notification with their own window
+hl.window_rule({
+    name = "steam-toast-tag",
+    match = {
+        initial_class = "^steam$",
+        title = "^notificationtoasts_.*$",
+    },
+    tag = "+fake_notification",
+})
+
+hl.window_rule({
+    name = "battle-net-toast-tag",
+    match = {
+        initial_class = "^steam_app_.*$",
+        initial_title = "^Battle\\.net$",
+        float = true,
+    },
+    tag = "+fake_notification",
 })
 
 -- tag steam updater

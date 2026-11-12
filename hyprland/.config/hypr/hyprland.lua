@@ -27,6 +27,8 @@ noctalia.apply_theme()
 -- Active border as an animated gradient (rotated by the "borderangle" animation).
 -- Built from Noctalia's own palette so it stays in-theme.
 hl.config({
+    -- corruption with blur if invalidate_buffers = 1 and CEF windows on screen
+    debug = { invalidate_buffers = 0},
     general = {
         col = {
             active_border = {

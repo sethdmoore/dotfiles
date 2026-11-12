@@ -17,9 +17,51 @@ hl.window_rule({
         initial_class = "^steam_app_default$",
         initial_title = "^(Battle\\.net.*|.*Installation)$",
     },
-    workspace = "4 silent",
+    -- workspace = "4 silent",
     float = true,
 })
+
+hl.window_rule({
+	-- class: io.github.Faugus.faugus-launcher
+	-- title: Faugus
+	-- initialClass: io.github.Faugus.faugus-launcher
+	-- initialTitle: Faugus
+	name = "faugus-launcher",
+	match = {
+	    initial_title = "^Faugus$",
+	    initial_class = "^io.github.Faugus.faugus-launcher$",
+	},
+	float = false,
+	pseudo = true,
+})
+
+-- Same corner as Noctalia's notifications. Without this, Wine's Wayland driver can't
+-- place Battle.net's toast, so it lands mid-screen despite its BottomRight setting.
+hl.window_rule({
+    name = "fake-notification",
+    match = {
+        tag = "fake_notification",
+    },
+    float = true,
+    pin = true,
+    no_initial_focus = true,
+    move = {"monitor_w - window_w - 22", "62"},
+})
+
+-- TODO: the toast never closes itself under Proton-Wineland. Cause not found, so close it here.
+-- The height check spares taller Battle.net popups, such as the 376x344 login window.
+hl.on("window.open", function(w)
+    if not w.initial_class:find("^steam_app_") or w.initial_title ~= "Battle.net" or not w.floating then
+        return
+    end
+    local address, stable_id = w.address, w.stable_id
+    hl.timer(function()
+        local toast = hl.get_window("address:" .. address)
+        if toast and toast.stable_id == stable_id and toast.size.y < 200 then
+            hl.dispatch(hl.dsp.window.close({ window = toast }))
+        end
+    end, { timeout = 8000, type = "oneshot" })
+end)
 
 -- Rule expressions can't read another window's position.
 hl.on("window.open", function(w)

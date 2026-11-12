@@ -8,6 +8,7 @@ hl.config({
     scrolling = {
         direction = "right",
         column_width = 0.333,
+        wrap_focus = false,
     }
 })
 
